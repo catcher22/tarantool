@@ -49,6 +49,8 @@ static const void *tc_options_def = gopt_start(
 		    gopt_longs("admin-port"), " <port>", "server admin port"),
 	gopt_option('C', GOPT_ARG, gopt_shorts('C'),
 		    gopt_longs("cat"), " <file>", "print xlog or snapshot file content"),
+	gopt_option('I', 0, gopt_shorts('C'),
+		    gopt_longs("catin"), NULL, "print xlog content from stdin"),
 	gopt_option('P', GOPT_ARG, gopt_shorts('P'),
 		    gopt_longs("play"), " <file>", "replay xlog file to the specified server"),
 	gopt_option('S', GOPT_ARG, gopt_shorts('S'),
@@ -58,7 +60,9 @@ static const void *tc_options_def = gopt_start(
 	gopt_option('T', GOPT_ARG, gopt_shorts('T'),
 		    gopt_longs("to"), " <lsn>", "stop on specified xlog lsn"),
 	gopt_option('M', GOPT_ARG, gopt_shorts('M'),
-		    gopt_longs("format"), " <name>", "cat output format (tarantool)"),
+		    gopt_longs("format"), " <name>", "cat output format (tarantool, raw)"),
+	gopt_option('H', 0, gopt_shorts('H'),
+		    gopt_longs("header"), NULL, "add file headers for the raw output"),
 	gopt_option('R', GOPT_ARG, gopt_shorts('R'),
 		    gopt_longs("rpl"), " <lsn>", "act as replica for the specified server"),
 	gopt_option('?', 0, gopt_shorts(0), gopt_longs("help"),
@@ -125,21 +129,26 @@ enum tc_opt_mode tc_opt_init(struct tc_opt *opt, int argc, char **argv)
 	/* from lsn */
 	opt->lsn_from = 0;
 	if (gopt_arg(tc_options, 'F', &arg)) {
-		opt->lsn_from = atoi(arg);
+		opt->lsn_from = strtoll(arg, NULL, 10);
 		opt->lsn_from_set = 1;
 	}
 
 	/* to lsn */
 	opt->lsn_to = 0;
 	if (gopt_arg(tc_options, 'T', &arg)) {
-		opt->lsn_to = atoi(arg);
+		opt->lsn_to = strtoll(arg, NULL, 10);
 		opt->lsn_to_set = 1;
 	}
 
 	/* output format */
+	opt->raw = 0;
 	opt->format = NULL;
 	if (gopt_arg(tc_options, 'M', &arg))
 		opt->format = arg;
+
+	opt->raw_with_headers = 0;
+	if (gopt(tc_options, 'H'))
+		opt->raw_with_headers = 1;
 
 	/* replica mode */
 	if (gopt_arg(tc_options, 'R', &arg)) {
@@ -151,6 +160,13 @@ enum tc_opt_mode tc_opt_init(struct tc_opt *opt, int argc, char **argv)
 	/* wal-cat mode */
 	if (gopt_arg(tc_options, 'C', &opt->file)) {
 		opt->mode = TC_OPT_WAL_CAT;
+		goto done;
+	}
+
+	/* wal-cat mode from stdin */
+	if (gopt(tc_options, 'I')) {
+		opt->mode = TC_OPT_WAL_CAT;
+		opt->file = NULL;
 		goto done;
 	}
 

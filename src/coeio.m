@@ -122,6 +122,7 @@ struct coeio_task {
 	va_list ap;
 	/** Callback results. */
 	ssize_t result;
+	int complete;
 	int errorno;
 };
 
@@ -150,6 +151,7 @@ coeio_on_complete(eio_req *req)
 		struct coeio_task *task = req->data;
 		task->result = req->result;
 		task->errorno = req->errorno;
+		task->complete = 1;
 		fiber_wakeup(task->fiber);
 	}
 	return 0;
@@ -188,12 +190,13 @@ coeio_custom(ssize_t (*func)(va_list ap), ev_tstamp timeout, ...)
 	task.fiber = fiber;
 	task.func = func;
 	task.result = -1;
+	task.complete = 0;
 	va_start(task.ap, timeout);
 	struct eio_req *req = eio_custom(coeio_custom_cb, 0,
 					 coeio_on_complete, &task);
 	if (req == NULL) {
 		errno = ENOMEM;
-	} else if (fiber_yield_timeout(timeout)) {
+	} else if (fiber_yield_timeout(timeout) && !task.complete) {
 		/* timeout. */
 		errno = ETIMEDOUT;
 		task.result = -1;
@@ -204,4 +207,61 @@ coeio_custom(ssize_t (*func)(va_list ap), ev_tstamp timeout, ...)
 	}
 	va_end(task.ap);
 	return task.result;
+}
+
+/*
+ * Resolver function, run in separate thread by
+ * coeio (libeio).
+*/
+static ssize_t
+getaddrinfo_cb(va_list ap)
+{
+	const char *host = va_arg(ap, const char *);
+	const char *port = va_arg(ap, const char *);
+	struct addrinfo *hints = va_arg(ap, struct addrinfo *);
+	struct addrinfo **res = va_arg(ap, struct addrinfo **);
+
+	int rc = getaddrinfo(host, port, hints, res);
+	/* getaddrinfo can return EAI_ADDRFAMILY on attempt
+	 * to resolve ::1, if machine has no public ipv6 addresses
+	 * configured. Retry without AI_ADDRCONFIG flag set.
+	 *
+	 * See for details: https://bugs.launchpad.net/tarantool/+bug/1160877
+	 */
+
+	/* EAI_ADDRFAMILY is deprecated on FreeBSD */
+#ifdef EAI_ADDRFAMILY
+	int is_rc = EAI_BADFLAGS|EAI_ADDRFAMILY;
+#else
+	int is_rc = EAI_BADFLAGS;
+#endif
+	if (rc == is_rc) {
+		hints->ai_flags &= ~AI_ADDRCONFIG;
+		rc = getaddrinfo(host, port, hints, res);
+	}
+	if (rc) {
+		errno = ERESOLVE;
+		return -1;
+	}
+	return 0;
+}
+
+struct addrinfo *
+coeio_resolve(int socktype, const char *host, const char *port,
+              ev_tstamp timeout)
+{
+	/* Fill hinting information for use by connect(2) or bind(2). */
+	struct addrinfo *result = NULL;
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+	hints.ai_socktype = socktype;
+	hints.ai_flags = AI_ADDRCONFIG|AI_NUMERICSERV|AI_PASSIVE;
+	hints.ai_protocol = 0;
+	/* do resolving */
+	errno = 0;
+	if (coeio_custom(getaddrinfo_cb, timeout, host, port,
+			 &hints, &result))
+		return NULL;
+	return result;
 }

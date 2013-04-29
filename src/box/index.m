@@ -29,6 +29,7 @@
 #include "index.h"
 #include "hash_index.h"
 #include "tree_index.h"
+#include "bitset_index.h"
 #include "tuple.h"
 #include "say.h"
 #include "exception.h"
@@ -108,6 +109,8 @@ replace_check_dup(struct tuple *old_tuple,
 		return [HashIndex alloc: key_def :space];
 	case TREE:
 		return [TreeIndex alloc: key_def :space];
+	case BITSET:
+		return [BitsetIndex alloc];
 	default:
 		assert(false);
 	}
@@ -177,6 +180,13 @@ replace_check_dup(struct tuple *old_tuple,
 	return NULL;
 }
 
+- (struct tuple *) random: (u32) rnd
+{
+	(void) rnd;
+	[self subclassResponsibility: _cmd];
+	return NULL;
+}
+
 - (struct tuple *) findByKey: (const void *) key :(u32) part_count
 {
 	(void) key;
@@ -212,7 +222,7 @@ replace_check_dup(struct tuple *old_tuple,
 
 - (void) initIterator: (struct iterator *) iterator
 	:(enum iterator_type) type
-	:(void *) key :(u32) part_count
+	:(const void *) key :(u32) part_count
 {
 	(void) iterator;
 	(void) type;

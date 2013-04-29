@@ -92,17 +92,19 @@ lua s:close()
 lua s:close()
 ---
 ...
-lua s:connect('somewhereelse', '30303', 0.01)
+lua sr, se = s:connect('somewhereelse', '30303', 0.0001)
 ---
- - nil
- - timeout
- - 110
- - Connection timed out
 ...
-lua s:error()
+lua sr == nil and se == 'error' or se == 'timeout'
 ---
- - 110
- - Connection timed out
+ - true
+...
+lua e = s:error()
+---
+...
+lua e == -1 or e == 110
+---
+ - true
 ...
 lua s:close()
 ---
@@ -114,11 +116,6 @@ error: 'box.socket: socket is not initialized'
 lua s:send(1)
 ---
 error: 'box.socket: socket is not initialized'
-...
-lua s:error()
----
- - 110
- - Connection timed out
 ...
 lua s = box.socket.tcp()
 ---
@@ -154,10 +151,6 @@ lua type(error_code)
 lua type(error_str)
 ---
  - string
-...
-lua n
----
- - 163840
 ...
 lua status
 ---
@@ -817,7 +810,7 @@ lua s:error()
 lua s:close()
 ---
 ...
-lua type(s:bind('localhost', '30303'))
+lua type(s:bind('127.0.0.1', '30303'))
 ---
  - userdata
 ...
@@ -853,7 +846,7 @@ ping
 lua s = box.socket.udp()
 ---
 ...
-lua type(s:sendto('ping', 'localhost', '30302'))
+lua type(s:sendto('ping', '127.0.0.1', '30302'))
 ---
  - number
 ...
@@ -876,7 +869,7 @@ lua s:close()
 lua s = box.socket.udp()
 ---
 ...
-lua type(s:bind('localhost', '30301'))
+lua type(s:bind('127.0.0.1', '30301'))
 ---
  - userdata
 ...
@@ -913,4 +906,42 @@ lua s:error()
 ping
 lua s:close()
 ---
+...
+lua  replies = 0 function bug1160869() 	local s = box.socket.tcp() 	s:connect('127.0.0.1', box.cfg.primary_port) 	box.fiber.resume( box.fiber.create(function() 		box.fiber.detach() 		while true do 			s:recv(12) 			replies = replies + 1 		end 	end) ) 	return s:send(box.pack('iii', 65280, 0, 1)) end 
+---
+...
+lua bug1160869()
+---
+ - 12
+...
+lua bug1160869()
+---
+ - 12
+...
+lua bug1160869()
+---
+ - 12
+...
+lua replies
+---
+ - 3
+...
+lua  s = nil syncno = 0 reps = 0 function iostart() 	if s ~= nil then 		return 	end 	s = box.socket.tcp() 	s:connect('127.0.0.1', box.cfg.primary_port) 	box.fiber.resume( box.fiber.create(function() 		box.fiber.detach() 		while true do 			s:recv(12) 			reps = reps + 1 		end 	end)) end  function iotest() 	iostart() 	syncno = syncno + 1 	return s:send(box.pack('iii', 65280, 0, syncno)) end 
+---
+...
+lua iotest()
+---
+ - 12
+...
+lua iotest()
+---
+ - 12
+...
+lua iotest()
+---
+ - 12
+...
+lua reps
+---
+ - 3
 ...

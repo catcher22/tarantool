@@ -144,17 +144,17 @@ struct _mh(t) {
 struct _mh(t) * _mh(new)();
 void _mh(clear)(struct _mh(t) *h);
 void _mh(delete)(struct _mh(t) *h);
-void _mh(resize)(struct _mh(t) *h, mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg);
+void _mh(resize)(struct _mh(t) *h, mh_arg_t arg);
 int _mh(start_resize)(struct _mh(t) *h, mh_int_t buckets, mh_int_t batch,
-		      mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg);
+		      mh_arg_t arg);
 void _mh(reserve)(struct _mh(t) *h, mh_int_t size,
-		  mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg);
+		  mh_arg_t arg);
 void __attribute__((noinline)) _mh(del_resize)(struct _mh(t) *h, mh_int_t x,
-					       mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg);
+					       mh_arg_t arg);
 void _mh(dump)(struct _mh(t) *h);
 
-#define put_slot(h, node, hash_arg, eq_arg) \
-	_mh(put_slot)(h, node, hash_arg, eq_arg)
+#define put_slot(h, node, arg) \
+	_mh(put_slot)(h, node, arg)
 
 static inline mh_node_t *
 _mh(node)(struct _mh(t) *h, mh_int_t x)
@@ -172,16 +172,15 @@ _mh(next_slot)(mh_int_t slot, mh_int_t inc, mh_int_t size)
 
 static inline mh_int_t
 _mh(get)(struct _mh(t) *h, const mh_node_t *node,
-	 mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+	 mh_arg_t arg)
 {
-	(void) hash_arg;
-	(void) eq_arg;
+	(void) arg;
 
-	mh_int_t k = mh_hash(node, hash_arg);
+	mh_int_t k = mh_hash(node, arg);
 	mh_int_t i = k % h->n_buckets;
 	mh_int_t inc = 1 + k % (h->n_buckets - 1);
 	for (;;) {
-		if ((mh_exist(h, i) && mh_eq(node, mh_node(h, i), eq_arg)))
+		if ((mh_exist(h, i) && mh_eq(node, mh_node(h, i), arg)))
 			return i;
 
 		if (!mh_dirty(h, i))
@@ -192,19 +191,30 @@ _mh(get)(struct _mh(t) *h, const mh_node_t *node,
 }
 
 static inline mh_int_t
-_mh(put_slot)(struct _mh(t) *h, const mh_node_t *node,
-	      mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+_mh(random)(struct _mh(t) *h, mh_int_t rnd)
 {
-	(void) hash_arg;
-	(void) eq_arg;
+	for (mh_int_t i = 0; i < mh_size(h); i++, rnd++) {
+		rnd %= h->n_buckets;
+		if (mh_exist(h, rnd))
+			return rnd;
+	}
 
-	mh_int_t k = mh_hash(node, hash_arg); /* hash key */
+	return h->n_buckets;
+}
+
+static inline mh_int_t
+_mh(put_slot)(struct _mh(t) *h, const mh_node_t *node,
+	      mh_arg_t arg)
+{
+	(void) arg;
+
+	mh_int_t k = mh_hash(node, arg); /* hash key */
 	mh_int_t i = k % h->n_buckets; /* offset in the hash table. */
 	mh_int_t inc = 1 + k % (h->n_buckets - 1); /* overflow chain increment. */
 
 	/* Skip through all collisions. */
 	while (mh_exist(h, i)) {
-		if (mh_eq(node, mh_node(h, i), eq_arg))
+		if (mh_eq(node, mh_node(h, i), arg))
 			return i;               /* Found a duplicate. */
 		/*
 		 * Mark this link as part of a collision chain. The
@@ -227,16 +237,25 @@ _mh(put_slot)(struct _mh(t) *h, const mh_node_t *node,
 	while (mh_dirty(h, i)) {
 		i = _mh(next_slot)(i, inc, h->n_buckets);
 
-		if (mh_exist(h, i) && mh_eq(mh_node(h, i), node, eq_arg))
+		if (mh_exist(h, i) && mh_eq(mh_node(h, i), node, arg))
 			return i;               /* Found a duplicate. */
 	}
 	/* Reached the end of the collision chain: no duplicates. */
 	return save_i;
 }
 
+/**
+ * Find a node in the hash and replace it with a new value.
+ * Save the old node in ret pointer, if it is provided.
+ * If the old node didn't exist, just insert the new node.
+ *
+ * @retval != mh_end()   pos of the new node, ret is either NULL
+ *                       or copy of the old node
+ * @retval  mh_end()     out of memory, ret is unchanged.
+ */
 static inline mh_int_t
-_mh(put)(struct _mh(t) *h, const mh_node_t *node,
-	 mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg, int *ret)
+_mh(put)(struct _mh(t) *h, const mh_node_t *node, mh_node_t **ret,
+	 mh_arg_t arg)
 {
 	mh_int_t x = mh_end(h);
 	if (h->size == h->n_buckets)
@@ -245,25 +264,23 @@ _mh(put)(struct _mh(t) *h, const mh_node_t *node,
 
 #if MH_INCREMENTAL_RESIZE
 	if (mh_unlikely(h->resize_position > 0))
-		_mh(resize)(h, hash_arg, eq_arg);
+		_mh(resize)(h, arg);
 	else if (mh_unlikely(h->n_dirty >= h->upper_bound)) {
-		if (_mh(start_resize)(h, h->n_buckets + 1, 0, hash_arg, eq_arg))
+		if (_mh(start_resize)(h, h->n_buckets + 1, 0, arg))
 			goto put_done;
 	}
 	if (h->resize_position)
-		_mh(put)(h->shadow, node, hash_arg, eq_arg, NULL);
+		_mh(put)(h->shadow, node, NULL, arg);
 #else
 	if (mh_unlikely(h->n_dirty >= h->upper_bound)) {
 		if (_mh(start_resize)(h, h->n_buckets + 1, h->size,
-				      hash_arg, eq_arg))
+				      arg))
 			goto put_done;
 	}
 #endif
 
-	x = put_slot(h, node, hash_arg, eq_arg);
+	x = put_slot(h, node, arg);
 	int exist = mh_exist(h, x);
-	if (ret)
-		*ret = !exist;
 
 	if (!exist) {
 		/* add new */
@@ -273,7 +290,11 @@ _mh(put)(struct _mh(t) *h, const mh_node_t *node,
 			h->n_dirty++;
 
 		memcpy(&(h->p[x]), node, sizeof(mh_node_t));
+		if (ret)
+			*ret = NULL;
 	} else {
+		if (ret)
+			memcpy(*ret, &(h->p[x]), sizeof(mh_node_t));
 		/* replace old */
 		memcpy(&(h->p[x]), node, sizeof(mh_node_t));
 	}
@@ -282,40 +303,9 @@ put_done:
 	return x;
 }
 
-
-/**
- * Find a node in the hash and replace it with a new value.
- * Save the old node in p_old pointer, if it is provided.
- * If the old node didn't exist, just insert the new node.
- */
-static inline mh_int_t
-_mh(replace)(struct _mh(t) *h, const mh_node_t *node, mh_node_t **p_old,
-	 mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
-{
-	mh_int_t k = _mh(get)(h, node, hash_arg, eq_arg);
-	if (k == mh_end(h)) {
-		/* No such node yet: insert a new one. */
-		if (p_old) {
-			*p_old = NULL;
-		}
-		return _mh(put)(h, node, hash_arg, eq_arg, NULL);
-	} else {
-		/*
-		 * Maintain uniqueness: replace the old node
-		 * with a new value.
-		 */
-		if (p_old) {
-			/* Save the old value. */
-			memcpy(*p_old, &(h->p[k]), sizeof(mh_node_t));
-		}
-		memcpy(&(h->p[k]), node, sizeof(mh_node_t));
-		return k;
-	}
-}
-
 static inline void
 _mh(del)(struct _mh(t) *h, mh_int_t x,
-	 mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+	 mh_arg_t arg)
 {
 	if (x != h->n_buckets && mh_exist(h, x)) {
 		mh_setfree(h, x);
@@ -324,7 +314,7 @@ _mh(del)(struct _mh(t) *h, mh_int_t x,
 			h->n_dirty--;
 #if MH_INCREMENTAL_RESIZE
 		if (mh_unlikely(h->resize_position))
-			_mh(del_resize)(h, x, hash_arg, eq_arg);
+			_mh(del_resize)(h, x, arg);
 #endif
 	}
 }
@@ -332,24 +322,24 @@ _mh(del)(struct _mh(t) *h, mh_int_t x,
 
 static inline void
 _mh(remove)(struct _mh(t) *h, const mh_node_t *node,
-	 mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+	 mh_arg_t arg)
 {
-	mh_int_t k = _mh(get)(h, node, hash_arg, eq_arg);
+	mh_int_t k = _mh(get)(h, node, arg);
 	if (k != mh_end(h))
-		_mh(del)(h, k, hash_arg, eq_arg);
+		_mh(del)(h, k, arg);
 }
 
 #ifdef MH_SOURCE
 
 void __attribute__((noinline))
 _mh(del_resize)(struct _mh(t) *h, mh_int_t x,
-		mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+		mh_arg_t arg)
 {
 	struct _mh(t) *s = h->shadow;
 	uint32_t y = _mh(get)(s, (const mh_node_t *) &(h->p[x]),
-			      hash_arg, eq_arg);
-	_mh(del)(s, y, hash_arg, eq_arg);
-	_mh(resize)(h, hash_arg, eq_arg);
+			      arg);
+	_mh(del)(s, y, arg);
+	_mh(resize)(h, arg);
 }
 
 struct _mh(t) *
@@ -386,7 +376,7 @@ _mh(delete)(struct _mh(t) *h)
 
 void
 _mh(resize)(struct _mh(t) *h,
-	    mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+	    mh_arg_t arg)
 {
 	struct _mh(t) *s = h->shadow;
 #if MH_INCREMENTAL_RESIZE
@@ -401,7 +391,7 @@ _mh(resize)(struct _mh(t) *h,
 #endif
 		if (!mh_exist(h, i))
 			continue;
-		mh_int_t n = put_slot(s, mh_node(h, i), hash_arg, eq_arg);
+		mh_int_t n = put_slot(s, mh_node(h, i), arg);
 		s->p[n] = h->p[i];
 		mh_setexist(s, n);
 		s->n_dirty++;
@@ -415,7 +405,7 @@ _mh(resize)(struct _mh(t) *h,
 
 int
 _mh(start_resize)(struct _mh(t) *h, mh_int_t buckets, mh_int_t batch,
-		  mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+		  mh_arg_t arg)
 {
 	if (h->resize_position) {
 		/* resize has already been started */
@@ -456,16 +446,16 @@ _mh(start_resize)(struct _mh(t) *h, mh_int_t buckets, mh_int_t batch,
 		s->p = NULL;
 		return -1;
 	}
-	_mh(resize)(h, hash_arg, eq_arg);
+	_mh(resize)(h, arg);
 
 	return 0;
 }
 
 void
 _mh(reserve)(struct _mh(t) *h, mh_int_t size,
-	     mh_hash_arg_t hash_arg, mh_eq_arg_t eq_arg)
+	     mh_arg_t arg)
 {
-	_mh(start_resize)(h, size/MH_DENSITY, h->size, hash_arg, eq_arg);
+	_mh(start_resize)(h, size/MH_DENSITY, h->size, arg);
 }
 
 #ifndef mh_stat
@@ -512,8 +502,7 @@ _mh(dump)(struct _mh(t) *h)
 #undef MH_HEADER
 #undef mh_int_t
 #undef mh_node_t
-#undef mh_hash_arg_t
-#undef mh_eq_arg_t
+#undef mh_arg_t
 #undef mh_name
 #undef mh_hash
 #undef mh_eq

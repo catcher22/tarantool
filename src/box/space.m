@@ -69,13 +69,14 @@ struct space_meta {
 };
 
 static u32
-space_meta_calc_load_size_v1(const void *d, u32 field_count);
+space_meta_calc_load_size_v1(u32 field_count);
 
 static u32
 space_meta_calc_save_size_v1(const struct space_meta *meta);
 
 static const void *
-space_meta_load_v1(struct space_meta *meta, const void *d, u32 field_count);
+space_meta_load_v1(struct space_meta *meta, const void *cur,
+		   const void *end, u32 field_count);
 
 static void *
 space_meta_save_v1(void *d, u32 *p_part_count, const struct space_meta *meta);
@@ -100,13 +101,11 @@ struct index_meta {
 };
 
 static u32
-index_meta_calc_load_size_v1(const void *d, u32 field_count);
+index_meta_calc_load_size_v1(u32 field_count);
 
 static const void *
-index_meta_load_v1(struct index_meta *meta, const void *d, u32 field_count);
-
-static const void *
-index_meta_load_v1(struct index_meta *meta, const void *d, u32 field_count);
+index_meta_load_v1(struct index_meta *meta, const void *cur, const void *end,
+		   u32 field_count);
 
 static void *
 index_meta_save_v1(void *d, u32 *p_part_count,const struct index_meta *meta);
@@ -256,13 +255,11 @@ space_delete(struct space *space)
 }
 
 static u32
-space_meta_calc_load_size_v1(const void *d, u32 field_count)
+space_meta_calc_load_size_v1(u32 field_count)
 {
 	if ((field_count - 4) % 2 != 0) {
 		raise_meta_error("invalid field count");
 	}
-
-	(void) d;
 
 	u32 field_def_count = (field_count - 4) / 2;
 	return sizeof(struct space_meta) + field_def_count *
@@ -281,8 +278,8 @@ space_meta_calc_save_size_v1(const struct space_meta *meta)
 }
 
 static const void *
-space_meta_load_v1(struct space_meta *meta,
-		   const void *d, u32 field_count)
+space_meta_load_v1(struct space_meta *meta, const void *cur,
+		   const void *end, u32 field_count)
 {
 	if ((field_count - 4) % 2 != 0) {
 		raise_meta_error("invalid field count");
@@ -290,10 +287,10 @@ space_meta_load_v1(struct space_meta *meta,
 
 	const void *name = NULL;
 	u32 name_len;
-	d = load_field_u32(d, &meta->space_no);
-	d = load_field_str(d, &name, &name_len);
-	d = load_field_u32(d, &meta->arity);
-	d = load_field_u32(d, &meta->flags);
+	meta->space_no = pick_field_u32(&cur, end);
+	name = pick_field_str(&cur, end, &name_len);
+	meta->arity = pick_field_u32(&cur, end);
+	meta->flags = pick_field_u32(&cur, end);
 
 	if (name_len + varint32_sizeof(name_len) + 1 >=
 			BOX_SPACE_NAME_MAXLEN) {
@@ -302,18 +299,16 @@ space_meta_load_v1(struct space_meta *meta,
 
 	assert(name_len + varint32_sizeof(name_len) < BOX_SPACE_NAME_MAXLEN);
 	memset(meta->name, 0, sizeof(meta->name));
-	save_field_str(meta->name, name, name_len);
+	pack_field_str(meta->name, name, name_len);
 
 	meta->max_fieldno = 0;
 	meta->field_defs_count = (field_count - 4) / 2;
 	for (u32 i = 0; i < meta->field_defs_count; i++) {
 		/* field no */
-		u32 field_no;
-		d = load_field_u32(d, &field_no);
+		u32 field_no = pick_field_u32(&cur, end);
 
 		/* field type */
-		u32 field_type;
-		d = load_field_u32(d, &field_type);
+		u32 field_type = pick_field_u32(&cur, end);
 
 		if (meta->max_fieldno < field_no + 1) {
 			meta->max_fieldno = field_no + 1;
@@ -353,7 +348,7 @@ space_meta_load_v1(struct space_meta *meta,
 				meta->field_defs[i].field_type;
 	}
 
-	return d;
+	return cur;
 }
 
 static void *
@@ -362,13 +357,13 @@ space_meta_save_v1(void *d, u32 *p_part_count, const struct space_meta *meta)
 	const void *name = meta->name;
 	u32 name_len = load_varint32(&name);
 
-	d = save_field_u32(d, meta->space_no);
-	d = save_field_str(d, name, name_len);
-	d = save_field_u32(d, meta->arity);
-	d = save_field_u32(d, meta->flags);
+	d = pack_field_u32(d, meta->space_no);
+	d = pack_field_str(d, name, name_len);
+	d = pack_field_u32(d, meta->arity);
+	d = pack_field_u32(d, meta->flags);
 	for (u32 i = 0; i < meta->field_defs_count; i++) {
-		d = save_field_u32(d, meta->field_defs[i].field_no);
-		d = save_field_u32(d, meta->field_defs[i].field_type);
+		d = pack_field_u32(d, meta->field_defs[i].field_no);
+		d = pack_field_u32(d, meta->field_defs[i].field_type);
 	}
 
 	*p_part_count = 4 + 2 * meta->field_defs_count;
@@ -380,11 +375,13 @@ static struct space_meta *
 space_meta_from_tuple(const struct tuple *tuple)
 {
 	struct space_meta *meta;
-	const void *d = tuple->data;
-	u32 m_size = space_meta_calc_load_size_v1(d, tuple->field_count);
+	const void *cur = tuple->data;
+	const void *end = tuple->data + tuple->bsize;
+	u32 m_size = space_meta_calc_load_size_v1(tuple->field_count);
+
 	meta = p0alloc(fiber->gc_pool, m_size);
-	d = space_meta_load_v1(meta, d, tuple->field_count);
-	assert (d = tuple->data + tuple->bsize);
+	cur = space_meta_load_v1(meta, cur, end, tuple->field_count);
+	assert (cur == end);
 	return meta;
 }
 
@@ -393,17 +390,16 @@ space_meta_to_tuple(const struct space_meta *meta)
 {
 	u32 size = space_meta_calc_save_size_v1(meta);
 	struct tuple *tuple = tuple_alloc(size);
-	void *d = tuple->data;
-	d = space_meta_save_v1(d, &tuple->field_count, meta);
-	assert(d = tuple->data + tuple->bsize);
+	void *cur = tuple->data;
+	void *end = tuple->data + tuple->bsize;
+	cur = space_meta_save_v1(cur, &tuple->field_count, meta);
+	assert(cur = end);
 	return tuple;
 }
 
 static u32
-index_meta_calc_load_size_v1(const void *d, u32 field_count)
+index_meta_calc_load_size_v1(u32 field_count)
 {
-	(void) d;
-
 	u32 fields_count = (field_count - 5);
 	return sizeof(struct index_meta) + fields_count * sizeof(u32);
 }
@@ -415,23 +411,21 @@ index_meta_calc_save_size_v1(const struct index_meta *meta)
 	u32 name_len = load_varint32(&name);
 
 	return name_len + varint32_sizeof(name_len) +
-			4 * (varint32_sizeof(sizeof(u32)) + sizeof(u32))+
-			meta->part_count * sizeof(*meta->parts);
+			(varint32_sizeof(sizeof(u32)) + sizeof(u32)) *
+			(4 + meta->part_count);
 }
 
 static const void *
-index_meta_load_v1(struct index_meta *meta, const void *d, u32 field_count)
+index_meta_load_v1(struct index_meta *meta, const void *cur, const void *end,
+		   u32 field_count)
 {
 	const void *name = NULL;
 	u32 name_len;
-	d = load_field_u32(d, &meta->space_no);
-	d = load_field_u32(d, &meta->index_no);
-	d = load_field_str(d, &name, &name_len);
-	u32 type = 0;
-	d = load_field_u32(d, &type);
-	meta->type = type;
-	u32 is_unique;
-	d = load_field_u32(d, &is_unique);
+	meta->space_no = pick_field_u32(&cur, end);
+	meta->index_no = pick_field_u32(&cur, end);
+	name = pick_field_str(&cur, end, &name_len);
+	meta->type = pick_field_u32(&cur, end);
+	u32 is_unique = pick_field_u32(&cur, end);
 	meta->is_unique = (is_unique != 0);
 
 	if (name_len + varint32_sizeof(name_len) + 1 >=
@@ -442,14 +436,13 @@ index_meta_load_v1(struct index_meta *meta, const void *d, u32 field_count)
 
 	assert(name_len + varint32_sizeof(name_len) < BOX_SPACE_NAME_MAXLEN);
 	memset(meta->name, 0, sizeof(meta->name));
-	save_field_str(meta->name, name, name_len);
+	pack_field_str(meta->name, name, name_len);
 
 	meta->max_fieldno = 0;
 	meta->part_count = (field_count - 5);
 	for (u32 part = 0; part < meta->part_count; part++) {
 		/* field no */
-		u32 field_no;
-		d = load_field_u32(d, &field_no);
+		u32 field_no = pick_field_u32(&cur, end);
 
 		if (meta->max_fieldno < field_no + 1) {
 			meta->max_fieldno = field_no + 1;
@@ -464,7 +457,7 @@ index_meta_load_v1(struct index_meta *meta, const void *d, u32 field_count)
 				 meta->space_no, meta->index_no);
 	}
 
-	return d;
+	return cur;
 }
 
 static void *
@@ -473,13 +466,13 @@ index_meta_save_v1(void *d, u32 *p_field_count, const struct index_meta *meta)
 	const void *name = meta->name;
 	u32 name_len = load_varint32(&name);
 
-	d = save_field_u32(d, meta->space_no);
-	d = save_field_u32(d, meta->index_no);
-	d = save_field_str(d, name, name_len);
-	d = save_field_u32(d, meta->type);
-	d = save_field_u32(d, meta->is_unique);
+	d = pack_field_u32(d, meta->space_no);
+	d = pack_field_u32(d, meta->index_no);
+	d = pack_field_str(d, name, name_len);
+	d = pack_field_u32(d, meta->type);
+	d = pack_field_u32(d, meta->is_unique);
 	for (u32 i = 0; i < meta->part_count; i++) {
-		d = save_field_u32(d, meta->parts[i].field_no);
+		d = pack_field_u32(d, meta->parts[i].field_no);
 	}
 
 	*p_field_count = 5 + meta->part_count;
@@ -491,11 +484,12 @@ static struct index_meta *
 index_meta_from_tuple(const struct tuple *tuple)
 {
 	struct index_meta *meta;
-	const void *d = tuple->data;
-	u32 m_size = index_meta_calc_load_size_v1(d, tuple->field_count);
+	const void *cur = tuple->data;
+	const void *end = tuple->data + tuple->bsize;
+	u32 m_size = index_meta_calc_load_size_v1(tuple->field_count);
 	meta = p0alloc(fiber->gc_pool, m_size);
-	d = index_meta_load_v1(meta, d, tuple->field_count);
-	assert (d = tuple->data + tuple->bsize);
+	cur = index_meta_load_v1(meta, cur, end, tuple->field_count);
+	assert (cur = end);
 	return meta;
 }
 
@@ -569,7 +563,7 @@ space_sysspace_before(struct space_trigger *trigger, struct space *sysspace,
 		Index *sysindex_pk = index_find_by_no(sysindex, 0);
 
 		char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
-		save_field_u32(space_key, space_meta->space_no);
+		pack_field_u32(space_key, space_meta->space_no);
 		struct iterator *it = [sysindex_pk allocIterator];
 		@try {
 			[sysindex_pk initIterator: it :ITER_EQ :space_key :1];
@@ -728,7 +722,7 @@ space_sysindex_before(struct space_trigger *trigger, struct space *sysindex,
 	Index *sysindex_pk = index_find_by_no(sysindex, 0);
 
 	char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
-	save_field_u32(space_key, space_no);
+	pack_field_u32(space_key, space_no);
 
 	/*
 	 * Get metadata for space
@@ -846,7 +840,7 @@ space_init_system(void)
 				sizeof(*sysspace_meta) + 4 *
 				sizeof(*sysspace_meta->field_defs));
 	sysspace_meta->space_no = BOX_SYSSPACE_NO;
-	save_field_str(sysspace_meta->name, BOX_SYSSPACE_NAME,
+	pack_field_str(sysspace_meta->name, BOX_SYSSPACE_NAME,
 		       strlen(BOX_SYSSPACE_NAME));
 	sysspace_meta->arity = 0;
 	sysspace_meta->flags = 0;
@@ -870,7 +864,7 @@ space_init_system(void)
 
 	sysspace_idx_metas[0]->space_no = BOX_SYSSPACE_NO;
 	sysspace_idx_metas[0]->index_no = 0;
-	save_field_str(sysspace_idx_metas[0]->name, "pk", strlen("pk"));
+	pack_field_str(sysspace_idx_metas[0]->name, "pk", strlen("pk"));
 	sysspace_idx_metas[0]->type = TREE;
 	sysspace_idx_metas[0]->is_unique = true;
 	sysspace_idx_metas[0]->max_fieldno = 1;
@@ -883,7 +877,7 @@ space_init_system(void)
 
 	sysspace_idx_metas[1]->space_no = BOX_SYSSPACE_NO;
 	sysspace_idx_metas[1]->index_no = 1;
-	save_field_str(sysspace_idx_metas[1]->name, "name", strlen("name"));
+	pack_field_str(sysspace_idx_metas[1]->name, "name", strlen("name"));
 	sysspace_idx_metas[1]->type = TREE;
 	sysspace_idx_metas[1]->is_unique = true;
 	sysspace_idx_metas[1]->max_fieldno = 2;
@@ -897,7 +891,7 @@ space_init_system(void)
 				sizeof(*sysindex_meta) + 5 *
 				sizeof(*sysindex_meta->field_defs));
 	sysindex_meta->space_no = BOX_SYSINDEX_NO;
-	save_field_str(sysindex_meta->name, BOX_SYSINDEX_NAME,
+	pack_field_str(sysindex_meta->name, BOX_SYSINDEX_NAME,
 		       strlen(BOX_SYSINDEX_NAME));
 	sysindex_meta->arity = 0;
 	sysindex_meta->max_fieldno = 5;
@@ -923,7 +917,7 @@ space_init_system(void)
 
 	sysindex_idx_metas[0]->space_no = BOX_SYSINDEX_NO;
 	sysindex_idx_metas[0]->index_no = 0;
-	save_field_str(sysindex_idx_metas[0]->name, "pk", strlen("pk"));
+	pack_field_str(sysindex_idx_metas[0]->name, "pk", strlen("pk"));
 	sysindex_idx_metas[0]->type = TREE;
 	sysindex_idx_metas[0]->is_unique = true;
 	sysindex_idx_metas[0]->max_fieldno = 2;
@@ -937,7 +931,7 @@ space_init_system(void)
 
 	sysindex_idx_metas[1]->space_no = BOX_SYSINDEX_NO;
 	sysindex_idx_metas[1]->index_no = 1;
-	save_field_str(sysindex_idx_metas[1]->name, "name", strlen("name"));
+	pack_field_str(sysindex_idx_metas[1]->name, "name", strlen("name"));
 	sysindex_idx_metas[1]->type = TREE;
 	sysindex_idx_metas[1]->is_unique = true;
 	sysindex_idx_metas[1]->max_fieldno = 3;
@@ -1065,16 +1059,7 @@ space_init_system(void)
 		space_recovery_next(sysindex, sysindex_idx_tuple_1);
 	} @catch(tnt_Exception *e) {
 		[e log];
-		tuple_free(sysspace_tuple);
-		tuple_free(sysspace_idx_tuple_0);
-		tuple_free(sysspace_idx_tuple_1);
-		tuple_free(sysindex_tuple);
-		tuple_free(sysindex_idx_tuple_0);
-		tuple_free(sysindex_idx_tuple_1);
-
-		space_cache_rollback(BOX_SYSSPACE_NO);
-		space_cache_rollback(BOX_SYSINDEX_NO);
-		@throw;
+		panic("Cannot init system spaces");
 	}
 
 	space_cache_commit(BOX_SYSSPACE_NO);
@@ -1164,7 +1149,7 @@ static struct space *
 space_cache_get(u32 space_no)
 {
 	struct mh_i32ptr_node_t no_node = { .key = space_no };
-	mh_int_t pos = mh_i32ptr_get(spaces_by_no, &no_node, NULL, NULL);
+	mh_int_t pos = mh_i32ptr_get(spaces_by_no, &no_node, NULL);
 	if (pos != mh_end(spaces_by_no)) {
 		return mh_i32ptr_node(spaces_by_no, pos)->val;
 	}
@@ -1179,8 +1164,7 @@ space_cache_put(struct space *space)
 	no_node.key = space->no;
 	no_node.val = space;
 
-	uint32_t pos = mh_i32ptr_replace(spaces_by_no, &no_node, NULL,
-					NULL, NULL);
+	uint32_t pos = mh_i32ptr_put(spaces_by_no, &no_node, NULL, NULL);
 	if (pos == mh_end(spaces_by_no)) {
 		tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
 			  sizeof(no_node), "spaces_by_no", "space");
@@ -1303,7 +1287,7 @@ space_cache_update2(struct space *old_space, struct space *new_space,
 	 */
 	const void *name = space_meta->name;
 	u32 name_len = load_varint32(&name);
-	save_field_str(new_space->name, name, name_len);
+	pack_field_str(new_space->name, name, name_len);
 
 	/*
 	 * Set arity
@@ -1443,8 +1427,7 @@ space_cache_update2(struct space *old_space, struct space *new_space,
 		struct mh_i32ptr_node_t no_node;
 		no_node.key = space_meta->space_no;
 		no_node.val = new_space;
-		uint32_t pos = mh_i32ptr_replace(spaces_by_no, &no_node,
-						 NULL, NULL, NULL);
+		uint32_t pos = mh_i32ptr_put(spaces_by_no, &no_node, NULL, NULL);
 		if (pos == mh_end(spaces_by_no)) {
 			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
 				  sizeof(no_node), "spaces_by_no", "space");
@@ -1459,7 +1442,7 @@ space_cache_update(struct space_meta *space_meta, size_t index_count,
 {
 	struct space *old_space = NULL;
 	struct mh_i32ptr_node_t no_node = { .key = space_meta->space_no };
-	mh_int_t pos = mh_i32ptr_get(spaces_by_no, &no_node, NULL, NULL);
+	mh_int_t pos = mh_i32ptr_get(spaces_by_no, &no_node, NULL);
 	if (pos != mh_end(spaces_by_no)) {
 		old_space = mh_i32ptr_node(spaces_by_no, pos)->val;
 	}
@@ -1650,8 +1633,10 @@ space_find_by_name(const void *name)
 		tnt_raise(ClientError, :ER_NO_SUCH_SPACE, name_buf);
 	}
 
-	u32 space_no;
-	load_field_u32(space_tuple->data, &space_no);
+	const void *data = space_tuple->data;
+	const void *end = space_tuple->data + space_tuple->bsize;
+	u32 space_no = pick_field_u32(&data, end);
+
 	return space_find_by_no(space_no);
 }
 
@@ -1832,9 +1817,9 @@ space_recovery_begin_build(void)
 		struct tuple *tuple;
 		[sysspace_pk initIterator: it :ITER_ALL :NULL :0];
 		while ((tuple = it->next(it)) != NULL) {
-			const void *d = tuple->data;
-			u32 space_no;
-			load_field_u32(d, &space_no);
+			const void *data = tuple->data;
+			const void *end = tuple->data + tuple->bsize;
+			u32 space_no = pick_field_u32(&data, end);
 			struct space *space = space_find_by_no(space_no);
 
 			if (space_no == BOX_SYSSPACE_NO ||
@@ -1862,9 +1847,9 @@ space_recovery_end_build(void)
 
 		struct tuple *tuple = NULL;
 		while ((tuple = it->next(it)) != NULL) {
-			const void *d = tuple->data;
-			u32 space_no;
-			load_field_u32(d, &space_no);
+			const void *data = tuple->data;
+			const void *end = tuple->data + tuple->bsize;
+			u32 space_no = pick_field_u32(&data, end);
 			struct space *space = space_find_by_no(space_no);
 
 			if (space_no == BOX_SYSSPACE_NO ||
@@ -1995,25 +1980,25 @@ space_config_convert_space(tarantool_cfg_space *cfg_space, u32 space_no)
 
 	void *d = tuple->data;
 	/* space_no */
-	d = save_field_u32(d, space_no);
+	d = pack_field_u32(d, space_no);
 
 	/* name */
-	d = save_field_str(d, name_buf, name_len);
+	d = pack_field_str(d, name_buf, name_len);
 
 	/* arity */
 	u32 arity = (cfg_space->cardinality != -1) ? cfg_space->cardinality : 0;
-	d = save_field_u32(d, arity);
+	d = pack_field_u32(d, arity);
 
 	u32 flags = 0;
-	d = save_field_u32(d, flags);
+	d = pack_field_u32(d, flags);
 
 	for (u32 fieldno = 0; fieldno < max_fieldno; fieldno++) {
 		u32 type = field_types[fieldno];
 		if (type == UNKNOWN)
 			continue;
 
-		d = save_field_u32(d, fieldno);
-		d = save_field_u32(d, type);
+		d = pack_field_u32(d, fieldno);
+		d = pack_field_u32(d, type);
 		defined_fieldno--;
 	}
 
@@ -2073,22 +2058,22 @@ space_config_convert_index(tarantool_cfg_space_index *cfg_index,
 
 	void *d = tuple->data;
 	/* space_no */
-	d = save_field_u32(d, space_no);
+	d = pack_field_u32(d, space_no);
 
 	/* index_no */
-	d = save_field_u32(d, index_no);
+	d = pack_field_u32(d, index_no);
 
 	/* name */
-	d = save_field_str(d, name_buf, name_len);
+	d = pack_field_str(d, name_buf, name_len);
 
 	/* type */
 	u32 type = STR2ENUM(index_type, cfg_index->type);
 	assert (type < index_type_MAX);
-	d = save_field_u32(d, type);
+	d = pack_field_u32(d, type);
 
 	/* unique */
 	u32 unique = (cfg_index->unique) ? 1 : 0;
-	d = save_field_u32(d, unique);
+	d = pack_field_u32(d, unique);
 
 	for (u32 part = 0; cfg_index->key_field[part] != NULL; ++part) {
 		typeof(cfg_index->key_field[part]) cfg_key =
@@ -2101,7 +2086,7 @@ space_config_convert_index(tarantool_cfg_space_index *cfg_index,
 
 		u32 fieldno = cfg_key->fieldno;
 		assert (fieldno < BOX_FIELD_MAX);
-		d = save_field_u32(d, fieldno);
+		d = pack_field_u32(d, fieldno);
 
 		defined_fieldno--;
 	}
@@ -2138,33 +2123,33 @@ space_config_convert_space_memcached(u32 memcached_space)
 
 	void *d = tuple->data;
 	/* space_no */
-	d = save_field_u32(d, memcached_space);
+	d = pack_field_u32(d, memcached_space);
 
 	/* name */
-	d = save_field_str(d, name, name_len);
+	d = pack_field_str(d, name, name_len);
 
 	/* arity */
 	u32 arity = 4;
-	d = save_field_u32(d, arity);
+	d = pack_field_u32(d, arity);
 
 	/* flags */
 	u32 flags = 0;
-	d = save_field_u32(d, flags);
+	d = pack_field_u32(d, flags);
 
 	u32 field_no = 0;
 	u32 field_type = STRING;
-	d = save_field_u32(d, field_no);
-	d = save_field_u32(d, field_type);
+	d = pack_field_u32(d, field_no);
+	d = pack_field_u32(d, field_type);
 
 	field_no = 2;
 	field_type = STRING;
-	d = save_field_u32(d, field_no);
-	d = save_field_u32(d, field_type);
+	d = pack_field_u32(d, field_no);
+	d = pack_field_u32(d, field_type);
 
 	field_no = 3;
 	field_type = STRING;
-	d = save_field_u32(d, field_no);
-	d = save_field_u32(d, field_type);
+	d = pack_field_u32(d, field_no);
+	d = pack_field_u32(d, field_type);
 
 	assert (tuple->data + tuple->bsize == d);
 #if defined(DEBUG)
@@ -2198,25 +2183,25 @@ space_config_convert_index_memcached(u32 memcached_space)
 
 	void *d = tuple->data;
 	/* space_no */
-	d = save_field_u32(d, memcached_space);
+	d = pack_field_u32(d, memcached_space);
 
 	/* index_no */
 	u32 index_no = 0;
-	d = save_field_u32(d, index_no);
+	d = pack_field_u32(d, index_no);
 
 	/* name */
-	d = save_field_str(d, name, name_len);
+	d = pack_field_str(d, name, name_len);
 
 	/* type */
 	u32 type = HASH;
-	d = save_field_u32(d, type);
+	d = pack_field_u32(d, type);
 
 	/* is_unique */
 	u32 is_unique = 1;
-	d = save_field_u32(d, is_unique);
+	d = pack_field_u32(d, is_unique);
 
 	u32 field_no = 0;
-	d = save_field_u32(d, field_no);
+	d = pack_field_u32(d, field_no);
 
 	assert (tuple->data + tuple->bsize == d);
 #if defined(DEBUG)
@@ -2496,6 +2481,21 @@ check_spaces(struct tarantool_cfg *conf)
 				break;
 			case TREE:
 				/* extra check for tree index not needed */
+				break;
+			case BITSET:
+				/* check bitset index */
+				/* bitset index must has single-field key */
+				if (key_part_count != 1) {
+					out_warning(0, "(space = %zu index = %zu) "
+						    "bitset index must has a single-field key", i, j);
+					return -1;
+				}
+				/* bitset index must not be unique */
+				if (index->unique) {
+					out_warning(0, "(space = %zu index = %zu) "
+						    "bitset index must be non-unique", i, j);
+					return -1;
+				}
 				break;
 			default:
 				assert(false);

@@ -178,9 +178,10 @@ box_lua_space_put(struct lua_State *L, struct space *sp)
 	if (!lua_istable(L, -1))
 		return;
 
-	const void *name = NULL;
-	u32 name_len = 0;
-	load_field_str(sp->name, &name, &name_len);
+	const void *data = sp->name;
+	const void *end = sp->name + BOX_SPACE_NAME_MAXLEN;
+	u32 name_len;
+	const void *name = pick_field_str(&data, end, &name_len);
 	lua_pushlstring(L, name, name_len);
 
 	lbox_pushspace(L, sp);
@@ -205,9 +206,10 @@ box_lua_space_del(struct lua_State *L, struct space *sp)
 	lua_pushnil(L);
 	lua_rawseti(L, -2, sp->no);
 
-	const void *name;
+	const void *data = sp->name;
+	const void *end = sp->name + BOX_SPACE_NAME_MAXLEN;
 	u32 name_len;
-	load_field_str(sp->name, &name, &name_len);
+	const void *name = pick_field_str(&data, end, &name_len);
 	if (name_len == 0) {
 		lua_pop(L, 2);
 		return;

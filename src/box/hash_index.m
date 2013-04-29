@@ -296,7 +296,7 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 
 - (void) reserve: (u32) n_tuples
 {
-	mh_i32ptr_reserve(int_hash, n_tuples, NULL, NULL);
+	mh_i32ptr_reserve(int_hash, n_tuples, NULL);
 }
 
 - (void) free
@@ -321,6 +321,14 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	return mh_size(int_hash);
 }
 
+- (struct tuple *) random: (u32) rnd
+{
+	mh_int_t k = mh_i32ptr_random(int_hash, rnd);
+	if (k != mh_end(int_hash))
+		return mh_i32ptr_node(int_hash, k)->val;
+	return NULL;
+}
+
 - (struct tuple *) findByKey: (const void *) key :(u32) part_count
 {
 	assert(key_def->is_unique);
@@ -330,7 +338,7 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 
 	struct tuple *ret = NULL;
 	struct mh_i32ptr_node_t node = int32_key_to_node(key);
-	mh_int_t k = mh_i32ptr_get(int_hash, &node, NULL, NULL);
+	mh_int_t k = mh_i32ptr_get(int_hash, &node, NULL);
 	if (k != mh_end(int_hash))
 		ret = mh_i32ptr_node(int_hash, k)->val;
 #ifdef DEBUG
@@ -349,12 +357,12 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	if (new_tuple) {
 		struct mh_i32ptr_node_t *dup_node = &old_node;
 		new_node = int32_tuple_to_node(new_tuple, key_def);
-		mh_int_t pos = mh_i32ptr_replace(int_hash, &new_node,
-						 &dup_node, NULL, NULL);
+		mh_int_t pos = mh_i32ptr_put(int_hash, &new_node,
+					     &dup_node, NULL);
 
 		ERROR_INJECT(ERRINJ_INDEX_ALLOC,
 		{
-			mh_i32ptr_del(int_hash, pos, NULL, NULL);
+			mh_i32ptr_del(int_hash, pos, NULL);
 			pos = mh_end(int_hash);
 		});
 
@@ -366,10 +374,10 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 		errcode = replace_check_dup(old_tuple, dup_tuple, mode);
 
 		if (errcode) {
-			mh_i32ptr_remove(int_hash, &new_node, NULL, NULL);
+			mh_i32ptr_remove(int_hash, &new_node, NULL);
 			if (dup_node) {
-				pos = mh_i32ptr_replace(int_hash, dup_node,
-							NULL, NULL, NULL);
+				pos = mh_i32ptr_put(int_hash, dup_node,
+						    NULL, NULL);
 				if (pos == mh_end(int_hash)) {
 					panic("Failed to allocate memory in "
 					      "recover of int hash");
@@ -382,7 +390,7 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	}
 	if (old_tuple) {
 		old_node = int32_tuple_to_node(old_tuple, key_def);
-		mh_i32ptr_remove(int_hash, &old_node, NULL, NULL);
+		mh_i32ptr_remove(int_hash, &old_node, NULL);
 	}
 	return old_tuple;
 }
@@ -400,7 +408,7 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 }
 
 - (void) initIterator: (struct iterator *) ptr :(enum iterator_type) type
-			:(void *) key :(u32) part_count
+			:(const void *) key :(u32) part_count
 {
 	assert(ptr->free == hash_iterator_free);
 	struct hash_i32_iterator *it = (struct hash_i32_iterator *) ptr;
@@ -412,7 +420,7 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 			check_key_parts(key_def, part_count,
 					traits->allows_partial_key);
 			node = int32_key_to_node(key);
-			it->h_pos = mh_i32ptr_get(int_hash, &node, NULL, NULL);
+			it->h_pos = mh_i32ptr_get(int_hash, &node, NULL);
 			it->base.next = hash_iterator_i32_ge;
 			break;
 		}
@@ -425,7 +433,7 @@ int32_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 		check_key_parts(key_def, part_count,
 				traits->allows_partial_key);
 		node = int32_key_to_node(key);
-		it->h_pos = mh_i32ptr_get(int_hash, &node, NULL, NULL);
+		it->h_pos = mh_i32ptr_get(int_hash, &node, NULL);
 		it->base.next = hash_iterator_i32_eq;
 		break;
 	default:
@@ -462,7 +470,7 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 @implementation Hash64Index
 - (void) reserve: (u32) n_tuples
 {
-	mh_i64ptr_reserve(int64_hash, n_tuples, NULL, NULL);
+	mh_i64ptr_reserve(int64_hash, n_tuples, NULL);
 }
 
 - (void) free
@@ -486,6 +494,14 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	return mh_size(int64_hash);
 }
 
+- (struct tuple *) random: (u32) rnd
+{
+	mh_int_t k = mh_i64ptr_random(int64_hash, rnd);
+	if (k != mh_end(int64_hash))
+		return mh_i64ptr_node(int64_hash, k)->val;
+	return NULL;
+}
+
 - (struct tuple *) findByKey: (const void *) key :(u32) part_count
 {
 	assert(key_def->is_unique);
@@ -493,7 +509,7 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 
 	struct tuple *ret = NULL;
 	struct mh_i64ptr_node_t node = int64_key_to_node(key);
-	mh_int_t k = mh_i64ptr_get(int64_hash, &node, NULL, NULL);
+	mh_int_t k = mh_i64ptr_get(int64_hash, &node, NULL);
 	if (k != mh_end(int64_hash))
 		ret = mh_i64ptr_node(int64_hash, k)->val;
 #ifdef DEBUG
@@ -512,12 +528,12 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	if (new_tuple) {
 		struct mh_i64ptr_node_t *dup_node = &old_node;
 		new_node = int64_tuple_to_node(new_tuple, key_def);
-		mh_int_t pos = mh_i64ptr_replace(int64_hash, &new_node,
-						 &dup_node, NULL, NULL);
+		mh_int_t pos = mh_i64ptr_put(int64_hash, &new_node,
+					     &dup_node, NULL);
 
 		ERROR_INJECT(ERRINJ_INDEX_ALLOC,
 		{
-			mh_i64ptr_del(int64_hash, pos, NULL, NULL);
+			mh_i64ptr_del(int64_hash, pos, NULL);
 			pos = mh_end(int64_hash);
 		});
 		if (pos == mh_end(int64_hash)) {
@@ -528,10 +544,10 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 		errcode = replace_check_dup(old_tuple, dup_tuple, mode);
 
 		if (errcode) {
-			mh_i64ptr_remove(int64_hash, &new_node, NULL, NULL);
+			mh_i64ptr_remove(int64_hash, &new_node, NULL);
 			if (dup_node) {
-				pos = mh_i64ptr_replace(int64_hash, dup_node,
-							NULL, NULL, NULL);
+				pos = mh_i64ptr_put(int64_hash, dup_node,
+						    NULL, NULL);
 				if (pos == mh_end(int64_hash)) {
 					panic("Failed to allocate memory in "
 					      "recover of int64 hash");
@@ -544,7 +560,7 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	}
 	if (old_tuple) {
 		old_node = int64_tuple_to_node(old_tuple, key_def);
-		mh_i64ptr_remove(int64_hash, &old_node, NULL, NULL);
+		mh_i64ptr_remove(int64_hash, &old_node, NULL);
 	}
 	return old_tuple;
 }
@@ -563,7 +579,7 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 
 
 - (void) initIterator: (struct iterator *) ptr :(enum iterator_type) type
-			:(void *) key :(u32) part_count
+			:(const void *) key :(u32) part_count
 {
 	(void) part_count;
 	assert(ptr->free == hash_iterator_free);
@@ -576,7 +592,7 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 			check_key_parts(key_def, part_count,
 					traits->allows_partial_key);
 			node = int64_key_to_node(key);
-			it->h_pos = mh_i64ptr_get(int64_hash, &node, NULL, NULL);
+			it->h_pos = mh_i64ptr_get(int64_hash, &node, NULL);
 			it->base.next = hash_iterator_i64_ge;
 			break;
 		}
@@ -589,7 +605,7 @@ int64_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 		check_key_parts(key_def, part_count,
 				traits->allows_partial_key);
 		node = int64_key_to_node(key);
-		it->h_pos = mh_i64ptr_get(int64_hash, &node, NULL, NULL);
+		it->h_pos = mh_i64ptr_get(int64_hash, &node, NULL);
 		it->base.next = hash_iterator_i64_eq;
 		break;
 	default:
@@ -620,7 +636,7 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 @implementation HashStrIndex
 - (void) reserve: (u32) n_tuples
 {
-	mh_lstrptr_reserve(str_hash, n_tuples, NULL, NULL);
+	mh_lstrptr_reserve(str_hash, n_tuples, NULL);
 }
 
 - (void) free
@@ -644,6 +660,14 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	return mh_size(str_hash);
 }
 
+- (struct tuple *) random: (u32) rnd
+{
+	mh_int_t k = mh_lstrptr_random(str_hash, rnd);
+	if (k != mh_end(str_hash))
+		return mh_lstrptr_node(str_hash, k)->val;
+	return NULL;
+}
+
 - (struct tuple *) findByKey: (const void *) key :(u32) part_count
 {
 	assert(key_def->is_unique);
@@ -651,7 +675,7 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 
 	struct tuple *ret = NULL;
 	const struct mh_lstrptr_node_t node = { .key = key };
-	mh_int_t k = mh_lstrptr_get(str_hash, &node, NULL, NULL);
+	mh_int_t k = mh_lstrptr_get(str_hash, &node, NULL);
 	if (k != mh_end(str_hash))
 		ret = mh_lstrptr_node(str_hash, k)->val;
 #ifdef DEBUG
@@ -672,12 +696,12 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	if (new_tuple) {
 		struct mh_lstrptr_node_t *dup_node = &old_node;
 		new_node = lstrptr_tuple_to_node(new_tuple, key_def);
-		mh_int_t pos = mh_lstrptr_replace(str_hash, &new_node,
-						  &dup_node, NULL, NULL);
+		mh_int_t pos = mh_lstrptr_put(str_hash, &new_node,
+					      &dup_node, NULL);
 
 		ERROR_INJECT(ERRINJ_INDEX_ALLOC,
 		{
-			mh_lstrptr_del(str_hash, pos, NULL, NULL);
+			mh_lstrptr_del(str_hash, pos, NULL);
 			pos = mh_end(str_hash);
 		});
 
@@ -689,10 +713,10 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 		errcode = replace_check_dup(old_tuple, dup_tuple, mode);
 
 		if (errcode) {
-			mh_lstrptr_remove(str_hash, &new_node, NULL, NULL);
+			mh_lstrptr_remove(str_hash, &new_node, NULL);
 			if (dup_node) {
-				pos = mh_lstrptr_replace(str_hash, dup_node,
-							 NULL, NULL, NULL);
+				pos = mh_lstrptr_put(str_hash, dup_node,
+						     NULL, NULL);
 				if (pos == mh_end(str_hash)) {
 					panic("Failed to allocate memory in "
 					      "recover of str hash");
@@ -705,7 +729,7 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 	}
 	if (old_tuple) {
 		old_node = lstrptr_tuple_to_node(old_tuple, key_def);
-		mh_lstrptr_remove(str_hash, &old_node, NULL, NULL);
+		mh_lstrptr_remove(str_hash, &old_node, NULL);
 	}
 	return old_tuple;
 }
@@ -724,7 +748,7 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 
 - (void) initIterator: (struct iterator *) ptr
 			:(enum iterator_type) type
-			:(void *) key :(u32) part_count
+			:(const void *) key :(u32) part_count
 {
 	(void) part_count;
 
@@ -738,7 +762,7 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 			check_key_parts(key_def, part_count,
 					traits->allows_partial_key);
 			node.key = key;
-			it->h_pos = mh_lstrptr_get(str_hash, &node, NULL, NULL);
+			it->h_pos = mh_lstrptr_get(str_hash, &node, NULL);
 			it->base.next = hash_iterator_lstr_ge;
 			break;
 		}
@@ -751,7 +775,7 @@ lstrptr_tuple_to_node(struct tuple *tuple, struct key_def *key_def)
 		check_key_parts(key_def, part_count,
 				traits->allows_partial_key);
 		node.key = key;
-		it->h_pos = mh_lstrptr_get(str_hash, &node, NULL, NULL);
+		it->h_pos = mh_lstrptr_get(str_hash, &node, NULL);
 		it->base.next = hash_iterator_lstr_eq;
 		break;
 	default:

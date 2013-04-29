@@ -3,6 +3,14 @@
 #
 enable_tnt_compile_flags()
 
+include_directories(${LIBEV_INCLUDE_DIR})
+include_directories(${LIBEIO_INCLUDE_DIR})
+include_directories(${LIBCORO_INCLUDE_DIR})
+include_directories(${LIBGOPT_INCLUDE_DIR})
+if (ENABLE_BUNDLED_LIBOBJC)
+    include_directories(${LIBOBJC_INCLUDE_DIR})
+endif()
+
 # Require pthread globally if compiling with GCC
 if (CMAKE_COMPILER_IS_GNUCC)
     add_compile_flags("C;CXX" "-pthread")
@@ -86,7 +94,6 @@ set (common_sources
      exception.m
      errcode.c
      errinj.m
-     latch.m
      fio.c
      crc32.c
      rope.c

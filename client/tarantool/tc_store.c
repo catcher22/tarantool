@@ -114,7 +114,7 @@ static int tc_store_printer(struct tnt_iter *i) {
 			return 0;
 	}
 	if (tc.opt.lsn_to_set) {
-		if (s->log.current.hdr.lsn >= tc.opt.lsn_to)
+		if (s->log.current.hdr.lsn > tc.opt.lsn_to)
 			return 0;
 	}
 	((tc_printerf_t)tc.opt.printer)(&s->log.current.hdr, r);
@@ -123,7 +123,23 @@ static int tc_store_printer(struct tnt_iter *i) {
 
 static int tc_snapshot_printer(struct tnt_iter *i) {
 	struct tnt_tuple *tu = TNT_ISTORAGE_TUPLE(i);
-	tc_print_tuple(tu);
+	struct tnt_stream_snapshot *ss =
+		TNT_SSNAPSHOT_CAST(TNT_ISTORAGE_STREAM(i));
+	if (tc.opt.raw) {
+		if (tc.opt.raw_with_headers) {
+			fwrite(&tnt_log_marker_v11,
+			       sizeof(tnt_log_marker_v11), 1, stdout);
+		}
+		fwrite(&ss->log.current.row_snap,
+		       sizeof(ss->log.current.row_snap), 1, stdout);
+		fwrite(tu->data, tu->size, 1, stdout);
+	} else {
+		tc_printf("tag: %"PRIu16", cookie: %"PRIu64", space: %"PRIu32"\n",
+			  ss->log.current.row_snap.tag,
+			  ss->log.current.row_snap.cookie,
+			  ss->log.current.row_snap.space);
+		tc_print_tuple(tu);
+	}
 	return 0;
 }
 
@@ -164,15 +180,36 @@ static int tc_store_foreach_snapshot(tc_iter_t cb) {
 
 int tc_store_cat(void)
 {
-	switch (tnt_log_guess((char*)tc.opt.file)) {
-	case TNT_LOG_SNAPSHOT:
-		return tc_store_foreach_snapshot(tc_snapshot_printer);
-	case TNT_LOG_XLOG:
-		return tc_store_foreach_xlog(tc_store_printer);
-	case TNT_LOG_NONE:
-		break;
+	enum tnt_log_type type = tnt_log_guess((char*)tc.opt.file);
+	if (type == TNT_LOG_NONE)
+		return 1;
+	int print_headers = tc.opt.raw && tc.opt.raw_with_headers;
+	if (print_headers) {
+		char *h = (type == TNT_LOG_SNAPSHOT ?
+		           TNT_LOG_MAGIC_SNAP : TNT_LOG_MAGIC_XLOG);
+		fputs(h, stdout);
+		fputs(TNT_LOG_VERSION, stdout);
+		fputs("\n", stdout);
 	}
-	return 1;
+	int rc;
+	switch (type) {
+	case TNT_LOG_SNAPSHOT:
+		rc = tc_store_foreach_snapshot(tc_snapshot_printer);
+		break;
+	case TNT_LOG_XLOG:
+		rc = tc_store_foreach_xlog(tc_store_printer);
+		break;
+	case TNT_LOG_NONE:
+		rc = 1;
+		break;
+	default:
+		return -1;
+	}
+	if (rc == 0 && print_headers) {
+		fwrite(&tnt_log_marker_eof_v11,
+		       sizeof(tnt_log_marker_eof_v11), 1, stdout);
+	}
+	return rc;
 }
 
 static int tc_store_resender(struct tnt_iter *i) {

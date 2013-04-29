@@ -55,7 +55,7 @@ void box_free(void);
  * change when entering/leaving read-only mode
  * (master->slave propagation).
  */
-typedef void (*box_process_func)(struct port *, u32, struct tbuf *);
+typedef void (*box_process_func)(struct port *, u32, const void *, u32);
 /** For read-write operations. */
 extern box_process_func box_process;
 /** For read-only port. */
@@ -72,10 +72,6 @@ i32 box_check_config(struct tarantool_cfg *conf);
  */
 i32 box_reload_config(struct tarantool_cfg *old_conf, struct tarantool_cfg *new_conf);
 void box_lua_load_cfg(struct lua_State *L);
-/**
- * Ehm, this is a hack, shouldn't be here.
- */
-int box_cat(const char *filename);
 /**
  * Iterate over all spaces and save them to the
  * snapshot file.

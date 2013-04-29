@@ -1,5 +1,6 @@
-#ifndef TARANTOOL_LATCH_H_INCLUDED
-#define TARANTOOL_LATCH_H_INCLUDED
+#ifndef TARANTOOL_BOX_INDEX_BITSET_H_INCLUDED
+#define TARANTOOL_BOX_INDEX_BITSET_H_INCLUDED
+
 /*
  * Redistribution and use in source and binary forms, with or
  * without modification, are permitted provided that the following
@@ -28,45 +29,22 @@
  * THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-#include <stdbool.h>
-
-struct fiber;
-
-/*
- * Internal implementation of a container for a mutex like object
- * with similar interface. It's used boolean variable because of
- * single threaded nature of tarantool. But it's rather simple to change
- * this variable to a mutex object to maintain multi threaded approach.
- */
-struct tnt_latch {
-	bool locked;
-
-	struct fiber *owner;
-};
 
 /**
- * Initialize the given latch.
- *
- * @param latch Latch to be initialized.
+ * @brief Objective C wrapper for bitset_index
+ * @see bitset/index.h
  */
-void tnt_latch_create(struct tnt_latch *latch);
-/**
- * Destroy the given latch.
- */
-void tnt_latch_destroy(struct tnt_latch *latch);
-/**
- * Set the latch to the locked state. If it's already locked
- * returns -1 value immediately otherwise returns 0.
- *
- * @param latch Latch to be locked.
- */
-int tnt_latch_trylock(struct tnt_latch *latch);
-/**
- * Unlock the locked latch.
- *
- * @param latch Latch to be unlocked.
- */
-void tnt_latch_unlock(struct tnt_latch *latch);
 
+#include "index.h"
+#include <lib/bitset/index.h>
 
-#endif /* TARANTOOL_LATCH_H_INCLUDED */
+struct bitset_index;
+struct bitset_expr;
+
+@interface BitsetIndex: Index {
+	@private
+	struct bitset_index index;
+}
+@end
+
+#endif /* TARANTOOL_BOX_INDEX_BITSET_H_INCLUDED */

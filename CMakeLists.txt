@@ -107,7 +107,7 @@ add_custom_target(TAGS COMMAND ctags -R --langmap=ObjectiveC:.m -e -f TAGS
 # Define PACKAGE_VERSION -- a string constant with tarantool version.
 #
 set (PACKAGE_VERSION "")
-execute_process (COMMAND ${GIT} describe HEAD
+execute_process (COMMAND ${GIT} describe --match "[1-9].*" HEAD
     OUTPUT_VARIABLE PACKAGE_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
     )
@@ -116,8 +116,8 @@ execute_process (COMMAND ${GIT} describe HEAD
 # out of source.
 #
 set (CPACK_PACKAGE_VERSION_MAJOR "1")
-set (CPACK_PACKAGE_VERSION_MINOR "4")
-set (CPACK_PACKAGE_VERSION_PATCH "8")
+set (CPACK_PACKAGE_VERSION_MINOR "5")
+set (CPACK_PACKAGE_VERSION_PATCH "0")
 if (PACKAGE_VERSION STREQUAL "")
     set (PACKAGE_VERSION
         "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
@@ -184,6 +184,16 @@ if (ENABLE_STATIC)
     add_compile_flags("C;CXX" "-static")
 endif()
 
+#
+# On CentOS the default gcc is way older than gcc 4.6, required
+# to compile Tarantool. To make the package compiled with gcc 4.6
+# usable on a system which has only gcc 4.1, statically link with
+# builtin libgcc by default.
+#
+if (CMAKE_COMPILER_IS_GNUCC AND NOT CMAKE_COMPILER_IS_CLANG)
+    add_compile_flags("C;CXX;OBJC;OBJCXX" "-static-libgcc")
+endif()
+
 ##
 ## Third-Party libraries
 ##
@@ -206,14 +216,17 @@ include(luajit)
 #
 # LibOBJC
 #
-option(ENABLE_BUNDLED_LIBOBJC "Enable building of the bundled libobjc" ON)
+set (ENABLE_BUNDLED_LIBOBJC_DEFAULT ON)
+if (TARGET_OS_DARWIN)
+    set (ENABLE_BUNDLED_LIBOBJC_DEFAULT OFF)
+endif()
+option(ENABLE_BUNDLED_LIBOBJC "Enable building of the bundled libobjc" ${ENABLE_BUNDLED_LIBOBJC_DEFAULT})
 
 if (ENABLE_BUNDLED_LIBOBJC)
     include(BuildLibOBJC)
     libobjc_build()
     add_dependencies(build_bundled_libs objc)
     set(HAVE_LIBOBJC_BUNDLED ON)
-    include_directories(${LIBOBJC_INCLUDE_DIR})
 else()
     if (CMAKE_COMPILER_IS_GNUCC)
         # Use compiler's objc library
@@ -241,7 +254,6 @@ set(ENABLE_BUNDLED_LIBEV ON)
 include(BuildLibEV)
 libev_build()
 add_dependencies(build_bundled_libs ev)
-include_directories(${LIBEV_INCLUDE_DIR})
 
 #
 # LibEIO
@@ -257,7 +269,6 @@ else()
     find_package(LibEIO)
 endif()
 
-include_directories(${LIBEIO_INCLUDE_DIR})
 
 #
 # LibCORO
@@ -274,7 +285,6 @@ set(ENABLE_BUNDLED_LIBCORO ON)
 include(BuildLibCORO)
 libcoro_build()
 add_dependencies(build_bundled_libs coro)
-include_directories(${LIBCORO_INCLUDE_DIR})
 
 if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "86" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "amd64")
     add_definitions("-DCORO_ASM")
@@ -289,8 +299,6 @@ endif()
 include(BuildLibGOPT)
 libgopt_build()
 add_dependencies(build_bundled_libs gopt)
-
-include_directories(${LIBGOPT_INCLUDE_DIR})
 
 #
 # Third-Party misc
@@ -312,7 +320,7 @@ add_subdirectory(doc)
 install (FILES README.md LICENSE doc/box-protocol.txt
          DESTINATION share/doc/tarantool)
 
-include (cmake/cpack.cmake)
+include (cmake/package.cmake)
 
 # tarantool info summary (used in server version output)
 #

@@ -47,12 +47,11 @@ session_create(int fd)
 		;
 
 	uint32_t sid = sid_max;
-	int ret;
 	struct mh_i32ptr_node_t node = {
 		.key = sid, .val =  (void *) (intptr_t) fd
 	};
 
-	mh_int_t k = mh_i32ptr_put(session_registry, &node, NULL, NULL, &ret);
+	mh_int_t k = mh_i32ptr_put(session_registry, &node, NULL, NULL);
 
 	if (k == mh_end(session_registry)) {
 		tnt_raise(ClientError, :ER_MEMORY_ISSUE,
@@ -69,8 +68,7 @@ session_create(int fd)
 			session_on_connect.trigger(param);
 		} @catch (tnt_Exception *e) {
 			fiber_set_sid(fiber, 0);
-			mh_i32ptr_remove(session_registry, &node,
-					 NULL, NULL);
+			mh_i32ptr_remove(session_registry, &node, NULL);
 			@throw;
 		}
 	}
@@ -95,14 +93,14 @@ session_destroy(uint32_t sid)
 		}
 	}
 	struct mh_i32ptr_node_t node = { .key = sid };
-	mh_i32ptr_remove(session_registry, &node, NULL, NULL);
+	mh_i32ptr_remove(session_registry, &node, NULL);
 }
 
 int
 session_fd(uint32_t sid)
 {
 	struct mh_i32ptr_node_t node = { .key = sid };
-	mh_int_t k = mh_i32ptr_get(session_registry, &node, NULL, NULL);
+	mh_int_t k = mh_i32ptr_get(session_registry, &node, NULL);
 	return k == mh_end(session_registry) ?
 		-1 : (intptr_t) mh_i32ptr_node(session_registry, k)->val;
 }

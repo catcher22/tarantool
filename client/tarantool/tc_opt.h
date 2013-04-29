@@ -55,6 +55,8 @@ struct tc_opt {
 	int space;
 	int space_set;
 	const char *format;
+	int raw;
+	int raw_with_headers;
 	void *printer;
 	const char *file;
 	char **cmdv;

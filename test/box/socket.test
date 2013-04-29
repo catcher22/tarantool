@@ -54,22 +54,23 @@ exec admin "lua s:connect(123)"
 exec admin "lua s:close()"
 
 exec admin "lua s:close()"
-exec admin "lua s:connect('somewhereelse', '30303', 0.01)"
-# timedout
-exec admin "lua s:error()"
+exec admin "lua sr, se = s:connect('somewhereelse', '30303', 0.0001)"
+exec admin "lua sr == nil and se == 'error' or se == 'timeout'"
+
+# timedout or hostname resolution failed
+exec admin "lua e = s:error()"
+exec admin "lua e == -1 or e == 110"
 exec admin "lua s:close()"
 
-##################
-#                #
+#################
+#               #
 # socket:send() #
-#                #
-##################
+#               #
+#################
 
 # bad args
 exec admin "lua s:send()"
 exec admin "lua s:send(1)"
-# bad file descriptor
-exec admin "lua s:error()"
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -87,7 +88,6 @@ exec admin "lua type(n)"
 exec admin "lua type(status)"
 exec admin "lua type(error_code)"
 exec admin "lua type(error_str)"
-exec admin "lua n"
 exec admin "lua status"
 exec admin "lua error_code"
 exec admin "lua error_str"
@@ -441,12 +441,12 @@ exec admin "lua s:close()"
 # connect from test to echo server implemented in
 # stored procedure and do send/recv.
 #
-exec admin "lua type(s:bind('localhost', '30303'))"
+exec admin "lua type(s:bind('127.0.0.1', '30303'))"
 exec admin "lua type(s:listen())"
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.connect(('localhost', 30303))
+s.connect(('127.0.0.1', 30303))
 s.sendall('ping')
 
 exec admin "lua client, status, addr = s:accept()"
@@ -472,7 +472,7 @@ s.bind(('localhost', 30302))
 
 # SOCK_DGRAM
 exec admin "lua s = box.socket.udp()"
-exec admin "lua type(s:sendto('ping', 'localhost', '30302'))"
+exec admin "lua type(s:sendto('ping', '127.0.0.1', '30302'))"
 exec admin "lua s:error()"
 
 data, addr = s.recvfrom(4)
@@ -490,7 +490,7 @@ exec admin "lua s:close()"
 # stored procedure and do send/recv.
 #
 exec admin "lua s = box.socket.udp()"
-exec admin "lua type(s:bind('localhost', '30301'))"
+exec admin "lua type(s:bind('127.0.0.1', '30301'))"
 exec admin "lua s:error()"
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -509,3 +509,58 @@ print(data)
 s.close()
 
 exec admin "lua s:close()"
+
+# Bug #1160869: incorrect fiber call order.
+# (https://bugs.launchpad.net/tarantool/+bug/1160869)
+#
+test="""
+replies = 0
+function bug1160869()
+	local s = box.socket.tcp()
+	s:connect('127.0.0.1', box.cfg.primary_port)
+	box.fiber.resume( box.fiber.create(function()
+		box.fiber.detach()
+		while true do
+			s:recv(12)
+			replies = replies + 1
+		end
+	end) )
+	return s:send(box.pack('iii', 65280, 0, 1))
+end
+"""
+exec admin "lua " + test.replace('\n', ' ')
+exec admin "lua bug1160869()"
+exec admin "lua bug1160869()"
+exec admin "lua bug1160869()"
+exec admin "lua replies"
+
+test="""
+s = nil
+syncno = 0
+reps = 0
+function iostart()
+	if s ~= nil then
+		return
+	end
+	s = box.socket.tcp()
+	s:connect('127.0.0.1', box.cfg.primary_port)
+	box.fiber.resume( box.fiber.create(function()
+		box.fiber.detach()
+		while true do
+			s:recv(12)
+			reps = reps + 1
+		end
+	end))
+end
+
+function iotest()
+	iostart()
+	syncno = syncno + 1
+	return s:send(box.pack('iii', 65280, 0, syncno))
+end
+"""
+exec admin "lua " + test.replace('\n', ' ')
+exec admin "lua iotest()"
+exec admin "lua iotest()"
+exec admin "lua iotest()"
+exec admin "lua reps"

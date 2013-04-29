@@ -1,3 +1,26 @@
+tarantool (1.4.9+20130415.1808-1) unstable; urgency=low
+
+  * New upstream release (fix disconnect bug).
+    https://bugs.launchpad.net/tarantool/+bug/1168076
+
+ -- Dmitry E. Oboukhov <unera@debian.org>  Mon, 15 Apr 2013 18:08:14 +0400
+
+tarantool (1.4.9-1) unstable; urgency=low
+
+  * New upstream release.
+   + Apply patch from Colin Watson <cjwatson@ubuntu.com>, closes: #703044,
+   + Fix VCS-link, closes: #681703
+   + Fix FTBFS (kfreebsd), patch from Steven Chamberlain <steven@pyro.eu.org>,
+     closes: 695541
+
+ -- Dmitry E. Oboukhov <unera@debian.org>  Wed, 10 Apr 2013 12:08:49 +0400
+
+tarantool (1.4.8+20130306.1415-1) unstable; urgency=low
+
+  * New snapshot (some fixes in iproto).
+
+ -- Dmitry E. Oboukhov <unera@debian.org>  Wed, 06 Mar 2013 14:15:10 +0400
+
 tarantool (1.4.8+20130212.1728-1) unstable; urgency=low
 
   * Rebuilt last snapshot for Debian.

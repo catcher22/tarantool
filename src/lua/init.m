@@ -42,7 +42,6 @@
 #include "lj_state.h"
 #include <ctype.h>
 
-#include "pickle.h"
 #include "fiber.h"
 #include "lua_ipc.h"
 #include "lua_socket.h"
@@ -511,7 +510,7 @@ box_lua_fiber_run(va_list ap __attribute__((unused)))
 			/* The fiber is detached, log the error. */
 			[e log];
 		}
-	} @catch (...) {
+	} @catch (id allOthers) {
 		lua_settop(L, 1);
 		/*
 		 * The error message is already there.
@@ -748,7 +747,7 @@ lbox_fiber_name(struct lua_State *L)
 		fiber_set_name(f, name);
 		return 0;
 	} else {
-		lua_pushstring(L, f->name);
+		lua_pushstring(L, fiber_name(f));
 		return 1;
 	}
 }
@@ -869,9 +868,11 @@ tarantool_lua_printstack_yaml(struct lua_State *L, struct tbuf *out)
 	int top = lua_gettop(L);
 	for (int i = 1; i <= top; i++) {
 		if (lua_type(L, i) == LUA_TCDATA) {
+			GCcdata *cd = cdataV(L->base + i - 1);
 			const char *sz = tarantool_lua_tostring(L, i);
 			int len = strlen(sz);
-			tbuf_printf(out, " - %-.*s" CRLF, len - 3, sz);
+			int chop = (cd->typeid == CTID_UINT64 ? 3 : 2);
+			tbuf_printf(out, " - %-.*s" CRLF, len - chop, sz);
 		} else
 			tbuf_printf(out, " - %s" CRLF,
 				    tarantool_lua_tostring(L, i));
@@ -888,9 +889,11 @@ tarantool_lua_printstack(struct lua_State *L, struct tbuf *out)
 	int top = lua_gettop(L);
 	for (int i = 1; i <= top; i++) {
 		if (lua_type(L, i) == LUA_TCDATA) {
+			GCcdata *cd = cdataV(L->base + i - 1);
 			const char *sz = tarantool_lua_tostring(L, i);
 			int len = strlen(sz);
-			tbuf_printf(out, "%-.*s" CRLF, len - 3, sz);
+			int chop = (cd->typeid == CTID_UINT64 ? 3 : 2);
+			tbuf_printf(out, "%-.*s" CRLF, len - chop, sz);
 		} else
 			tbuf_printf(out, "%s", tarantool_lua_tostring(L, i));
 	}
@@ -969,7 +972,7 @@ lbox_pcall(struct lua_State *L)
 		lua_pushstring(L, e->errmsg);
 	} @catch (tnt_Exception *e) {
 		@throw;
-	} @catch (...) {
+	} @catch (id allOthers) {
 		lua_settop(L, 1);
 		/* completion status */
 		lua_pushboolean(L, false);
@@ -1109,7 +1112,7 @@ tarantool_lua_dostring(struct lua_State *L, const char *str)
 	} @catch (tnt_Exception *e) {
 		lua_pushstring(L, [e errmsg]);
 		return 1;
-	} @catch (...) {
+	} @catch (id allOthers) {
 		return 1;
 	}
 	return 0;

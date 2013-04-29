@@ -38,7 +38,6 @@
 #include TARANTOOL_CONFIG
 #include <tbuf.h>
 #include <stat.h>
-#include <pickle.h>
 #include <assoc.h>
 #include "iobuf.h"
 #include <rlist.h>
@@ -302,7 +301,7 @@ struct fiber *
 fiber_find(int fid)
 {
 	struct mh_i32ptr_node_t node = { .key = fid };
-	mh_int_t k = mh_i32ptr_get(fiber_registry, &node, NULL, NULL);
+	mh_int_t k = mh_i32ptr_get(fiber_registry, &node, NULL);
 
 	if (k == mh_end(fiber_registry))
 		return NULL;
@@ -312,16 +311,15 @@ fiber_find(int fid)
 static void
 register_fid(struct fiber *fiber)
 {
-	int ret;
 	struct mh_i32ptr_node_t node = { .key = fiber -> fid, .val = fiber };
-	mh_i32ptr_put(fiber_registry, &node, NULL, NULL, &ret);
+	mh_i32ptr_put(fiber_registry, &node, NULL, NULL);
 }
 
 static void
 unregister_fid(struct fiber *fiber)
 {
 	struct mh_i32ptr_node_t node = { .key = fiber->fid };
-	mh_i32ptr_remove(fiber_registry, &node, NULL, NULL);
+	mh_i32ptr_remove(fiber_registry, &node, NULL);
 }
 
 void
@@ -363,14 +361,14 @@ fiber_loop(void *data __attribute__((unused)))
 		@try {
 			fiber->f(fiber->f_data);
 		} @catch (FiberCancelException *e) {
-			say_info("fiber `%s' has been cancelled", fiber->name);
-			say_info("fiber `%s': exiting", fiber->name);
+			say_info("fiber `%s' has been cancelled", fiber_name(fiber));
+			say_info("fiber `%s': exiting", fiber_name(fiber));
 		} @catch (tnt_Exception *e) {
 			[e log];
 		} @catch (id e) {
 			say_error("fiber `%s': exception `%s'",
-				fiber->name, object_getClassName(e));
-			panic("fiber `%s': exiting", fiber->name);
+				fiber_name(fiber), object_getClassName(e));
+			panic("fiber `%s': exiting", fiber_name(fiber));
 		}
 		fiber_zombificate();
 		fiber_yield();	/* give control back to scheduler */
@@ -387,8 +385,7 @@ void
 fiber_set_name(struct fiber *fiber, const char *name)
 {
 	assert(name != NULL);
-	snprintf(fiber->name, sizeof(fiber->name), "%s", name);
-	palloc_set_name(fiber->gc_pool, fiber->name);
+	palloc_set_name(fiber->gc_pool, name);
 }
 
 /**
@@ -449,7 +446,7 @@ fiber_destroy(struct fiber *f)
 {
 	if (f == fiber) /* do not destroy running fiber */
 		return;
-	if (strcmp(f->name, "sched") == 0)
+	if (strcmp(fiber_name(f), "sched") == 0)
 		return;
 
 	rlist_del(&f->state);
@@ -475,7 +472,7 @@ fiber_info_print(struct tbuf *out, struct fiber *fiber)
 
 	tbuf_printf(out, "  - fid: %4i" CRLF, fiber->fid);
 	tbuf_printf(out, "    csw: %i" CRLF, fiber->csw);
-	tbuf_printf(out, "    name: %s" CRLF, fiber->name);
+	tbuf_printf(out, "    name: %s" CRLF, fiber_name(fiber));
 	tbuf_printf(out, "    stack: %p" CRLF, stack_top);
 #ifdef ENABLE_BACKTRACE
 	tbuf_printf(out, "    backtrace:" CRLF "%s",

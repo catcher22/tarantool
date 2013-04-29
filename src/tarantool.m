@@ -50,7 +50,7 @@
 #include <fiber.h>
 #include <coeio.h>
 #include <iproto.h>
-#include <latch.h>
+#include "mutex.h"
 #include <recovery.h>
 #include <crc32.h>
 #include <palloc.h>
@@ -211,15 +211,15 @@ core_reload_config(const struct tarantool_cfg *old_conf,
 i32
 reload_cfg(struct tbuf *out)
 {
-	static struct tnt_latch *latch = NULL;
+	static struct mutex *mutex = NULL;
 	struct tarantool_cfg new_cfg, aux_cfg;
 
-	if (latch == NULL) {
-		latch = palloc(eter_pool, sizeof(*latch));
-		tnt_latch_create(latch);
+	if (mutex == NULL) {
+		mutex = palloc(eter_pool, sizeof(*mutex));
+		mutex_create(mutex);
 	}
 
-	if (tnt_latch_trylock(latch) == -1) {
+	if (mutex_trylock(mutex) == true) {
 		out_warning(0, "Could not reload configuration: it is being reloaded right now");
 		tbuf_append(out, cfg_out->data, cfg_out->size);
 
@@ -276,9 +276,8 @@ reload_cfg(struct tbuf *out)
 		if (cfg_out->size != 0)
 			tbuf_append(out, cfg_out->data, cfg_out->size);
 
-		tnt_latch_unlock(latch);
+		mutex_unlock(mutex);
 	}
-
 	return 0;
 }
 
@@ -316,7 +315,7 @@ tarantool_uptime(void)
 }
 
 int
-snapshot(void *ev, int events __attribute__((unused)))
+snapshot(void)
 {
 	if (snapshot_pid)
 		return EINPROGRESS;
@@ -327,22 +326,6 @@ snapshot(void *ev, int events __attribute__((unused)))
 		return -1;
 	}
 	if (p > 0) {
-		/*
-		 * If called from a signal handler, we can't
-		 * access any fiber state, and no one is expecting
-		 * to get an execution status. Just return 0 to
-		 * indicate a successful fork.
-		 */
-		if (ev != NULL)
-			return 0;
-		/*
-		 * This is 'save snapshot' call received from the
-		 * administrative console. Check for the child
-		 * exit status and report it back. This is done to
-		 * make 'save snapshot' synchronous, and propagate
-		 * any possible error up to the user.
-		 */
-
 		snapshot_pid = p;
 		int status = wait_for_child(p);
 		snapshot_pid = 0;
@@ -361,6 +344,22 @@ snapshot(void *ev, int events __attribute__((unused)))
 
 	exit(EXIT_SUCCESS);
 	return 0;
+}
+
+
+/**
+* Create snapshot from signal handler (SIGUSR1)
+*
+*/
+static void
+sig_snapshot(void)
+{
+	if (snapshot_pid) {
+		say_warn("Snapshot process is already running,"
+			" the signal is ignored");
+		return;
+	}
+	fiber_call(fiber_new("snapshot", (fiber_func)snapshot));
 }
 
 static void
@@ -489,7 +488,7 @@ signal_init(void)
 
 	sigs = palloc(eter_pool, sizeof(ev_signal) * 4);
 	memset(sigs, 0, sizeof(ev_signal) * 4);
-	ev_signal_init(&sigs[0], (void*)snapshot, SIGUSR1);
+	ev_signal_init(&sigs[0], (void*)sig_snapshot, SIGUSR1);
 	ev_signal_start(&sigs[0]);
 	ev_signal_init(&sigs[1], (void*)signal_cb, SIGINT);
 	ev_signal_start(&sigs[1]);
@@ -607,24 +606,17 @@ tarantool_free(void)
 }
 
 static void
-initialize(double slab_alloc_arena, int slab_alloc_minimal, double slab_alloc_factor)
+initialize_minimal()
 {
-	if (!salloc_init(slab_alloc_arena * (1 << 30), slab_alloc_minimal, slab_alloc_factor))
+	if (!salloc_init(64 * 1000 * 1000, 4, 2))
 		panic_syserror("can't initialize slab allocator");
 	fiber_init();
 	coeio_init();
 }
 
-static void
-initialize_minimal()
-{
-	initialize(0.1, 4, 2);
-}
-
 int
 main(int argc, char **argv)
 {
-	const char *cat_filename = NULL;
 	const char *cfg_paramname = NULL;
 
 #ifndef HAVE_LIBC_STACK_END
@@ -660,8 +652,6 @@ main(int argc, char **argv)
 			   gopt_option('c', GOPT_ARG, gopt_shorts('c'),
 				       gopt_longs("config"),
 				       "=FILE", "path to configuration file (default: " DEFAULT_CFG_FILENAME ")"),
-			   gopt_option('C', GOPT_ARG, gopt_shorts(0), gopt_longs("cat"),
-				       "=FILE", "cat snapshot file to stdout in readable format and exit"),
 			   gopt_option('I', 0, gopt_shorts(0),
 				       gopt_longs("init-storage", "init_storage"),
 				       NULL, "initialize storage (an empty snapshot file) and exit"),
@@ -694,22 +684,16 @@ main(int argc, char **argv)
 		puts("");
 		gopt_help(opt_def);
 		puts("");
-		puts("Please visit project home page at http://launchpad.net/tarantool");
+		puts("Please visit project home page at http://tarantool.org");
 		puts("to see online documentation, submit bugs or contribute a patch.");
 		return 0;
 	}
 
-	if (gopt_arg(opt, 'C', &cat_filename)) {
-		initialize_minimal();
-		if (access(cat_filename, R_OK) == -1) {
-			panic("access(\"%s\"): %s", cat_filename, strerror(errno));
-			exit(EX_OSFILE);
-		}
-		return box_cat(cat_filename);
-	}
-
 	gopt_arg(opt, 'c', &cfg_filename);
-	/* if config is not specified trying ./tarantool.cfg then /etc/tarantool.cfg */
+	/*
+	 * if config is not specified trying ./tarantool.cfg then
+	 * /etc/tarantool.cfg
+	 */
 	if (cfg_filename == NULL) {
 		if (access(DEFAULT_CFG_FILENAME, F_OK) == 0)
 			cfg_filename = DEFAULT_CFG_FILENAME;
@@ -856,8 +840,11 @@ main(int argc, char **argv)
 	atexit(tarantool_free);
 
 	ev_default_loop(EVFLAG_AUTO);
-	initialize(cfg.slab_alloc_arena, cfg.slab_alloc_minimal, cfg.slab_alloc_factor);
+	fiber_init();
 	replication_prefork();
+	coeio_init();
+	salloc_init(cfg.slab_alloc_arena * (1 << 30) /* GB */,
+		    cfg.slab_alloc_minimal, cfg.slab_alloc_factor);
 
 	signal_init();
 
