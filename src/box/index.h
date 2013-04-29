@@ -156,6 +156,12 @@ enum dup_replace_mode {
 	DUP_REPLACE
 };
 
+enum index_state {
+	INDEX_NEW = 0,
+	INDEX_BUILDING,
+	INDEX_BUILT
+};
+
 @interface Index: tnt_Object {
 	/* Index features. */
 	struct index_traits *traits;
@@ -164,8 +170,6 @@ enum dup_replace_mode {
 	struct space *space;
 	/* Index no */
 	u32 no;
-	/* Name (varint32 + data) */
-	char name[BOX_INDEX_NAME_MAXLEN];
 	/* Description of a possibly multipart key. */
 	struct key_def *key_def;
 	/*
@@ -173,6 +177,8 @@ enum dup_replace_mode {
 	 * box_process(). Should not be used elsewhere.
 	 */
 	struct iterator *position;
+
+	enum index_state state;
 };
 
 /**

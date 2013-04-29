@@ -125,6 +125,7 @@ replace_check_dup(struct tuple *old_tuple,
 	key_def = key_def_arg;
 	space = space_arg;
 	position = [self allocIterator];
+	state = INDEX_NEW;
 
 	return self;
 }

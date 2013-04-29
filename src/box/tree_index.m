@@ -897,7 +897,9 @@ tree_iterator_gt(struct iterator *iterator)
 
 - (void) free
 {
-	sptree_index_destroy(&tree);
+	if (state == INDEX_BUILT) {
+		sptree_index_destroy(&tree);
+	}
 	[super free];
 }
 
@@ -966,6 +968,8 @@ tree_iterator_gt(struct iterator *iterator)
 			  :(struct tuple *) new_tuple
 			  :(enum dup_replace_mode) mode
 {
+	assert (state == INDEX_BUILT);
+
 	size_t node_size = [self node_size];
 	void *new_node = alloca(node_size);
 	void *old_node = alloca(node_size);
@@ -1068,7 +1072,8 @@ tree_iterator_gt(struct iterator *iterator)
 
 - (void) beginBuild
 {
-	assert(index_is_primary(self));
+	assert (state == INDEX_NEW);
+	state = INDEX_BUILDING;
 
 	tree.size = 0;
 	tree.max_size = 64;
@@ -1083,6 +1088,8 @@ tree_iterator_gt(struct iterator *iterator)
 
 - (void) buildNext: (struct tuple *) tuple
 {
+	assert (state == INDEX_BUILDING);
+
 	size_t node_size = [self node_size];
 
 	if (tree.size == tree.max_size) {
@@ -1102,7 +1109,7 @@ tree_iterator_gt(struct iterator *iterator)
 
 - (void) endBuild
 {
-	assert(index_is_primary(self));
+	assert (state == INDEX_BUILDING);
 
 	u32 n_tuples = tree.size;
 	u32 estimated_tuples = tree.max_size;
@@ -1112,10 +1119,15 @@ tree_iterator_gt(struct iterator *iterator)
 			  [self node_size], nodes, n_tuples, estimated_tuples,
 			  [self key_node_cmp], [self node_cmp],
 			  self);
+
+	state = INDEX_BUILT;
 }
 
 - (void) build: (Index *) pk
 {
+	assert (state == INDEX_NEW);
+	state = INDEX_BUILDING;
+
 	u32 n_tuples = [pk size];
 	u32 estimated_tuples = n_tuples * 1.2;
 	size_t node_size = [self node_size];
@@ -1155,6 +1167,8 @@ tree_iterator_gt(struct iterator *iterator)
 			  [self key_node_cmp],
 			  key_def->is_unique ? [self node_cmp] : [self dup_node_cmp],
 			  self);
+
+	state = INDEX_BUILT;
 }
 
 - (size_t) node_size

@@ -38,16 +38,7 @@
 #include <lua/init.h>
 
 static int
-lbox_spaces_index(struct lua_State *L);
-static int
 lbox_pushspace(struct lua_State *L, struct space *space);
-
-static const char *lbox_spaces_name = "box.spaces";
-
-static const struct luaL_reg lbox_spaces_meta[] = {
-	{"__index", lbox_spaces_index},
-	{NULL, NULL}
-};
 
 /**
  * Make a single space available in Lua,
@@ -100,8 +91,7 @@ lbox_pushspace(struct lua_State *L, struct space *space)
 		if (space->index[i] == NULL)
 			continue;
 
-		const void *name = space->index[i]->name;
-		assert (name != NULL);
+		const void *name = space->index_name[i];
 		u32 name_len = load_varint32(&name);
 		lua_pushinteger(L, space->index[i]->no);
 
@@ -177,44 +167,32 @@ lbox_pushspace(struct lua_State *L, struct space *space)
 	return 1;
 }
 
-static int
-lbox_spaces_index(struct lua_State *L)
+void
+box_lua_space_put(struct lua_State *L, struct space *sp)
 {
-	struct space *sp = NULL;
-	if (lua_type(L, 2) == LUA_TNUMBER) {
-		lua_Integer req = lua_tointeger(L, 2);
-		if (req >= 0 && req < UINT_MAX) {
-			sp = space_find_by_no((u32) req);
-		}
-	} else {
-		size_t len = 0;
-		const char *req = lua_tolstring(L, 2, &len);
-		struct tbuf *buf = tbuf_new(fiber->gc_pool);
-		write_varint32(buf, len);
-		tbuf_append(buf, req, len);
-		sp = space_find_by_name(tbuf_str(buf));
-	}
+	lua_getfield(L, LUA_GLOBALSINDEX, "box");
+	if (!lua_istable(L, -1))
+		return;
 
-	if (sp == NULL) {
-		lua_pushnil(L);
-		return 1;
-	}
+	lua_getfield(L, -1, "space");
+	if (!lua_istable(L, -1))
+		return;
+
+	const void *name = NULL;
+	u32 name_len = 0;
+	load_field_str(sp->name, &name, &name_len);
+	lua_pushlstring(L, name, name_len);
 
 	lbox_pushspace(L, sp);
 	lua_pushvalue(L, -1);
-	lua_rawseti(L, 1, sp->no);
+	lua_rawseti(L, -4, sp->no);
+	lua_rawset(L, -3);
 
-	const void *name = sp->name;
-	u32 name_len = load_varint32(&name);
-	lua_pushlstring(L, name, name_len);
-	lua_pushvalue(L, -2);
-	lua_rawset(L, 1);
-
-	return 1;
+	lua_pop(L, 2);
 }
 
 void
-box_lua_space_cache_clear(struct lua_State *L, struct space *sp)
+box_lua_space_del(struct lua_State *L, struct space *sp)
 {
 	lua_getfield(L, LUA_GLOBALSINDEX, "box");
 	if (!lua_istable(L, -1))
@@ -230,12 +208,22 @@ box_lua_space_cache_clear(struct lua_State *L, struct space *sp)
 	const void *name;
 	u32 name_len;
 	load_field_str(sp->name, &name, &name_len);
-	if (name_len == 0)
+	if (name_len == 0) {
+		lua_pop(L, 2);
 		return;
+	}
 
 	lua_pushlstring(L, name, name_len);
 	lua_pushnil(L);
 	lua_rawset(L, -3);
+	lua_pop(L, 2);
+}
+
+static void
+box_lua_load_space(struct space *space, void *udata)
+{
+	struct lua_State *L = (struct lua_State *) udata;
+	box_lua_space_put(L, space);
 }
 
 void
@@ -248,10 +236,8 @@ box_lua_load_cfg(struct lua_State *L)
 	lua_newtable(L);
 	lua_setfield(L, -2, "space");
 
-	lua_getfield(L, -1, "space");
-	tarantool_lua_register_type(L, lbox_spaces_name, lbox_spaces_meta);
-	luaL_register(L, lbox_spaces_name, lbox_spaces_meta);
-
-	lua_setmetatable(L, -2);
 	lua_pop(L, 1);
+
+	/* Load spaces */
+	space_foreach(box_lua_load_space, tarantool_L);
 }

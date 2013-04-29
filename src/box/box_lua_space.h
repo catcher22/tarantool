@@ -35,6 +35,9 @@ void
 box_lua_load_cfg(struct lua_State *L);
 
 void
-box_lua_space_cache_clear(struct lua_State *L, struct space *sp);
+box_lua_space_put(struct lua_State *L, struct space *sp);
+
+void
+box_lua_space_del(struct lua_State *L, struct space *sp);
 
 #endif /* INCLUDES_TARANTOOL_LUA_SPACE_H */

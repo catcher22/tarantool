@@ -196,23 +196,33 @@ hash_iterator_lstr_eq(struct iterator *it)
 
 - (void) beginBuild
 {
+	assert (state == INDEX_NEW);
+	state = INDEX_BUILDING;
 }
 
 - (void) buildNext: (struct tuple *)tuple
 {
+	assert (state == INDEX_BUILDING);
 	[self replace: NULL :tuple :DUP_INSERT];
 }
 
 - (void) endBuild
 {
+	assert (state == INDEX_BUILDING);
+	state = INDEX_BUILT;
 }
 
 - (void) build: (Index *) pk
 {
+	assert (state == INDEX_NEW);
+	state = INDEX_BUILDING;
+
 	u32 n_tuples = [pk size];
 
-	if (n_tuples == 0)
+	if (n_tuples == 0) {
+		state = INDEX_BUILT;
 		return;
+	}
 
 	[self reserve: n_tuples];
 
@@ -225,6 +235,8 @@ hash_iterator_lstr_eq(struct iterator *it)
 
 	while ((tuple = it->next(it)))
 	      [self replace: NULL :tuple :DUP_INSERT];
+
+	state = INDEX_BUILT;
 }
 
 - (void) free

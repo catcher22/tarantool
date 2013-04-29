@@ -95,12 +95,12 @@ void
 box_leave_local_standby_mode(void *data __attribute__((unused)));
 
 enum {
-	BOX_SPACE_MAX = UINT32_MAX,
+	BOX_SPACE_MAX = UINT32_MAX - 1024 /* reserved for system spaces */,
 	BOX_INDEX_MAX = 10,
 	BOX_FIELD_MAX = UINT32_MAX,
 
-	BOX_SYSSPACE_NO = 4294967294,
-	BOX_SYSINDEX_NO = 4294967293,
+	BOX_SYSSPACE_NO = 4294967295,
+	BOX_SYSINDEX_NO = 4294967294,
 
 	/*
 	 * Space and index name stored as varint32 + data (without zero

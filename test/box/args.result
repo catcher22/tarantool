@@ -97,10 +97,16 @@ C_FLAGS: flags
 # can be relative to work_dir.
 
 tarantool_box --config=bug726778.cfg --init-storage
+tarantool_box: Space 4294967295: begin creating a new schema
+tarantool_box: Space 4294967295: end creating a new schema
+tarantool_box: Space 4294967294: begin creating a new schema
+tarantool_box: Space 4294967294: end creating a new schema
+tarantool_box: Space 0: begin creating a new schema
+tarantool_box: Space 0: end creating a new schema
+tarantool_box: Space 0: begin creating a new schema
+tarantool_box: Space 0: end creating a new schema
 tarantool_box: creating `snapshots/00000000000000000001.snap.inprogress'
 tarantool_box: saving snapshot `snapshots/00000000000000000001.snap'
-tarantool_box: Space 0: begin updating configuration...
-tarantool_box: Space 0: end updating configuration
 tarantool_box: done
 
 #

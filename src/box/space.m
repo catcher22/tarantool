@@ -118,20 +118,33 @@ index_meta_save_v1(void *d, u32 *p_part_count,const struct index_meta *meta);
 static struct mh_i32ptr_t *spaces_by_no;
 
 static struct space *
-space_cache_new(void);
+space_new(void);
 
 static void
-space_cache_delete(struct space *space);
+space_delete(struct space *space);
+
+static struct space *
+space_cache_get(u32 space_no);
 
 static void
-space_cache_update_do_index(struct space *space, struct index_meta *meta);
+space_cache_put(struct space *space);
 
 static void
-space_cache_update_do_space(struct space *space, struct space_meta *meta);
+space_cache_update(struct space_meta *space_meta, size_t index_count,
+		   struct index_meta *index_metas[BOX_INDEX_MAX]);
 
 static void
-space_cache_invalidate(struct space *space);
+space_cache_delete(u32 space_no);
 
+static void
+space_cache_commit(u32 space_no);
+
+static void
+space_cache_rollback(u32 space_no);
+
+/*
+ * Key Definition
+ */
 static void
 key_def_create(struct key_def *key_def, const struct index_meta *meta,
 	       const enum field_data_type *field_types);
@@ -139,12 +152,42 @@ key_def_create(struct key_def *key_def, const struct index_meta *meta,
 static void
 key_def_destroy(struct key_def *key_def);
 
+static bool
+key_def_eq(const struct key_def *a, const struct key_def *b);
+
 /*
  * System spaces
  */
 
 static void
-space_super_create(void);
+space_init_system(void);
+
+static void
+space_systrigger_free(struct space_trigger *trigger);
+
+static struct tuple *
+space_sysspace_before(struct space_trigger *trigger, struct space *sysspace,
+		      struct tuple *old_tuple, struct tuple *new_tuple);
+
+static struct tuple *
+space_sysspace_commit(struct space_trigger *trigger, struct space *sysspace,
+		      struct tuple *old_tuple, struct tuple *new_tuple);
+
+static struct tuple *
+space_sysspace_rollback(struct space_trigger *trigger, struct space *sysspace,
+			struct tuple *old_tuple, struct tuple *new_tuple);
+
+static struct tuple *
+space_sysindex_before(struct space_trigger *trigger, struct space *sysspace,
+		      struct tuple *old_tuple, struct tuple *new_tuple);
+
+static struct tuple *
+space_sysindex_commit(struct space_trigger *trigger, struct space *sysspace,
+		      struct tuple *old_tuple, struct tuple *new_tuple);
+
+static struct tuple *
+space_sysindex_rollback(struct space_trigger *trigger, struct space *sysspace,
+			struct tuple *old_tuple, struct tuple *new_tuple);
 
 /*
  * Utils
@@ -160,7 +203,7 @@ space_super_create(void);
 })
 
 static struct space *
-space_cache_new(void)
+space_new(void)
 {
 	struct space *sp = calloc(1, sizeof(*sp));
 	if (unlikely(sp == NULL)) {
@@ -171,20 +214,17 @@ space_cache_new(void)
 	sp->no = UINT32_MAX; /* set some invalid id, space_no = 0 is valid */
 
 	rlist_create(&sp->before_triggers);
+	rlist_create(&sp->commit_triggers);
+	rlist_create(&sp->rollback_triggers);
 
 	return sp;
 }
 
 static void
-space_cache_delete(struct space *space)
+space_delete(struct space *space)
 {
 	if (space == NULL)
 		return;
-
-	space_cache_invalidate(space);
-
-	struct mh_i32ptr_node_t no_node = { .key = space->no };
-	mh_i32ptr_remove(spaces_by_no, &no_node, NULL, NULL);
 
 	for (u32 index_no = 0 ; index_no < BOX_INDEX_MAX; index_no++) {
 		if (space->index[index_no] == NULL)
@@ -192,14 +232,23 @@ space_cache_delete(struct space *space)
 
 		key_def_destroy(&space->key_defs[index_no]);
 
-		[space->index[index_no] free];
+		if (!space->index_is_shared[index_no]) {
+			[space->index[index_no] free];
+		}
 		space->index[index_no] = NULL;
 	}
 
-	struct space_trigger *trigger;
-	rlist_foreach_entry(trigger, &space->before_triggers, link) {
-		assert(trigger->free != NULL);
-		trigger->free(trigger);
+	struct rlist *triggers[] = {
+		&space->before_triggers, &space->commit_triggers,
+		&space->rollback_triggers
+	};
+	for (size_t i = 0; i < lengthof(triggers); i++) {
+		struct space_trigger *trigger;
+		/* TODO: rlist_foreach_safe */
+		rlist_foreach_entry(trigger, triggers[i], link) {
+			assert(trigger->free != NULL);
+			trigger->free(trigger);
+		}
 	}
 
 	free(space->field_types);
@@ -246,10 +295,6 @@ space_meta_load_v1(struct space_meta *meta,
 	d = load_field_u32(d, &meta->arity);
 	d = load_field_u32(d, &meta->flags);
 
-	if (meta->space_no >= BOX_SPACE_MAX) {
-		raise_meta_error("invalid space_no");
-	}
-
 	if (name_len + varint32_sizeof(name_len) + 1 >=
 			BOX_SPACE_NAME_MAXLEN) {
 		raise_meta_error("name is too long");
@@ -286,15 +331,22 @@ space_meta_load_v1(struct space_meta *meta,
 
 	for (u32 i = 0; i < meta->field_defs_count; i++) {
 		if (meta->field_defs[i].field_no >= BOX_FIELD_MAX) {
-			raise_meta_error("field_def=%u, invalid field_no", i);
-		}
-		if (meta->field_defs[i].field_type == UNKNOWN ||
-		    meta->field_defs[i].field_type >= field_data_type_MAX) {
-			raise_meta_error("field_def=%u invalid field_type", i);
+			raise_meta_error("space_no=%u, field_def=%u: "
+					 "invalid field_no",
+					 meta->space_no, i);
 		}
 
 		if (new_types[meta->field_defs[i].field_no] != UNKNOWN) {
-			raise_meta_error("field_def=%u duplicate field_no", i);
+			raise_meta_error("space_no=%u, field_def=%u: "
+					 "duplicate field",
+					 meta->space_no, i);
+		}
+
+		if (meta->field_defs[i].field_type == UNKNOWN ||
+		    meta->field_defs[i].field_type >= field_data_type_MAX) {
+			raise_meta_error("space_no=%u, field_def=%u: "
+					 "invalid field type",
+					 meta->space_no, i);
 		}
 
 		new_types[meta->field_defs[i].field_no] =
@@ -382,17 +434,10 @@ index_meta_load_v1(struct index_meta *meta, const void *d, u32 field_count)
 	d = load_field_u32(d, &is_unique);
 	meta->is_unique = (is_unique != 0);
 
-	if (meta->space_no >= BOX_SPACE_MAX) {
-		raise_meta_error("invalid space_no");
-	}
-
-	if (meta->index_no >= BOX_INDEX_MAX) {
-		raise_meta_error("invalid index_no");
-	}
-
 	if (name_len + varint32_sizeof(name_len) + 1 >=
 			BOX_INDEX_NAME_MAXLEN) {
-		raise_meta_error("name is too long");
+		raise_meta_error("space_no=%u: name is too long",
+				 meta->space_no);
 	}
 
 	assert(name_len + varint32_sizeof(name_len) < BOX_SPACE_NAME_MAXLEN);
@@ -414,7 +459,9 @@ index_meta_load_v1(struct index_meta *meta, const void *d, u32 field_count)
 	}
 
 	if (meta->part_count == 0) {
-		raise_meta_error("at least one field is needed");
+		raise_meta_error("space_no=%u, index_no=%u: "
+				 "need at least one indexed field",
+				 meta->space_no, meta->index_no);
 	}
 
 	return d;
@@ -470,443 +517,327 @@ space_systrigger_free(struct space_trigger *trigger)
 	free(trigger);
 }
 
-static void
-space_sysspace_check_types(const struct index_meta *index_m,
-			   const enum field_data_type *types, u32 max_fieldno)
-{
-	for (u32 part = 0; part < index_m->part_count; part++){
-		u32 field_no = index_m->parts[part].field_no;
-		if (field_no >= max_fieldno || types[field_no] == UNKNOWN) {
-			raise_meta_error("pk=%u: field %u is not defined as "
-					  "required by index %u",
-					  index_m->space_no,
-					  index_m->parts[part].field_no,
-					  index_m->index_no);
-		}
-	}
-}
-
 static struct tuple *
-space_sysspace_check_replace(struct space_trigger *tr, struct space *sysspace,
-			     struct tuple *old_tuple, struct tuple *new_tuple)
+space_sysspace_before(struct space_trigger *trigger, struct space *sysspace,
+		      struct tuple *old_tuple, struct tuple *new_tuple)
 {
-	(void) tr;
+	(void) trigger;
 	(void) sysspace;
+
+	if (new_tuple == NULL) {
+		/*
+		 * Delete space
+		 */
+		struct space_meta *meta = space_meta_from_tuple(old_tuple);
+		space_cache_delete(meta->space_no);
+
+		return NULL;
+	}
+
 	assert (new_tuple != NULL);
 
 	/*
 	 * Parse new space meta
 	 */
-	struct space_meta *new_space_m = space_meta_from_tuple(new_tuple);
+	struct space_meta *space_meta = space_meta_from_tuple(new_tuple);
+	size_t index_count = 0;
+	struct index_meta *index_metas[BOX_INDEX_MAX];
 
 	/*
 	 * Check that meta for super spaces is not changing
 	 */
-	if (new_space_m->space_no == BOX_SYSSPACE_NO ||
-	    new_space_m->space_no == BOX_SYSINDEX_NO) {
-		raise_meta_error("pk=%u: cannot change system spaces",
-				 new_space_m->space_no);
+	if (space_meta->space_no == BOX_SYSSPACE_NO ||
+	    space_meta->space_no == BOX_SYSINDEX_NO) {
+		if (!primary_indexes_enabled) {
+			return NULL;
+		}
+
+		raise_meta_error("space_no=%u: cannot change the system space",
+				 space_meta->space_no);
 	}
 
-	if (old_tuple == NULL)
-		return new_tuple;
-
-	/*
-	 * Parse old space meta
-	 */
-	struct space_meta *old_m = space_meta_from_tuple(old_tuple);
-	assert (old_m->space_no == new_space_m->space_no);
-
-	/*
-	 * Check that all indexes fields are defined
-	 */
-	enum field_data_type *new_types = p0alloc(fiber->gc_pool,
-			new_space_m->max_fieldno * sizeof(*new_types));
-	for (u32 i = 0; i < new_space_m->field_defs_count; i++) {
-		new_types[new_space_m->field_defs[i].field_no] =
-				new_space_m->field_defs[i].field_type;
+	if (space_meta->space_no >= BOX_SPACE_MAX) {
+		raise_meta_error("space_no=%u: invalid space_no (>%u)",
+				 space_meta->space_no, BOX_SPACE_MAX);
 	}
 
-	char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
-	save_field_u32(space_key, new_space_m->space_no);
-	struct space *sysindex = space_find_by_no(BOX_SYSINDEX_NO);
-	Index *sysindex_pk = index_find_by_no(sysindex, 0);
-	struct iterator *it = [sysindex_pk allocIterator];
-	@try {
-		[sysindex_pk initIterator: it :ITER_EQ :space_key :1];
+	/*
+	 * Get indexes
+	 */
+	if (old_tuple != NULL) {
+		struct space *sysindex = space_find_by_no(BOX_SYSINDEX_NO);
+		Index *sysindex_pk = index_find_by_no(sysindex, 0);
 
-		struct tuple *index_tuple = NULL;
-		while ( (index_tuple = it->next(it)) != NULL) {
-			struct index_meta *index_m =
+		char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
+		save_field_u32(space_key, space_meta->space_no);
+		struct iterator *it = [sysindex_pk allocIterator];
+		@try {
+			[sysindex_pk initIterator: it :ITER_EQ :space_key :1];
+			struct tuple *index_tuple = NULL;
+			while ( (index_tuple = it->next(it)) != NULL) {
+				index_metas[index_count++] =
 					index_meta_from_tuple(index_tuple);
-
-			space_sysspace_check_types(index_m, new_types,
-						   new_space_m->max_fieldno);
-		}
-	} @finally {
-		it->free(it);
-	}
-
-	/*
-	 * Try to find a cache entry for this space
-	 */
-	struct space *space = NULL;
-	bool has_data = false;
-	const struct mh_i32ptr_node_t node = { .key = old_m->space_no };
-	mh_int_t k = mh_i32ptr_get(spaces_by_no, &node, NULL, NULL);
-	if (k != mh_end(spaces_by_no)) {
-		space = mh_i32ptr_node(spaces_by_no, k)->val;
-		has_data = space->index[0] != NULL &&
-			[space->index[0] size] > 0;
-		space_cache_invalidate(space);
-	}
-
-	if (!has_data)
-		return new_tuple;
-
-	assert (has_data);
-
-	/*
-	 * Check arity
-	 */
-	if (new_space_m->arity != 0 && new_space_m->arity != old_m->arity) {
-		raise_meta_error("pk=%u: "
-				 "arity can only be changed to 0, "
-				 "because space is not empty",
-				 new_space_m->space_no);
-	}
-
-	/*
-	 * Check flags
-	 */
-	if (new_space_m->flags != old_m->flags) {
-		raise_meta_error("pk=%u: "
-				 "flags are read-only, "
-				 "because space is not empty",
-				 new_space_m->space_no);
-	}
-
-	/*
-	 * Check that field definitions are not changing
-	 */
-	if (new_space_m->field_defs_count != old_m->field_defs_count) {
-		raise_meta_error("pk=%u: "
-				 "field defs are read-only, "
-				 "because space is not empty",
-				 new_space_m->space_no);
-	}
-
-	for (u32 i = 0; i < old_m->field_defs_count; i++) {
-		u32 field_no = old_m->field_defs[i].field_no;
-
-		if (new_types[field_no] != old_m->field_defs[i].field_type) {
-			raise_meta_error("pk=%u: "
-					 "field defs are read-only, "
-					 "because space is not empty",
-					 new_space_m->space_no);
+			}
+		} @finally {
+			it->free(it);
 		}
 	}
+
+	/*
+	 * Prepare new space cache
+	 */
+	space_cache_update(space_meta, index_count, index_metas);
 
 	return new_tuple;
 }
 
 static struct tuple *
-space_sysspace_check_delete(struct space_trigger *tr, struct space *sysspace,
-			    struct tuple *old_tuple) {
-	assert (old_tuple != NULL);
-	(void) tr;
+space_sysspace_commit(struct space_trigger *trigger, struct space *sysspace,
+		      struct tuple *old_tuple, struct tuple *new_tuple)
+{
+	(void) trigger;
 	(void) sysspace;
+	(void) old_tuple;
 
-	/*
-	 * Parse old space meta
-	 */
-	struct space_meta *old_m = space_meta_from_tuple(old_tuple);
-
-	/*
-	 * Check that meta for super spaces is not changing
-	 */
-	if (old_m->space_no == BOX_SYSSPACE_NO ||
-	    old_m->space_no == BOX_SYSINDEX_NO) {
-		raise_meta_error("pk=%u: cannot change system spaces",
-				 old_m->space_no);
+	u32 space_no;
+	if (new_tuple) {
+		/* REPLACE or INSERT */
+		struct space_meta *meta = space_meta_from_tuple(new_tuple);
+		space_no = meta->space_no;
+	} else if (old_tuple) {
+		/* DELETE */
+		struct space_meta *meta = space_meta_from_tuple(old_tuple);
+		space_no = meta->space_no;
+	} else {
+		assert (false);
 	}
 
 	/*
-	 * Try to find a cache entry for this space
+	 * Commit space meta
 	 */
-	struct space *space = NULL;
-	bool has_data = false;
-	const struct mh_i32ptr_node_t node = { .key = old_m->space_no };
-	mh_int_t k = mh_i32ptr_get(spaces_by_no, &node, NULL, NULL);
-	if (k != mh_end(spaces_by_no)) {
-		space = mh_i32ptr_node(spaces_by_no, k)->val;
-		has_data = space->index[0] != NULL &&
-			[space->index[0] size] > 0;
+	if (space_no == BOX_SYSSPACE_NO || space_no == BOX_SYSINDEX_NO) {
+		assert (!primary_indexes_enabled);
+		return new_tuple;
 	}
 
-	/*
-	 * Check that the space is empty
-	 */
-	if (has_data) {
-		raise_meta_error("pk=%u: cannot remove,"
-				 "because space is not empty",
-				 old_m->space_no);
-	}
+	space_cache_commit(space_no);
 
-	/*
-	 * Check that the space does not have indexes
-	 */
-	char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
-	save_field_u32(space_key, old_m->space_no);
-	struct space *sysindex = space_find_by_no(BOX_SYSINDEX_NO);
-	Index *sysindex_pk = index_find_by_no(sysindex, 0);
-	struct iterator *it = [sysindex_pk allocIterator];
-	@try {
-		[sysindex_pk initIterator: it :ITER_EQ :space_key :1];
-
-		if (it->next(it) != NULL) {
-			raise_meta_error("pk=%u: "
-					 "cannot remove, because "
-					 "space has indexes",
-					 old_m->space_no);
-		}
-	} @finally {
-		it->free(it);
-	}
-
-	/*
-	 * Remove the cache entry
-	 */
-	if (space != NULL) {
-		space_cache_delete(space);
-	}
-
-	return NULL;
+	return new_tuple;
 }
 
 static struct tuple *
-space_sysspace_check(struct space_trigger *trigger, struct space *sysspace,
-		     struct tuple *old_tuple, struct tuple *new_tuple)
+space_sysspace_rollback(struct space_trigger *trigger, struct space *sysspace,
+			struct tuple *old_tuple, struct tuple *new_tuple)
 {
+	(void) trigger;
+	(void) sysspace;
+	(void) old_tuple;
+
+	u32 space_no;
+	if (new_tuple) {
+		/* REPLACE or INSERT */
+		struct space_meta *meta = space_meta_from_tuple(new_tuple);
+		space_no = meta->space_no;
+	} else if (old_tuple) {
+		/* DELETE */
+		struct space_meta *meta = space_meta_from_tuple(old_tuple);
+		space_no = meta->space_no;
+	} else {
+		assert (false);
+	}
+
+	/*
+	 * Rollback space meta
+	 */
+
+	space_cache_rollback(space_no);
+
+	return new_tuple;
+}
+
+static struct tuple *
+space_sysindex_before(struct space_trigger *trigger, struct space *sysindex,
+		      struct tuple *old_tuple, struct tuple *new_tuple)
+{
+	(void) trigger;
+
 	assert (old_tuple != NULL || new_tuple != NULL);
 
-	if (new_tuple != NULL) {
-		return space_sysspace_check_replace(trigger, sysspace,
-						    old_tuple, new_tuple);
-	} else /* old_tuple != NULL */ {
-		return space_sysspace_check_delete(trigger, sysspace,
-						   old_tuple);
+	/*
+	 * Parse old and new space tuples
+	 */
+	struct index_meta *new_index_meta = NULL;
+	struct index_meta *old_index_meta = NULL;
+	u32 space_no;
+	if (old_tuple && new_tuple) {
+		/* replace */
+		old_index_meta = index_meta_from_tuple(old_tuple);
+		new_index_meta = index_meta_from_tuple(new_tuple);
+		assert (old_index_meta->space_no == new_index_meta->space_no);
+		space_no = old_index_meta->space_no;
+		if (old_index_meta->space_no != old_index_meta->space_no) {
+			raise_meta_error("space_no=%u ,index_no=%u: "
+					 "cannot change space_no",
+					 old_index_meta->space_no,
+					 old_index_meta->index_no);
+		}
+
+		if (old_index_meta->index_no != old_index_meta->index_no) {
+			raise_meta_error("space_no=%u ,index_no=%u: "
+					 "cannot change index_no",
+					 old_index_meta->space_no,
+					 old_index_meta->index_no);
+		}
+	} else if (new_tuple) {
+		/* insert */
+		new_index_meta = index_meta_from_tuple(new_tuple);
+		space_no = new_index_meta->space_no;
+	} else if (old_tuple) {
+		/* delete */
+		old_index_meta = index_meta_from_tuple(old_tuple);
+		space_no = old_index_meta->space_no;
+	} else {
+		assert(false);
 	}
 
-	return NULL;
-}
+	/*
+	 * Check that system spaces are not affected
+	 */
+	if (space_no == BOX_SYSSPACE_NO || space_no == BOX_SYSINDEX_NO) {
+		if (!primary_indexes_enabled) {
+			return NULL;
+		}
+		raise_meta_error("space_no=%u: cannot change system spaces",
+				 space_no);
+	}
 
-static struct tuple *
-space_sysindex_check_replace(struct space_trigger *tr, struct space *sysindex,
-			     struct tuple *old_tuple, struct tuple *new_tuple)
-{
-	assert (new_tuple != NULL);
-	(void) tr;
-	(void) sysindex;
+	if (new_tuple && new_index_meta->index_no >= BOX_INDEX_MAX) {
+		raise_meta_error("space_no=%u, index_no=%u: "
+				 "invalid index_no (> %u)",
+				 new_index_meta->space_no,
+				 new_index_meta->index_no,
+				 BOX_INDEX_MAX);
+	}
+
+	struct space_meta *space_meta;
+	size_t index_count = 0;
+	struct index_meta *index_metas[BOX_INDEX_MAX];
 
 	struct space *sysspace = space_find_by_no(BOX_SYSSPACE_NO);
 	Index *sysspace_pk = index_find_by_no(sysspace, 0);
+	Index *sysindex_pk = index_find_by_no(sysindex, 0);
 
-	/*
-	 * Parse new index meta
-	 */
-	struct index_meta *new_index_m = index_meta_from_tuple(new_tuple);
-
-	/*
-	 * Check that meta for super spaces is not changing
-	 */
-	if (new_index_m->space_no == BOX_SYSSPACE_NO ||
-	    new_index_m->space_no == BOX_SYSINDEX_NO) {
-		raise_meta_error("pk=%u,%u: cannot change system spaces",
-				 new_index_m->space_no, new_index_m->index_no);
-	}
-
-	/*
-	 * Check that space exist
-	 */
 	char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
-	save_field_u32(space_key, new_index_m->space_no);
-	struct tuple *space_tuple = [sysspace_pk findByKey :space_key :1];
+	save_field_u32(space_key, space_no);
+
+	/*
+	 * Get metadata for space
+	 */
+	struct tuple *space_tuple = [sysspace_pk findByKey: space_key :1];
 	if (space_tuple == NULL) {
-		raise_meta_error("pk=%u,%u: space does not exist",
-				  new_index_m->space_no, new_index_m->index_no);
+		raise_meta_error("space_no=%u: space does not exist",
+				 space_no);
 	}
+	space_meta = space_meta_from_tuple(space_tuple);
 
 	/*
-	 * Check index parameters
+	 * Get metadata for indexes
 	 */
-	if (new_index_m->type >= index_type_MAX) {
-		raise_meta_error("pk=%u,%u: invalid index type",
-				 new_index_m->space_no, new_index_m->index_no);
-	}
-
-	if (new_index_m->index_no == 0 && !new_index_m->is_unique) {
-		raise_meta_error("pk=%u,%u: primary key must be unique",
-				 new_index_m->space_no, new_index_m->index_no);
-	}
-
-	if (new_index_m->part_count > 1 &&
-	    (new_index_m->type == HASH /* || new_index_m->type == BITSET */)) {
-		raise_meta_error("pk=%u,%u: this index is single-part only",
-				 new_index_m->space_no, new_index_m->index_no);
-	}
-
-	if (!new_index_m->is_unique &&
-	    (new_index_m->type == HASH /* || new_index_m->type == BITSET */)) {
-		raise_meta_error("pk=%u,%u: this index is unique only",
-				 new_index_m->space_no, new_index_m->index_no);
-	}
-
-	/*
-	 * Parse space meta
-	 */
-	struct space_meta *space_m = space_meta_from_tuple(space_tuple);
-
-	/*
-	 * Check that all indexed fields are defined
-	 */
-	enum field_data_type *types = p0alloc(fiber->gc_pool,
-			space_m->max_fieldno * sizeof(*types));
-	for (u32 i = 0; i < space_m->field_defs_count; i++) {
-		types[space_m->field_defs[i].field_no] =
-				space_m->field_defs[i].field_type;
-	}
-	space_sysspace_check_types(new_index_m, types, space_m->max_fieldno);
-
-	/*
-	 * Try to find a cache entry for this space
-	 */
-	struct space *space = NULL;
-	bool has_data = false;
-	const struct mh_i32ptr_node_t node = { .key = new_index_m->space_no };
-	mh_int_t k = mh_i32ptr_get(spaces_by_no, &node, NULL, NULL);
-	if (k != mh_end(spaces_by_no)) {
-		space = mh_i32ptr_node(spaces_by_no, k)->val;
-		has_data = space->index[0] != NULL &&
-			[space->index[0] size] > 0;
-
-		space_cache_invalidate(space);
-	}
-
-	if (!has_data)
-		return new_tuple;
-
-	if (old_tuple == NULL) {
-		raise_meta_error("pk=%u,%u: cannot add the index, "
-				 "because space is not empty",
-				 new_index_m->space_no, new_index_m->index_no);
-	}
-
-	/*
-	 * Parse old index meta
-	 */
-	struct index_meta *old_index_m = index_meta_from_tuple(old_tuple);
-
-	assert (old_index_m->index_no == new_index_m->index_no);
-	assert (old_index_m->space_no == new_index_m->space_no);
-	(void) old_index_m;
-
-	bool key_def_changed = false;
-	if (old_index_m->type == new_index_m->type &&
-	    old_index_m->is_unique == new_index_m->is_unique &&
-	    old_index_m->part_count == new_index_m->part_count) {
-
-		for (u32 part = 0; part < new_index_m->part_count; part++) {
-			if (old_index_m->parts[part].field_no !=
-			    new_index_m->parts[part].field_no) {
-				key_def_changed = true;
-				break;
+	struct iterator *it = [sysindex_pk allocIterator];
+	@try {
+		[sysindex_pk initIterator: it :ITER_EQ :space_key :1];
+		struct tuple *index_tuple;
+		struct index_meta *index_meta;
+		while ( (index_tuple = it->next(it)) != NULL) {
+			index_meta = index_meta_from_tuple(index_tuple);
+			if (old_tuple && index_meta->index_no ==
+					 old_index_meta->index_no) {
+				/* Skip deleted index */
+				continue;
 			}
+			if (new_tuple && index_meta->index_no ==
+					 new_index_meta->index_no) {
+				/* Skip update index (add below) */
+				continue;
+			}
+
+			index_metas[index_count++] = index_meta;
 		}
-
-	} else {
-		key_def_changed = true;
+	} @finally {
+		it->free(it);
 	}
 
-	if (key_def_changed) {
-		raise_meta_error("pk=%u,%u: cannot change the index, "
-				 "because space is not empty",
-				 new_index_m->space_no, new_index_m->index_no);
+	if (new_tuple) {
+		/* Add new/updated index */
+		index_metas[index_count++] = new_index_meta;
 	}
+
+	/*
+	 * Prepare new space cache
+	 */
+	space_cache_update(space_meta, index_count, index_metas);
 
 	return new_tuple;
 }
 
 static struct tuple *
-space_sysindex_check_delete(struct space_trigger *tr, struct space *sysindex,
-			    struct tuple *old_tuple)
+space_sysindex_commit(struct space_trigger *trigger, struct space *sysspace,
+		      struct tuple *old_tuple, struct tuple *new_tuple)
 {
-	assert (old_tuple != NULL);
-	(void) tr;
-	(void) sysindex;
+	(void) trigger;
+	(void) sysspace;
 
-	/*
-	 * Parse old index meta
-	 */
-	struct index_meta *old_index_m = index_meta_from_tuple(old_tuple);
+	u32 space_no;
+	if (new_tuple) {
+		struct index_meta *meta = index_meta_from_tuple(new_tuple);
+		space_no = meta->space_no;
+	} else {
+		assert (old_tuple != NULL);
+		struct index_meta *meta = index_meta_from_tuple(old_tuple);
+		space_no = meta->space_no;
+	}
 
-	/*
-	 * Check that meta for super spaces is not changing
-	 */
-	if (old_index_m->space_no == BOX_SYSSPACE_NO ||
-	    old_index_m->space_no == BOX_SYSINDEX_NO) {
-		raise_meta_error("pk=%u,%u: cannot change system spaces",
-				 old_index_m->space_no, old_index_m->index_no);
+	if (space_no == BOX_SYSSPACE_NO || space_no == BOX_SYSINDEX_NO) {
+		assert (!primary_indexes_enabled);
+		return new_tuple;
 	}
 
 	/*
-	 * Try to find a cache entry for this space
+	 * Commit space meta
 	 */
-	struct space *space = NULL;
-	bool space_has_data = false;
-	const struct mh_i32ptr_node_t node = { .key = old_index_m->space_no };
-	mh_int_t k = mh_i32ptr_get(spaces_by_no, &node, NULL, NULL);
-	if (k != mh_end(spaces_by_no)) {
-		space = mh_i32ptr_node(spaces_by_no, k)->val;
-		space_has_data = space->index[0] != NULL &&
-				[space->index[0] size] > 0;
-	}
+	space_cache_commit(space_no);
 
-	if (space_has_data) {
-		raise_meta_error("pk=%u,%u: cannot change the index, "
-				 "because space is not empty",
-				 old_index_m->space_no, old_index_m->index_no);
-	}
-
-	/*
-	 * Invalidate cache
-	 */
-	if (space != NULL) {
-		space_cache_delete(space);
-	}
-
-	return NULL;
+	return new_tuple;
 }
 
 static struct tuple *
-space_sysindex_check(struct space_trigger *trigger, struct space *sysindex,
-		     struct tuple *old_tuple, struct tuple *new_tuple)
+space_sysindex_rollback(struct space_trigger *trigger, struct space *sysspace,
+			struct tuple *old_tuple, struct tuple *new_tuple)
 {
-	assert (old_tuple != NULL || new_tuple != NULL);
+	(void) trigger;
+	(void) sysspace;
 
-	if (new_tuple != NULL) {
-		return space_sysindex_check_replace(trigger, sysindex,
-						   old_tuple, new_tuple);
-	} else /* old_tuple != NULL */ {
-		return space_sysindex_check_delete(trigger, sysindex,
-						   old_tuple);
+	u32 space_no;
+	if (new_tuple) {
+		struct index_meta *meta = index_meta_from_tuple(new_tuple);
+		space_no = meta->space_no;
+	} else {
+		assert (old_tuple != NULL);
+		struct index_meta *meta = index_meta_from_tuple(old_tuple);
+		space_no = meta->space_no;
 	}
 
-	return NULL;
+	/*
+	 * Rollback space meta
+	 */
+	space_cache_rollback(space_no);
+
+	return new_tuple;
 }
 
+
 static void
-space_super_create(void)
+space_init_system(void)
 {
 	/*
 	 * sys_space
@@ -930,31 +861,34 @@ space_super_create(void)
 	sysspace_meta->field_defs[3].field_no = 3;
 	sysspace_meta->field_defs[3].field_type = NUM;
 
-	struct index_meta *sysspace_idx_meta_0 = p0alloc(fiber->gc_pool,
-				sizeof(*sysspace_idx_meta_0) + 1 *
-				sizeof(*sysspace_idx_meta_0->parts));
+	size_t sysspace_idx_count = 2;
+	struct index_meta *sysspace_idx_metas[2];
 
-	sysspace_idx_meta_0->space_no = BOX_SYSSPACE_NO;
-	sysspace_idx_meta_0->index_no = 0;
-	save_field_str(sysspace_idx_meta_0->name, "pk", strlen("pk"));
-	sysspace_idx_meta_0->type = TREE;
-	sysspace_idx_meta_0->is_unique = true;
-	sysspace_idx_meta_0->max_fieldno = 1;
-	sysspace_idx_meta_0->part_count = 1;
-	sysspace_idx_meta_0->parts[0].field_no = 0;
+	sysspace_idx_metas[0] = p0alloc(fiber->gc_pool,
+					sizeof(*sysspace_idx_metas[0]) + 1 *
+					sizeof(*sysspace_idx_metas[0]->parts));
 
-	struct index_meta *sysspace_idx_meta_1 = p0alloc(fiber->gc_pool,
-				sizeof(*sysspace_idx_meta_1) + 1 *
-				sizeof(*sysspace_idx_meta_1->parts));
+	sysspace_idx_metas[0]->space_no = BOX_SYSSPACE_NO;
+	sysspace_idx_metas[0]->index_no = 0;
+	save_field_str(sysspace_idx_metas[0]->name, "pk", strlen("pk"));
+	sysspace_idx_metas[0]->type = TREE;
+	sysspace_idx_metas[0]->is_unique = true;
+	sysspace_idx_metas[0]->max_fieldno = 1;
+	sysspace_idx_metas[0]->part_count = 1;
+	sysspace_idx_metas[0]->parts[0].field_no = 0;
 
-	sysspace_idx_meta_1->space_no = BOX_SYSSPACE_NO;
-	sysspace_idx_meta_1->index_no = 1;
-	save_field_str(sysspace_idx_meta_1->name, "name", strlen("name"));
-	sysspace_idx_meta_1->type = TREE;
-	sysspace_idx_meta_1->is_unique = true;
-	sysspace_idx_meta_1->max_fieldno = 2;
-	sysspace_idx_meta_1->part_count = 1;
-	sysspace_idx_meta_1->parts[0].field_no = 1;
+	sysspace_idx_metas[1] = p0alloc(fiber->gc_pool,
+					sizeof(*sysspace_idx_metas[1]) + 1 *
+					sizeof(*sysspace_idx_metas[1]->parts));
+
+	sysspace_idx_metas[1]->space_no = BOX_SYSSPACE_NO;
+	sysspace_idx_metas[1]->index_no = 1;
+	save_field_str(sysspace_idx_metas[1]->name, "name", strlen("name"));
+	sysspace_idx_metas[1]->type = TREE;
+	sysspace_idx_metas[1]->is_unique = true;
+	sysspace_idx_metas[1]->max_fieldno = 2;
+	sysspace_idx_metas[1]->part_count = 1;
+	sysspace_idx_metas[1]->parts[0].field_no = 1;
 
 	/*
 	 * sys_index
@@ -980,33 +914,36 @@ space_super_create(void)
 	sysindex_meta->field_defs[4].field_no = 4;
 	sysindex_meta->field_defs[4].field_type = NUM;
 
-	struct index_meta *sysindex_idx_meta_0 = p0alloc(fiber->gc_pool,
-				sizeof(*sysindex_idx_meta_0) + 2 *
-				sizeof(*sysindex_idx_meta_0->parts));
+	size_t sysindex_idx_count = 2;
+	struct index_meta *sysindex_idx_metas[2];
 
-	sysindex_idx_meta_0->space_no = BOX_SYSINDEX_NO;
-	sysindex_idx_meta_0->index_no = 0;
-	save_field_str(sysindex_idx_meta_0->name, "pk", strlen("pk"));
-	sysindex_idx_meta_0->type = TREE;
-	sysindex_idx_meta_0->is_unique = true;
-	sysindex_idx_meta_0->max_fieldno = 2;
-	sysindex_idx_meta_0->part_count = 2;
-	sysindex_idx_meta_0->parts[0].field_no = 0;
-	sysindex_idx_meta_0->parts[1].field_no = 1;
+	sysindex_idx_metas[0] = p0alloc(fiber->gc_pool,
+					sizeof(*sysindex_idx_metas[0]) + 2 *
+					sizeof(*sysindex_idx_metas[0]->parts));
 
-	struct index_meta *sysindex_idx_meta_1 = p0alloc(fiber->gc_pool,
-				sizeof(*sysindex_idx_meta_1) + 2 *
-				sizeof(*sysindex_idx_meta_1->parts));
+	sysindex_idx_metas[0]->space_no = BOX_SYSINDEX_NO;
+	sysindex_idx_metas[0]->index_no = 0;
+	save_field_str(sysindex_idx_metas[0]->name, "pk", strlen("pk"));
+	sysindex_idx_metas[0]->type = TREE;
+	sysindex_idx_metas[0]->is_unique = true;
+	sysindex_idx_metas[0]->max_fieldno = 2;
+	sysindex_idx_metas[0]->part_count = 2;
+	sysindex_idx_metas[0]->parts[0].field_no = 0;
+	sysindex_idx_metas[0]->parts[1].field_no = 1;
 
-	sysindex_idx_meta_1->space_no = BOX_SYSINDEX_NO;
-	sysindex_idx_meta_1->index_no = 1;
-	save_field_str(sysindex_idx_meta_1->name, "name", strlen("name"));
-	sysindex_idx_meta_1->type = TREE;
-	sysindex_idx_meta_1->is_unique = true;
-	sysindex_idx_meta_1->max_fieldno = 3;
-	sysindex_idx_meta_1->part_count = 2;
-	sysindex_idx_meta_1->parts[0].field_no = 0;
-	sysindex_idx_meta_1->parts[0].field_no = 2;
+	sysindex_idx_metas[1] = p0alloc(fiber->gc_pool,
+					sizeof(*sysindex_idx_metas[1]) + 2 *
+					sizeof(*sysindex_idx_metas[1]->parts));
+
+	sysindex_idx_metas[1]->space_no = BOX_SYSINDEX_NO;
+	sysindex_idx_metas[1]->index_no = 1;
+	save_field_str(sysindex_idx_metas[1]->name, "name", strlen("name"));
+	sysindex_idx_metas[1]->type = TREE;
+	sysindex_idx_metas[1]->is_unique = true;
+	sysindex_idx_metas[1]->max_fieldno = 3;
+	sysindex_idx_metas[1]->part_count = 2;
+	sysindex_idx_metas[1]->parts[0].field_no = 0;
+	sysindex_idx_metas[1]->parts[0].field_no = 2;
 
 	struct space *sysspace = NULL;
 	struct space *sysindex = NULL;
@@ -1017,90 +954,117 @@ space_super_create(void)
 	struct tuple *sysindex_idx_tuple_0 = NULL;
 	struct tuple *sysindex_idx_tuple_1 = NULL;
 
+
 	@try {
-		sysspace = space_cache_new();
-		space_cache_update_do_space(sysspace, sysspace_meta);
-		space_cache_update_do_index(sysspace, sysspace_idx_meta_0);
-		space_cache_update_do_index(sysspace, sysspace_idx_meta_1);
+		/*
+		 * System Space
+		 */
+		space_cache_update(sysspace_meta, sysspace_idx_count,
+				   sysspace_idx_metas);
+		sysspace = space_cache_get(BOX_SYSSPACE_NO);
 
-		struct space_trigger *check;
-		check = calloc(1, sizeof(*check));
-		if (check == NULL) {
+		struct space_trigger *before;
+		struct space_trigger *commit;
+		struct space_trigger *rollback;
+
+		/* Before trigger */
+		before = calloc(1, sizeof(*before));
+		if (before == NULL) {
 			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
-			sizeof(*check), "space", "check_trigger");
+				  sizeof(*before), "space",
+				  "check_trigger");
 		}
-		check->free = space_systrigger_free;
-		check->replace = space_sysspace_check;
-		rlist_add_entry(&sysspace->before_triggers, check, link);
+		before->free = space_systrigger_free;
+		before->trigger = space_sysspace_before;
+		rlist_add_entry(&sysspace->before_triggers, before, link);
 
-		sysindex = space_cache_new();
-		space_cache_update_do_space(sysindex, sysindex_meta);
-		space_cache_update_do_index(sysindex, sysindex_idx_meta_0);
-		space_cache_update_do_index(sysindex, sysindex_idx_meta_1);
-
-		check = calloc(1, sizeof(*check));
-		if (check == NULL) {
+		/* Commit trigger */
+		commit = calloc(1, sizeof(*commit));
+		if (commit == NULL) {
 			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
-			sizeof(*check), "space", "check_trigger");
+				  sizeof(*commit), "space",
+				  "commit_trigger");
 		}
-		check->free = space_systrigger_free;
-		check->replace = space_sysindex_check;
-		rlist_add_entry(&sysindex->before_triggers, check, link);
+		commit->free = space_systrigger_free;
+		commit->trigger = space_sysspace_commit;
+		rlist_add_entry(&sysspace->commit_triggers, commit, link);
+
+		/* Rollback trigger */
+		rollback = calloc(1, sizeof(*rollback));
+		if (rollback == NULL) {
+			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
+				  sizeof(*rollback), "space",
+				  "rollback_trigger");
+		}
+		rollback->free = space_systrigger_free;
+		rollback->trigger = space_sysspace_rollback;
+		rlist_add_entry(&sysspace->rollback_triggers, rollback, link);
+
+		/*
+		 * System Index
+		 */
+		space_cache_update(sysindex_meta, sysindex_idx_count,
+				   sysindex_idx_metas);
+		sysindex = space_cache_get(BOX_SYSINDEX_NO);
+
+		/* Before trigger */
+		before = calloc(1, sizeof(*before));
+		if (before == NULL) {
+			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
+				  sizeof(*before), "space",
+				  "check_trigger");
+		}
+		before->free = space_systrigger_free;
+		before->trigger = space_sysindex_before;
+		rlist_add_entry(&sysindex->before_triggers, before, link);
+
+		/* Commit trigger */
+		commit = calloc(1, sizeof(*commit));
+		if (commit == NULL) {
+			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
+				  sizeof(*commit), "space",
+				  "commit_trigger");
+		}
+		commit->free = space_systrigger_free;
+		commit->trigger = space_sysindex_commit;
+		rlist_add_entry(&sysindex->commit_triggers, commit, link);
+
+		/* Rollback trigger */
+		rollback = calloc(1, sizeof(*rollback));
+		if (rollback == NULL) {
+			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
+				  sizeof(*rollback), "space",
+				  "rollback_trigger");
+		}
+		rollback->free = space_systrigger_free;
+		rollback->trigger = space_sysindex_rollback;
+		rlist_add_entry(&sysindex->rollback_triggers, rollback, link);
 
 		sysspace_tuple = space_meta_to_tuple(sysspace_meta);
-		sysspace_idx_tuple_0 = index_meta_to_tuple(sysspace_idx_meta_0);
-		sysspace_idx_tuple_1 = index_meta_to_tuple(sysspace_idx_meta_1);
+		sysspace_idx_tuple_0 = index_meta_to_tuple(sysspace_idx_metas[0]);
+		sysspace_idx_tuple_1 = index_meta_to_tuple(sysspace_idx_metas[1]);
 
 		sysindex_tuple = space_meta_to_tuple(sysindex_meta);
-		sysindex_idx_tuple_0 = index_meta_to_tuple(sysindex_idx_meta_0);
-		sysindex_idx_tuple_1 = index_meta_to_tuple(sysindex_idx_meta_1);
+		sysindex_idx_tuple_0 = index_meta_to_tuple(sysindex_idx_metas[0]);
+		sysindex_idx_tuple_1 = index_meta_to_tuple(sysindex_idx_metas[1]);
 
 		assert (sysspace->index[0] != NULL);
-		[sysspace->index[0] beginBuild];
-		@try {
-			[sysspace->index[0] buildNext: sysspace_tuple];
-			[sysspace->index[0] buildNext: sysindex_tuple];
-		} @finally {
-			[sysspace->index[0] endBuild];
-		}
-
 		assert (sysindex->index[0] != NULL);
+
+		[sysspace->index[0] beginBuild];
+		[sysspace->index[0] endBuild];
 		[sysindex->index[0] beginBuild];
-		@try {
-			[sysindex->index[0] buildNext: sysspace_idx_tuple_0];
-			[sysindex->index[0] buildNext: sysspace_idx_tuple_1];
-			[sysindex->index[0] buildNext: sysindex_idx_tuple_0];
-			[sysindex->index[0] buildNext: sysindex_idx_tuple_1];
-		} @finally {
-			[sysindex->index[0] endBuild];
-		}
+		[sysindex->index[0] endBuild];
 
-		tuple_ref(sysspace_tuple, 1);
-		tuple_ref(sysspace_idx_tuple_0, 1);
-		tuple_ref(sysspace_idx_tuple_1, 1);
-		tuple_ref(sysindex_tuple, 1);
-		tuple_ref(sysindex_idx_tuple_0, 1);
-		tuple_ref(sysindex_idx_tuple_1, 1);
+		space_recovery_next(sysspace, sysspace_tuple);
+		space_recovery_next(sysspace, sysindex_tuple);
 
-		mh_int_t pos;
-		struct mh_i32ptr_node_t no_node;
-		no_node.key = sysspace->no;
-		no_node.val = sysspace;
-		pos = mh_i32ptr_replace(spaces_by_no, &no_node, NULL, NULL, NULL);
-		if (pos == mh_end(spaces_by_no)) {
-			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
-				  sizeof(no_node), "spaces_by_no", "space");
-		}
-
-		no_node.key = sysindex->no;
-		no_node.val = sysindex;
-		pos = mh_i32ptr_replace(spaces_by_no, &no_node, NULL, NULL, NULL);
-		if (pos == mh_end(spaces_by_no)) {
-			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
-				  sizeof(no_node), "spaces_by_no", "space");
-		}
-
-	} @catch(tnt_Exception *) {
+		space_recovery_next(sysindex, sysspace_idx_tuple_0);
+		space_recovery_next(sysindex, sysspace_idx_tuple_1);
+		space_recovery_next(sysindex, sysindex_idx_tuple_0);
+		space_recovery_next(sysindex, sysindex_idx_tuple_1);
+	} @catch(tnt_Exception *e) {
+		[e log];
 		tuple_free(sysspace_tuple);
 		tuple_free(sysspace_idx_tuple_0);
 		tuple_free(sysspace_idx_tuple_1);
@@ -1108,14 +1072,15 @@ space_super_create(void)
 		tuple_free(sysindex_idx_tuple_0);
 		tuple_free(sysindex_idx_tuple_1);
 
-		space_cache_delete(sysspace);
-		space_cache_delete(sysindex);
+		space_cache_rollback(BOX_SYSSPACE_NO);
+		space_cache_rollback(BOX_SYSINDEX_NO);
 		@throw;
 	}
 
-	sysspace->is_valid = true;
-	sysindex->is_valid = true;
+	space_cache_commit(BOX_SYSSPACE_NO);
+	space_cache_commit(BOX_SYSINDEX_NO);
 }
+
 
 static void
 key_def_create(struct key_def *key_def, const struct index_meta *meta,
@@ -1173,312 +1138,499 @@ key_def_destroy(struct key_def *key_def)
 	key_def->cmp_order = NULL;
 }
 
-static void
-space_cache_invalidate(struct space *sp)
+static bool
+key_def_eq(const struct key_def *a, const struct key_def *b)
 {
-	sp->is_valid = false;
-	if (tarantool_L == NULL)
-		return;
+	if (a->type != b->type ||
+	    a->is_unique != b->is_unique ||
+	    a->part_count != b->part_count) {
+		return false;
+	}
 
-	box_lua_space_cache_clear(tarantool_L, sp);
+	for (u32 part = 0; part < a->part_count; part++) {
+		if (a->parts[part].fieldno != b->parts[part].fieldno ||
+		    a->parts[part].type != b->parts[part].type) {
+			return false;
+		}
+	}
+
+	assert (memcmp(a->cmp_order, b->cmp_order,
+		       a->max_fieldno * sizeof(u32)) == 0);
+
+	return true;
+}
+
+static struct space *
+space_cache_get(u32 space_no)
+{
+	struct mh_i32ptr_node_t no_node = { .key = space_no };
+	mh_int_t pos = mh_i32ptr_get(spaces_by_no, &no_node, NULL, NULL);
+	if (pos != mh_end(spaces_by_no)) {
+		return mh_i32ptr_node(spaces_by_no, pos)->val;
+	}
+
+	return NULL;
 }
 
 static void
-space_cache_update_do_index(struct space *space, struct index_meta *meta)
+space_cache_put(struct space *space)
 {
-	bool is_empty = (space->index[0] == NULL) || space_size(space) == 0;
+	struct mh_i32ptr_node_t no_node;
+	no_node.key = space->no;
+	no_node.val = space;
 
-	assert(meta->index_no < BOX_INDEX_MAX);
-	assert(meta->part_count > 0);
+	uint32_t pos = mh_i32ptr_replace(spaces_by_no, &no_node, NULL,
+					NULL, NULL);
+	if (pos == mh_end(spaces_by_no)) {
+		tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
+			  sizeof(no_node), "spaces_by_no", "space");
+	}
+}
 
-	if (!is_empty) {
-		assert (space->no == meta->space_no);
+static void
+space_cache_update_index(struct space *old_space, struct space *new_space,
+			 struct index_meta *index_m)
+{
+	assert (new_space != NULL);
+	assert (index_m != NULL);
+	assert (index_m->index_no < BOX_INDEX_MAX);
+	assert (index_m->part_count > 0);
+	assert (new_space->index[index_m->index_no] == NULL);
+	assert (new_space->no == index_m->space_no);
+
+	u32 index_no = index_m->index_no;
+
+	/*
+	 * Check index parameters
+	 */
+	if (index_m->type >= index_type_MAX) {
+		raise_meta_error("space_no=%u, index_no=%u: "
+				 "invalid index type",
+				 index_m->space_no, index_m->index_no);
 	}
 
-	/* Check if key_def was changed */
-	struct key_def *key_def = &space->key_defs[meta->index_no];
-	bool key_def_changed = false;
-	if (space->index[meta->index_no] == NULL) {
-		key_def_changed = true;
-	} else if (key_def->type != meta->type ||
-		   key_def->is_unique != meta->is_unique ||
-		   key_def->part_count != meta->part_count) {
-		key_def_changed = true;
-	} else {
-		for (u32 part = 0; part < meta->part_count; part++) {
-			u32 field_no = meta->parts[part].field_no;
-			if (key_def->parts[part].fieldno != field_no ||
-			    key_def->parts[part].type !=
-					space->field_types[field_no]) {
-				key_def_changed = true;
-				break;
-			}
+	if (index_m->part_count > 1 &&
+	    (index_m->type == HASH /* || new_index_m->type == BITSET */)) {
+		raise_meta_error("space_no=%u, index_no=%u: "
+				 "this type of index must be single-part",
+				 index_m->space_no, index_m->index_no);
+	}
+
+	if (!index_m->is_unique &&
+	    (index_m->type == HASH /* || new_index_m->type == BITSET */)) {
+		raise_meta_error("space_no=%u, index_no=%u: "
+				 "this type of index must be unique",
+				 index_m->space_no, index_m->index_no);
+	}
+
+	/* Check that all indexed fields are defined */
+	for (u32 part = 0; part < index_m->part_count; part++){
+		u32 field_no = index_m->parts[part].field_no;
+		if (field_no >= new_space->max_fieldno ||
+		    new_space->field_types[field_no] == UNKNOWN) {
+			raise_meta_error("space_no=%u, index_no %u: "
+					  "field %u is not defined",
+					  index_m->space_no, index_m->index_no,
+					  index_m->parts[part].field_no);
 		}
 	}
 
-	if (!key_def_changed) {
-		/* Update the other param which do not affect key_def */
-		Index *index = space->index[meta->index_no];
-		assert (index != NULL);
+	/* Create a new key_def */
+	key_def_create(&new_space->key_defs[index_no], index_m,
+		       new_space->field_types);
 
-		const void *name = meta->name;
-		u32 name_len = load_varint32(&name);
-		save_field_str(index->name, name, name_len);
+	/* Save index name */
+	memcpy(new_space->index_name[index_no], index_m->name,
+	       BOX_INDEX_NAME_MAXLEN);
+
+	/* Check if a key_def is not changed */
+	if (old_space != NULL && old_space->index[index_no] != NULL &&
+	    key_def_eq(&old_space->key_defs[index_no],
+		       &new_space->key_defs[index_no])) {
+
+		say_debug("Space %u Index %u: key definition is not changed",
+			  new_space->no, index_no);
+		/* Share the current index between old and new spaces */
+		assert(old_space != NULL && old_space->index[index_no] != NULL);
+		new_space->index[index_no] = old_space->index[index_no];
+		new_space->index_is_shared[index_no] = true;
 		return;
 	}
 
-	if (!is_empty) {
-		raise_meta_error("pk=%u, %u: "
-				 "key definition is read-only because"
-				 "space is not empty",
-				 meta->space_no, meta->index_no);
-	}
+	say_debug("Space %u Index %u: key definition was changed",
+		  new_space->no, index_no);
 
-	assert (space->index[meta->index_no] == NULL);
-#if 0
-	/* Drop the old index */
-	if (space->index[meta->index_no] != NULL) {
-		struct key_def *key_def = &space->key_defs[meta->index_no];
-		key_def_destroy(key_def);
-
-		[space->index[meta->index_no] free];
-		space->index[meta->index_no] = NULL;
-		return;
-	}
-#endif
-
-	/* Create a new one */
-	assert (space->index[meta->index_no] == NULL);
-	key_def_create(&space->key_defs[meta->index_no], meta,
-		       space->field_types);
 	@try {
-		space->index[meta->index_no] =
-			[[Index alloc :key_def->type :key_def :space]
-			  init :key_def :space];
-		assert (space->index[meta->index_no] != NULL);
-
-		space->index[meta->index_no]->no = meta->index_no;
-		const void *name = meta->name;
-		u32 name_len = load_varint32(&name);
-		save_field_str(space->index[meta->index_no]->name, name,
-			       name_len);
-
-		/*
-		 * If primary indexes is not enabled then the index will be
-		 * created by box_init/recovery_row procedures.
-		 * Otherwise, just create an empty index.
-		 */
-		if (primary_indexes_enabled) {
-			[space->index[meta->index_no] beginBuild];
-			[space->index[meta->index_no] endBuild];
-		}
+		/* Create a new index */
+		struct key_def *key_def = &new_space->key_defs[index_no];
+		new_space->index[index_no] = [[Index alloc :key_def->type
+				:key_def :new_space] init :key_def :new_space];
+		/* index_no */
+		new_space->index[index_no]->no = index_no;
 	} @catch(tnt_Exception *) {
-		key_def_destroy(&space->key_defs[meta->index_no]);
-		if (space->index[meta->index_no] != NULL) {
-			[space->index[meta->index_no] free];
-			space->index[meta->index_no] = NULL;
+		key_def_destroy(&new_space->key_defs[index_no]);
+		if (new_space->index[index_no] != NULL) {
+			[new_space->index[index_no] free];
+			new_space->index[index_no] = NULL;
 		}
 		@throw;
 	}
 }
 
 static void
-space_cache_update_do_space(struct space *space, struct space_meta *meta)
+space_cache_update2(struct space *old_space, struct space *new_space,
+		    struct space_meta *space_meta, size_t index_count,
+		    struct index_meta *index_metas[BOX_INDEX_MAX])
 {
-	bool is_empty = (space->index[0] == NULL) || space_size(space) == 0;
-
-	if (!is_empty) {
-		assert (space->no = meta->space_no);
+	bool has_data = false;
+	if (old_space) {
+		if (old_space->state != SPACE_CONFIGURED ||
+		    old_space->shadow != NULL) {
+			raise_meta_error("space_no=%u: " "space is locked",
+					 old_space->no);
+		}
+		has_data = space_size(old_space) > 0;
+		assert (!has_data || primary_indexes_enabled);
 	}
 
-	space->no = meta->space_no;
-	const void *name = meta->name;
+	/*
+	 * Set space_no
+	 */
+	new_space->no = space_meta->space_no;
+
+	/*
+	 * Set name
+	 */
+	const void *name = space_meta->name;
 	u32 name_len = load_varint32(&name);
-	save_field_str(space->name, name, name_len);
+	save_field_str(new_space->name, name, name_len);
 
-	assert(is_empty || meta->arity == 0 || space->arity == meta->arity);
-	space->arity = meta->arity;
-	space->flags = meta->flags;
+	/*
+	 * Set arity
+	 */
+	new_space->arity = space_meta->arity;
 
-	assert(is_empty || meta->max_fieldno <= space->max_fieldno);
-	if (!is_empty) {
-		for (u32 i = 0; i < meta->field_defs_count; i++) {
-			u32 field_no = meta->field_defs[i].field_no;
-			assert(space->field_types[field_no] ==
-			       meta->field_defs[field_no].field_type);
+	/*
+	 * Set flags
+	 */
+	if (has_data && old_space->flags != space_meta->flags) {
+		raise_meta_error("space_no=%u: "
+				 "flags are read-only, "
+				 "because space is not empty",
+				 space_meta->space_no);
+	}
+	new_space->flags = space_meta->flags;
+
+	/*
+	 * Set field types
+	 */
+	assert (new_space->field_types == NULL);
+	new_space->max_fieldno = space_meta->max_fieldno;
+	new_space->field_types = calloc(new_space->max_fieldno,
+				    sizeof(*new_space->field_types));
+	if (new_space->field_types == NULL) {
+		tnt_raise(LoggedError, :ER_MEMORY_ISSUE, new_space->max_fieldno *
+			  sizeof(*new_space->field_types),
+			  "space", "field types");
+	}
+
+	for (u32 i = 0; i < space_meta->field_defs_count; i++) {
+		u32 field_no = space_meta->field_defs[i].field_no;
+		/* duplicates checked by space_meta_load_v1 */
+		assert (new_space->field_types[field_no] == UNKNOWN);
+
+		new_space->field_types[field_no] =
+				space_meta->field_defs[i].field_type;
+	}
+
+	/*
+	 * Set indexes
+	 */
+	for (u32 i = 0; i < index_count; i++) {
+		struct index_meta *index_meta = index_metas[i];
+		space_cache_update_index(old_space, new_space, index_meta);
+	}
+
+	/* Check pk */
+	if (new_space->index[0] != NULL) {
+		if (!new_space->key_defs[0].is_unique) {
+			raise_meta_error("space_no=%u: "
+					 "primary key must be unique",
+					 new_space->no);
+		}
+	} else if (has_data) {
+		raise_meta_error("space_no=%u: "
+				 "primary key is not configured",
+				 new_space->no);
+	}
+
+	/*
+	 * Initialize indexes
+	 */
+	u32 index_init_count;
+	if (primary_indexes_enabled) {
+		if (secondary_indexes_enabled) {
+			/* Init all indexes */
+			index_init_count = BOX_INDEX_MAX;
+		} else {
+			/* Init only PK */
+			index_init_count = 1;
+		}
+	} else {
+		/* Do not init indexes */
+		index_init_count = 0;
+	}
+
+	if (!has_data) {
+		/*
+		 * Space is empty => just init indexes.
+		 */
+		for (u32 index_no = 0; index_no < index_init_count; index_no++){
+			if (new_space->index[index_no] == NULL ||
+			    new_space->index_is_shared[index_no])
+				continue;
+
+			[new_space->index[index_no] beginBuild];
+			[new_space->index[index_no] endBuild];
+		}
+	} else {
+		/*
+		 * Space is not empty => init indexes and copy data.
+		 */
+		assert (old_space != NULL);
+		assert (primary_indexes_enabled);
+
+		Index *pk = index_find_by_no(old_space, 0);
+
+		/* Check that data is compatible with new space */
+		say_info("Space %u: begin validating the new schema",
+			 new_space->no);
+		struct iterator *it = [pk allocIterator];
+		@try {
+			[pk initIterator: it :ITER_ALL :NULL :0];
+			struct tuple *tuple = NULL;
+			while ((tuple = it->next(it))) {
+				space_validate_tuple(new_space, tuple);
+			}
+		} @finally {
+			it->free(it);
+		}
+		say_info("Space %u: end validating the new schema",
+			 new_space->no);
+
+		/* Insert data into new indexes */
+		for (u32 index_no = 0; index_no < index_init_count; index_no++){
+			if (new_space->index[index_no] == NULL ||
+			    new_space->index_is_shared[index_no])
+				continue;
+
+			say_info("Space %u: begin rebuilding index %u",
+				 new_space->no, index_no);
+			Index *index = index_find_by_no(new_space, index_no);
+			/* Index::build does not check tuples */
+			[index build: pk];
+			say_info("Space %u: end rebuilding index %u",
+				 new_space->no, index_no);
 		}
 	}
 
-	space->max_fieldno = meta->max_fieldno;
-
-	/* Allocate field_types */
-	free(space->field_types);
-	space->field_types = NULL;
-	size_t sz = meta->max_fieldno * sizeof(*space->field_types);
-	space->field_types = malloc(sz);
-	if (space->field_types == NULL) {
-		tnt_raise(LoggedError, :ER_MEMORY_ISSUE, sz,
-			  "space", "field types");
-	}
-	memset(space->field_types, 0, sizeof(sz));
-
-	/* Update field types */
-	for (u32 i = 0; i < meta->field_defs_count; i++) {
-		space->field_types[meta->field_defs[i].field_no] =
-				meta->field_defs[i].field_type;
-	}
-}
-
-static struct space *
-space_cache_update(struct tuple *new_space_tuple)
-{
 	/*
-	 * Parse new space meta
+	 * Save space cache
 	 */
-	struct space_meta *new_space_m = space_meta_from_tuple(new_space_tuple);
-
-	say_info("Space %u: begin updating configuration...",
-		 new_space_m->space_no);
-
-	/*
-	 * Try to get an existing cache entry or create a new
-	 */
-	struct space *space = NULL;
-	struct mh_i32ptr_node_t no_node = { .key = new_space_m->space_no };
-	mh_int_t k = mh_i32ptr_get(spaces_by_no, &no_node, NULL, NULL);
-	if (k == mh_end(spaces_by_no)) {
-		space = space_cache_new();
-		space->no = new_space_m->space_no;
-		no_node.val = space;
-
-		mh_int_t pos;
-		pos = mh_i32ptr_replace(spaces_by_no, &no_node, NULL, NULL, NULL);
+	if (old_space != NULL) {
+		old_space->shadow = new_space;
+	} else {
+		struct mh_i32ptr_node_t no_node;
+		no_node.key = space_meta->space_no;
+		no_node.val = new_space;
+		uint32_t pos = mh_i32ptr_replace(spaces_by_no, &no_node,
+						 NULL, NULL, NULL);
 		if (pos == mh_end(spaces_by_no)) {
-			space_cache_delete(space);
 			tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
 				  sizeof(no_node), "spaces_by_no", "space");
 		}
-	} else {
-		space = mh_i32ptr_node(spaces_by_no, k)->val;
 	}
 
-	assert (space != NULL);
-	assert (!space->is_valid);
-
-	/*
-	 * Update space itself
-	 */
-	space_cache_update_do_space(space, new_space_m);
-
-	/*
-	 * Create/update indexes
-	 */
-	/* If space is empty then just drop all indexes in the cache */
-	bool has_data = space->index[0] != NULL && [space->index[0] size] > 0;
-	if (!has_data) {
-		for (u32 i = 0; i < BOX_INDEX_MAX; i++) {
-			if (space->index[i] == NULL)
-				continue;
-
-			key_def_destroy(&space->key_defs[i]);
-			[space->index[i] free];
-			space->index[i] = NULL;
-		}
-	}
-
-	/* Get all indexes from sysindex and update one by one */
-	char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
-	save_field_u32(space_key, space->no);
-	struct space *sysspace_index = space_find_by_no(BOX_SYSINDEX_NO);
-	Index *index = index_find_by_no(sysspace_index, 0);
-	struct iterator *it = [index allocIterator];
-	@try {
-		[index initIterator: it :ITER_EQ :space_key :1];
-
-		struct tuple *index_tuple = NULL;
-		struct index_meta *index_meta;
-		while ((index_tuple = it->next(it))) {
-			/*
-			 * Parse index meta
-			 */
-			index_meta = index_meta_from_tuple(index_tuple);
-
-			/*
-			 * Create/update the index
-			 */
-			space_cache_update_do_index(space, index_meta);
-		}
-	} @finally {
-		it->free(it);
-	}
-
-	/*
-	 * Perform post checks
-	 */
-
-	/* Check if pk is configured*/
-	if (space->index[0] == NULL) {
-		raise_meta_error("primary key is not configured");
-	}
-
-	/* Check if pk is unique */
-	if (!space->key_defs[0].is_unique) {
-		raise_meta_error("primary key must be unique");
-	}
-
-	/* Cache entry is valid */
-	space->is_valid = true;
-
-	say_info("Space %u: end updating configuration", space->no);
-
-	return space;
 }
 
-static struct space *
-space_cache_miss(u32 space_no)
+static void
+space_cache_update(struct space_meta *space_meta, size_t index_count,
+		   struct index_meta *index_metas[BOX_INDEX_MAX])
 {
-	/*
-	 * Try to get metadata by space no
-	 */
-	struct tuple *new_space_tuple = NULL;
+	struct space *old_space = NULL;
+	struct mh_i32ptr_node_t no_node = { .key = space_meta->space_no };
+	mh_int_t pos = mh_i32ptr_get(spaces_by_no, &no_node, NULL, NULL);
+	if (pos != mh_end(spaces_by_no)) {
+		old_space = mh_i32ptr_node(spaces_by_no, pos)->val;
+	}
 
-	struct space *sysspace_space = space_find_by_no(BOX_SYSSPACE_NO);
+	struct space *new_space = space_new();
+	if (new_space == NULL) {
+		tnt_raise(LoggedError, :ER_MEMORY_ISSUE,
+			  sizeof(*new_space), "space", "cache");
+	}
 
-	char space_key[varint32_sizeof(BOX_SPACE_MAX) + sizeof(u32)];
-	save_field_u32(space_key, space_no);
-	Index *index = index_find_by_no(sysspace_space, 0);
-	struct iterator *it = [index allocIterator];
 	@try {
-		[index initIterator: it :ITER_EQ :space_key :1];
-		new_space_tuple = it->next(it);
-	} @finally {
-		it->free(it);
+		say_info("Space %u: begin creating a new schema",
+			 space_meta->space_no);
+		space_cache_update2(old_space, new_space, space_meta,
+				    index_count, index_metas);
+		say_info("Space %u: end creating a new schema",
+			 space_meta->space_no);
+	} @catch (tnt_Exception *e) {
+		say_error("Space %u: failed to create a new schema",
+			  space_meta->space_no);
+		space_delete(new_space);
+		@throw;
 	}
-
-	if (new_space_tuple == NULL) {
-		char name_buf[11];
-		sprintf(name_buf, "%u", space_no);
-		tnt_raise(ClientError, :ER_NO_SUCH_SPACE, name_buf);
-	}
-
-	return space_cache_update(new_space_tuple);
 }
 
-/* return space by its number */
+static void
+space_cache_delete(u32 space_no)
+{
+	struct space *space = space_cache_get(space_no);
+	assert (space != NULL);
+
+	if (space_no == BOX_SYSSPACE_NO || space_no == BOX_SYSINDEX_NO) {
+		raise_meta_error("space_no=%u: "
+				 "cannot change system spaces",
+				 space_no);
+	}
+
+	if (space->state != SPACE_CONFIGURED || space->shadow != NULL) {
+		raise_meta_error("space_no=%u: " "space is locked",
+				 space->no);
+	}
+
+	if (space_size(space) > 0) {
+		raise_meta_error("space_no=%u: "
+				 "space is not empty",
+				 space->no);
+	}
+
+	for (u32 index_no = 0; index_no < BOX_INDEX_MAX; index_no++) {
+		if (space->index[index_no] != NULL) {
+			raise_meta_error("space_no=%u: "
+					 "space has indexes",
+					 space->no);
+		}
+	}
+
+	space->state = SPACE_DELETED;
+}
+
+static void
+space_cache_commit(u32 space_no)
+{
+	struct space *space = space_cache_get(space_no);
+	assert (space != NULL);
+
+	if (space->shadow == NULL) {
+		if (space->state == SPACE_DELETED) {
+			if (tarantool_L != NULL)  {
+				box_lua_space_del(tarantool_L, space);
+			}
+
+			space_delete(space);
+		} else if (space->state == SPACE_NEW) {
+			space->state = SPACE_CONFIGURED;
+
+			if (tarantool_L != NULL)  {
+				box_lua_space_put(tarantool_L, space);
+			}
+		} else {
+			assert(false);
+		}
+		return;
+	}
+
+	/*
+	 * Commit cache
+	 */
+	@try {
+		space_cache_put(space->shadow);
+	} @catch(tnt_Exception *e) {
+		space_delete(space->shadow);
+		space->shadow = NULL;
+		@throw;
+	}
+
+	/*
+	 * Transfer ownership of shared indexes
+	 */
+	for (u32 index_no = 0; index_no < BOX_INDEX_MAX; index_no++) {
+		if (!space->shadow->index_is_shared[index_no])
+			continue;
+
+		space->index_is_shared[index_no] = true;
+		space->shadow->index_is_shared[index_no] = false;
+		space->shadow->index[index_no]->space = space->shadow;
+		space->shadow->index[index_no]->key_def =
+				&space->shadow->key_defs[index_no];
+	}
+
+	/*
+	 * Transfer ownership of triggers
+	 */
+	while (!rlist_empty(&space->before_triggers)) {
+		rlist_move(rlist_first(&space->before_triggers),
+			   &space->shadow->before_triggers);
+	}
+	rlist_create(&space->before_triggers);
+	rlist_create(&space->commit_triggers);
+	rlist_create(&space->rollback_triggers);
+
+	space->shadow->state = SPACE_CONFIGURED;
+	space->state = SPACE_DELETED;
+
+	if (tarantool_L != NULL)  {
+		box_lua_space_del(tarantool_L, space);
+		box_lua_space_put(tarantool_L, space->shadow);
+		return;
+	}
+
+	space_delete(space);
+}
+
+static void
+space_cache_rollback(u32 space_no)
+{
+	struct space *space = space_cache_get(space_no);
+	assert (space != NULL);
+
+	if (space->shadow == NULL) {
+		if (space->state == SPACE_DELETED) {
+			/* Deleted space */
+			space->state = SPACE_CONFIGURED;
+		} else if (space->state == SPACE_NEW){
+			/* New space */
+			space_delete(space);
+		} else {
+			assert (false);
+		}
+		return;
+	}
+
+	assert (space->state == SPACE_CONFIGURED);
+	assert (space->shadow->state == SPACE_NEW);
+	space_delete(space->shadow);
+	space->shadow = NULL;
+}
+
 struct space *
 space_find_by_no(u32 space_no)
 {
-	const struct mh_i32ptr_node_t node = { .key = space_no };
-	mh_int_t k = mh_i32ptr_get(spaces_by_no, &node, NULL, NULL);
-	if (likely(k != mh_end(spaces_by_no))) {
-		struct space *space = mh_i32ptr_node(spaces_by_no, k)->val;
-		if (likely(space->is_valid))
-			return space;
-	}
+	struct space *space = space_cache_get(space_no);
+	if (likely(space != NULL && space->state == SPACE_CONFIGURED))
+		return space;
 
+	/* Space is not found */
 	assert (space_no != BOX_SYSSPACE_NO);
 	assert (space_no != BOX_SYSINDEX_NO);
-	return space_cache_miss(space_no);
+
+	char name_buf[11];
+	sprintf(name_buf, "%u", space_no);
+	tnt_raise(ClientError, :ER_NO_SUCH_SPACE, name_buf);
 }
 
 struct space *
@@ -1487,12 +1639,9 @@ space_find_by_name(const void *name)
 	struct space *sysspace_space = space_find_by_no(BOX_SYSSPACE_NO);
 
 	/* Try to lookup the space metadata by space name */
-	Index *index = index_find_by_no(sysspace_space, 1);
-	struct iterator *it = index->position;
-	/* TODO: const void * problem is fixed in master */
-	[index initIterator: it :ITER_EQ :(void *) name:1];
-	struct tuple *new_space_tuple = it->next(it);
-	if (new_space_tuple == NULL) {
+	Index *sysspace_pk = index_find_by_no(sysspace_space, 1);
+	struct tuple *space_tuple = [sysspace_pk findByKey: name :1];
+	if (space_tuple == NULL) {
 		const void *name2 = name;
 		u32 name_len = load_varint32(&name2);
 		char name_buf[BOX_SPACE_NAME_MAXLEN];
@@ -1501,9 +1650,8 @@ space_find_by_name(const void *name)
 		tnt_raise(ClientError, :ER_NO_SUCH_SPACE, name_buf);
 	}
 
-	const void *d = new_space_tuple->data;
 	u32 space_no;
-	load_field_u32(d, &space_no);
+	load_field_u32(space_tuple->data, &space_no);
 	return space_find_by_no(space_no);
 }
 
@@ -1519,45 +1667,121 @@ index_find_by_no(struct space *sp, u32 index_no)
 size_t
 space_size(struct space *sp)
 {
-	return [index_find_by_no(sp, 0) size];
+//	assert (sp->index[0].state == INDEX_BUILT);
+	return (sp->index[0] != NULL) ? [sp->index[0] size] : 0;
 }
 
 struct tuple *
 space_replace(struct space *sp, struct tuple *old_tuple,
 	      struct tuple *new_tuple, enum dup_replace_mode mode)
 {
-	u32 i = 0;
+	assert (old_tuple != NULL || new_tuple != NULL);
+
+	if (unlikely(sp->state != SPACE_CONFIGURED)) {
+		raise_meta_error("space_no=%u: "
+				 "space is locked", sp->no);
+	}
+
+	if (sp->index[0] == NULL) {
+		raise_meta_error("space_no=%u: "
+				 "primary key is not configured", sp->no);
+	}
+
+	/*
+	 * Check tuples
+	 */
+	if (old_tuple) {
+		space_validate_tuple(sp, old_tuple);
+	}
+
+	if (new_tuple) {
+		space_validate_tuple(sp, new_tuple);
+	}
+
+	if (unlikely(sp->shadow != NULL)) {
+		if (new_tuple) {
+			space_validate_tuple(sp->shadow, old_tuple);
+		}
+
+		if (new_tuple) {
+			space_validate_tuple(sp->shadow, new_tuple);
+		}
+	}
+
+	u32 index_no = 0;
+	u32 index_no_shadow = 0;
+	u32 index_count = (secondary_indexes_enabled) ? BOX_INDEX_MAX : 1;
 
 	@try {
-		/* Update the primary key */
-		Index *pk = index_find_by_no(sp, 0);
+		/*
+		 * Update the primary key
+		 */
+		assert (sp->index[0] != NULL);
+		Index *pk = sp->index[0];
 		assert(pk->key_def->is_unique);
+
 		/*
 		 * If old_tuple is not NULL, the index
 		 * has to find and delete it, or raise an
 		 * error.
 		 */
 		old_tuple = [pk replace: old_tuple :new_tuple :mode];
-
 		assert(old_tuple || new_tuple);
+		index_no++;
 
-		if (!secondary_indexes_enabled)
-			return old_tuple;
-
-		/* Update secondary keys */
-		for (i = i + 1; i < BOX_INDEX_MAX; i++) {
-			if (sp->index[i] == NULL)
+		/*
+		 * Update secondary keys
+		 */
+		for (; index_no < index_count; index_no++) {
+			if (sp->index[index_no] == NULL)
 				continue;
-			Index *index = sp->index[i];
+
+			assert (!sp->index_is_shared[index_no]);
+			Index *index = sp->index[index_no];
 			[index replace: old_tuple :new_tuple :DUP_INSERT];
 		}
+
+		if (likely(sp->shadow == NULL))
+			return old_tuple;
+
+		/*
+		 * Update shadow copy
+		 */
+		assert (sp->shadow->index[0] != NULL);
+		for (; index_no_shadow < index_count; index_no_shadow++) {
+			if (sp->shadow->index[index_no_shadow] == NULL)
+				continue;
+
+			if (sp->shadow->index_is_shared[index_no_shadow])
+				continue;
+
+			Index *index = sp->shadow->index[index_no_shadow];
+			[index replace: old_tuple :new_tuple :DUP_INSERT];
+		}
+
 		return old_tuple;
 	} @catch (tnt_Exception *e) {
-		/* Rollback all changes */
-		for (; i > 0; i--) {
-			Index *index = sp->index[i-1];
-			[index replace: new_tuple: old_tuple: DUP_INSERT];
+		/*
+		 * Rollback all changes
+		 */
+
+		@try {
+			for (; index_no > 0; index_no--) {
+				Index *index = sp->index[index_no - 1];
+				[index replace: new_tuple: old_tuple:
+						DUP_INSERT];
+			}
+
+			for (; index_no_shadow > 0; index_no_shadow--) {
+				Index *index = sp->index[index_no_shadow - 1];
+				[index replace: new_tuple: old_tuple:
+						DUP_INSERT];
+			}
+		} @catch (tnt_Exception *e) {
+			[e log];
+			panic("space_replace rollback failed");
 		}
+
 		@throw;
 	}
 }
@@ -1570,9 +1794,10 @@ space_validate_tuple(struct space *sp, struct tuple *new_tuple)
 		tnt_raise(IllegalParams,
 			  :"tuple must have all indexed fields");
 
-	if (sp->arity > 0 && sp->arity != new_tuple->field_count)
+	if (sp->arity > 0 && sp->arity != new_tuple->field_count) {
 		tnt_raise(IllegalParams,
 			  :"tuple field count must match space cardinality");
+	}
 
 	/* Sweep through the tuple and check the field sizes. */
 	const u8 *data = new_tuple->data;
@@ -1597,12 +1822,105 @@ space_validate_tuple(struct space *sp, struct tuple *new_tuple)
 }
 
 void
+space_recovery_begin_build(void)
+{
+	struct space *sysspace = space_find_by_no(BOX_SYSSPACE_NO);
+
+	Index *sysspace_pk = index_find_by_no(sysspace, 0);
+	struct iterator *it = [sysspace_pk allocIterator];
+	@try {
+		struct tuple *tuple;
+		[sysspace_pk initIterator: it :ITER_ALL :NULL :0];
+		while ((tuple = it->next(it)) != NULL) {
+			const void *d = tuple->data;
+			u32 space_no;
+			load_field_u32(d, &space_no);
+			struct space *space = space_find_by_no(space_no);
+
+			if (space_no == BOX_SYSSPACE_NO ||
+			    space_no == BOX_SYSINDEX_NO)
+				continue;
+
+			say_debug("Space %u: beginBuild", space_no);
+			Index *space_pk = index_find_by_no(space, 0);
+			[space_pk beginBuild];
+		}
+	} @finally {
+		it->free(it);
+	}
+}
+
+void
+space_recovery_end_build(void)
+{
+	struct space *sysspace = space_find_by_no(BOX_SYSSPACE_NO);
+
+	Index *sysspace_pk = index_find_by_no(sysspace, 0);
+	struct iterator *it = [sysspace_pk allocIterator];
+	@try {
+		[sysspace_pk initIterator: it :ITER_ALL :NULL :0];
+
+		struct tuple *tuple = NULL;
+		while ((tuple = it->next(it)) != NULL) {
+			const void *d = tuple->data;
+			u32 space_no;
+			load_field_u32(d, &space_no);
+			struct space *space = space_find_by_no(space_no);
+
+			if (space_no == BOX_SYSSPACE_NO ||
+			    space_no == BOX_SYSINDEX_NO)
+				continue;
+
+			assert (space->state == SPACE_CONFIGURED);
+			assert (space->shadow == NULL);
+
+			say_debug("Space %u: endBuild", space_no);
+			Index *space_pk = index_find_by_no(space, 0);
+			[space_pk endBuild];
+		}
+	} @finally {
+		it->free(it);
+	}
+}
+
+void
+space_recovery_next(struct space *space, struct tuple *tuple)
+{
+	/* Check to see if the tuple has a sufficient number of fields. */
+	space_validate_tuple(space, tuple);
+
+	Index *pk = index_find_by_no(space, 0);
+	if (space->no == BOX_SYSSPACE_NO || space->no == BOX_SYSINDEX_NO) {
+		if (space->no == BOX_SYSSPACE_NO) {
+			space_sysspace_before(NULL, space, NULL, tuple);
+		} else {
+			space_sysindex_before(NULL, space, NULL, tuple);
+		}
+		struct tuple *old;
+		old = [pk replace :NULL :tuple :DUP_REPLACE_OR_INSERT];
+		if (old != NULL) {
+			/* an old entry from the configuration was replaced */
+			tuple_ref(old, -1);
+		}
+		if (space->no == BOX_SYSSPACE_NO) {
+			space_sysspace_commit(NULL, space, NULL, tuple);
+		} else {
+			space_sysindex_commit(NULL, space, NULL, tuple);
+		}
+	} else {
+		[pk buildNext: tuple];
+	}
+
+	tuple_ref(tuple, 1);
+}
+
+void
 space_free(void)
 {
 	mh_int_t i;
 	mh_foreach(spaces_by_no, i) {
 		struct space *space = mh_i32ptr_node(spaces_by_no, i)->val;
-		space_cache_delete(space);
+		space_delete(space);
 	}
 }
 
@@ -1914,11 +2232,8 @@ space_config_convert_index_memcached(u32 memcached_space)
 static void
 space_config_convert(void)
 {
-	struct space *sysspace_space = space_find_by_no(BOX_SYSSPACE_NO);
-	struct space *sysspace_index = space_find_by_no(BOX_SYSINDEX_NO);
-
-	Index *sysspace_pk = index_find_by_no(sysspace_space, 0);
-	Index *sysindex_pk = index_find_by_no(sysspace_index, 0);
+	struct space *sysspace = space_find_by_no(BOX_SYSSPACE_NO);
+	struct space *sysindex = space_find_by_no(BOX_SYSINDEX_NO);
 
 	/* exit if no spaces are configured */
 	if (cfg.space == NULL) {
@@ -1947,15 +2262,13 @@ space_config_convert(void)
 
 			assert(cfg.memcached_port == 0 || i != cfg.memcached_space);
 			meta = space_config_convert_space(cfg_space, i);
-			tuple_ref(meta, 1);
-			[sysspace_pk replace :NULL :meta :DUP_INSERT];
+			space_recovery_next(sysspace, meta);
 			meta = NULL;
 
 			for (u32 j = 0; cfg_space->index[j] != NULL; ++j) {
 				meta = space_config_convert_index(
 						cfg_space->index[j], i, j);
-				tuple_ref(meta, 1);
-				[sysindex_pk replace :NULL: meta: DUP_INSERT];
+				space_recovery_next(sysindex, meta);
 				meta = NULL;
 			}
 		}
@@ -1963,14 +2276,12 @@ space_config_convert(void)
 		if (cfg.memcached_port != 0) {
 			meta = space_config_convert_space_memcached(
 						cfg.memcached_space);
-			[sysspace_pk replace :NULL :meta :DUP_INSERT];
-			tuple_ref(meta, 1);
+			space_recovery_next(sysspace, meta);
 			meta = NULL;
 
 			meta = space_config_convert_index_memcached(
 						cfg.memcached_space);
-			[sysindex_pk replace :NULL :meta :DUP_INSERT];
-			tuple_ref(meta, 1);
+			space_recovery_next(sysindex, meta);
 			meta = NULL;
 		}
 	} @catch(tnt_Exception *e) {
@@ -1980,16 +2291,6 @@ space_config_convert(void)
 
 		@throw;
 	}
-
-#if 0
-	/* Init config spaces */
-	for (u32 i = 0; cfg.space[i] != NULL; ++i) {
-		if (!CNF_STRUCT_DEFINED(cfg.space[i]) || !cfg.space[i]->enabled)
-			continue;
-
-		space_find_by_no(i);
-	}
-#endif
 }
 
 void
@@ -1998,10 +2299,22 @@ space_init(void)
 	spaces_by_no = mh_i32ptr_new();
 
 	/* configure system spaces */
-	space_super_create();
+	space_init_system();
 
 	/* cconvert configuration */
 	space_config_convert();
+}
+
+void
+space_foreach(void (*func)(struct space *sp, void *udata), void *udata)
+{
+	mh_int_t i;
+	mh_foreach(spaces_by_no, i) {
+		struct space *space = mh_i32ptr_node(spaces_by_no, i)->val;
+		if (space->state != SPACE_CONFIGURED)
+			continue;
+		func(space, udata);
+	}
 }
 
 void
@@ -2017,14 +2330,15 @@ build_secondary_indexes(void)
 		say_info("Space %u: begin building secondary keys...",
 			 space_no);
 		struct space *space = space_find_by_no(space_no);
-		assert (space->is_valid);
+		assert (space->state == SPACE_CONFIGURED);
+		assert (space->shadow == NULL);
 
 		Index *pk = index_find_by_no(space, 0);
 		for (u32 j = 1; j < BOX_INDEX_MAX; j++) {
 			if (space->index[j] == NULL)
 				continue;
 
-			Index *index = index_find_by_no(space, j);
+			Index *index = space->index[j];
 			[index build: pk];
 		}
 

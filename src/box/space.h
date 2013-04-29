@@ -43,15 +43,21 @@ enum space_flags {
 
 struct space_trigger;
 
-typedef struct tuple *(*space_trigger_replace_cb)(struct space_trigger *trigger,
+typedef struct tuple *(*space_trigger_cb)(struct space_trigger *trigger,
 	struct space *space, struct tuple *old_tuple, struct tuple *new_tuple);
 
 typedef void (*space_trigger_free_cb)(struct space_trigger *trigger);
 
 struct space_trigger {
 	struct rlist link;
-	space_trigger_replace_cb replace;
+	space_trigger_cb trigger;
 	space_trigger_free_cb free;
+};
+
+enum space_state {
+	SPACE_NEW = 0,
+	SPACE_CONFIGURED,
+	SPACE_DELETED
 };
 
 struct space {
@@ -97,8 +103,20 @@ struct space {
 	/** 'before' triggers */
 	struct rlist before_triggers;
 
-	/** true if the space cache is valid and can be used in requests */
-	bool is_valid;
+	/** 'commit' triggers */
+	struct rlist commit_triggers;
+
+	/** 'rollback' triggers */
+	struct rlist rollback_triggers;
+
+	/** space state */
+	enum space_state state;
+
+	struct space *shadow;
+	bool index_is_shared[BOX_INDEX_MAX];
+
+	/** Index names (varint32 + data) */
+	char index_name[BOX_INDEX_MAX][BOX_INDEX_NAME_MAXLEN];
 };
 
 /** Get space ordinal number. */
@@ -191,7 +209,7 @@ static inline u32 space_n(struct space *sp) { return sp->no; }
  */
 struct tuple *
 space_replace(struct space *space, struct tuple *old_tuple,
-              struct tuple *new_tuple, enum dup_replace_mode mode);
+	      struct tuple *new_tuple, enum dup_replace_mode mode);
 
 /**
  * Check that the tuple has correct arity and correct field
@@ -199,6 +217,17 @@ space_replace(struct space *space, struct tuple *old_tuple,
  */
 void
 space_validate_tuple(struct space *sp, struct tuple *new_tuple);
+
+/*
+ * Recovery utils
+ */
+
+void
+space_recovery_begin_build(void);
+void
+space_recovery_next(struct space *space, struct tuple *tuple);
+void
+space_recovery_end_build(void);
 
 struct space *
 space_find_by_no(u32 space_no);
@@ -244,6 +273,12 @@ index_is_primary(Index *index)
 }
 
 /**
+ * @brief Iterate over all spaces
+ */
+void
+space_foreach(void (*func)(struct space *sp, void *udata), void *udata);
+
+/**
  * Secondary indexes are built in bulk after all data is
  * recovered. This flag indicates that the indexes are
  * already built and ready for use.
@@ -259,8 +294,6 @@ void space_free(void);
 int
 check_spaces(struct tarantool_cfg *conf);
 /* Build secondary keys. */
-void begin_build_primary_indexes(void);
-void end_build_primary_indexes(void);
 void build_secondary_indexes(void);
 
 const char *

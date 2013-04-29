@@ -92,13 +92,6 @@ execute_replace(struct request *request, struct txn *txn)
 	new_tuple->field_count = field_count;
 	memcpy(new_tuple->data, data->data, data->size);
 
-	@try {
-		space_validate_tuple(sp, new_tuple);
-	} @catch (tnt_Exception *e) {
-		tuple_free(new_tuple);
-		@throw;
-	}
-
 	enum dup_replace_mode mode = dup_replace_mode(request->flags);
 	txn_replace(txn, sp, NULL, new_tuple, mode);
 }
@@ -719,7 +712,6 @@ execute_update(struct request *request, struct txn *txn)
 
 	@try {
 		do_update_ops(rope, new_tuple);
-		space_validate_tuple(sp, new_tuple);
 	} @catch (tnt_Exception *e) {
 		tuple_free(new_tuple);
 		@throw;

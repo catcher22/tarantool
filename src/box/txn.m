@@ -48,8 +48,8 @@ txn_add_redo(struct txn *txn, u16 op, struct tbuf *data)
 }
 
 static struct tuple *
-txn_replace_do_before_triggers(struct space *sp, struct tuple *old_tuple,
-			       struct tuple *new_tuple)
+txn_exec_before_triggers(struct space *sp, struct tuple *old_tuple,
+			 struct tuple *new_tuple)
 {
 	@try {
 		struct space_trigger *trigger;
@@ -61,9 +61,9 @@ txn_replace_do_before_triggers(struct space *sp, struct tuple *old_tuple,
 		}
 
 		rlist_foreach_entry(trigger, &sp->before_triggers, link) {
-			assert (trigger->replace != NULL);
+			assert (trigger->trigger != NULL);
 
-			new_tuple2 = trigger->replace(trigger, sp, old_tuple,
+			new_tuple2 = trigger->trigger(trigger, sp, old_tuple,
 						      new_tuple);
 
 			if (new_tuple != NULL) {
@@ -75,8 +75,6 @@ txn_replace_do_before_triggers(struct space *sp, struct tuple *old_tuple,
 
 				tuple_ref(new_tuple, -1);
 				new_tuple = new_tuple2;
-
-				space_validate_tuple(sp, new_tuple);
 			} else {
 				assert (new_tuple2 == NULL);
 			}
@@ -90,6 +88,23 @@ txn_replace_do_before_triggers(struct space *sp, struct tuple *old_tuple,
 	}
 
 	return new_tuple;
+}
+
+static void
+txn_exec_after_triggers(struct space *sp, struct tuple *old_tuple,
+			struct tuple *new_tuple, struct rlist *triggers)
+{
+	struct space_trigger *trigger;
+
+	rlist_foreach_entry(trigger, triggers, link) {
+		assert (trigger->trigger != NULL);
+
+		struct tuple *res = trigger->trigger(trigger, sp, old_tuple,
+						     new_tuple);
+		assert (res == new_tuple);
+		(void) res;
+
+	}
 }
 
 void
@@ -106,8 +121,8 @@ txn_replace(struct txn *txn, struct space *space,
 	}
 
 	if (!rlist_empty(&space->before_triggers)) {
-		struct tuple *new_tuple2 = txn_replace_do_before_triggers(
-				space, old_tuple, new_tuple);
+		struct tuple *new_tuple2 = txn_exec_before_triggers(
+					space,old_tuple, new_tuple);
 
 		if (new_tuple != new_tuple2) {
 			mode = DUP_INSERT;
@@ -128,9 +143,15 @@ txn_replace(struct txn *txn, struct space *space,
 					       mode);
 		txn->new_tuple = new_tuple;
 	} @catch(tnt_Exception *) {
-		if (new_tuple) {
-			tuple_ref(new_tuple, -1);
+		@try {
+			txn_exec_after_triggers(space, old_tuple, new_tuple,
+						&space->rollback_triggers);
+		} @finally {
+			if (new_tuple) {
+				tuple_ref(new_tuple, -1);
+			}
 		}
+
 		@throw;
 	}
 
@@ -143,6 +164,8 @@ txn_begin()
 	struct txn *txn = p0alloc(fiber->gc_pool, sizeof(*txn));
 	return txn;
 }
+
+
 
 void
 txn_commit(struct txn *txn)
@@ -169,6 +192,9 @@ txn_commit(struct txn *txn)
 		if (res)
 			tnt_raise(LoggedError, :ER_WAL_IO);
 
+		txn_exec_after_triggers(txn->space,
+					txn->old_tuple, txn->new_tuple,
+					&txn->space->commit_triggers);
 	}
 }
 
@@ -184,9 +210,17 @@ void
 txn_rollback(struct txn *txn)
 {
 	if (txn->old_tuple || txn->new_tuple) {
-		space_replace(txn->space, txn->new_tuple, txn->old_tuple, DUP_INSERT);
-		if (txn->new_tuple)
-			tuple_ref(txn->new_tuple, -1);
+		space_replace(txn->space, txn->new_tuple, txn->old_tuple,
+			      DUP_INSERT);
+
+		@try {
+			txn_exec_after_triggers(txn->space,
+						txn->old_tuple, txn->new_tuple,
+						&txn->space->rollback_triggers);
+		} @finally {
+			if (txn->new_tuple)
+				tuple_ref(txn->new_tuple, -1);
+		}
 	}
 	TRASH(txn);
 }

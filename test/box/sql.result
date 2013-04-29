@@ -95,7 +95,8 @@ An error occurred: ER_NO_SUCH_SPACE, 'Space 1 does not exist'
 select * from t65537 where k0 = 0
 An error occurred: ER_NO_SUCH_SPACE, 'Space 65537 does not exist'
 select * from t4294967295 where k0 = 0
-An error occurred: ER_NO_SUCH_SPACE, 'Space 4294967295 does not exist'
+Found 1 tuple:
+[0, '0', 0, 0, 0, 1]
 lua box.space[0]:truncate()
 ---
 ...
