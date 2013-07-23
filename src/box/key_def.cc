@@ -53,3 +53,12 @@ key_def_destroy(struct key_def *key_def)
 	free(key_def->parts);
 }
 
+void
+key_list_add_key(struct key_def **key_list, uint32_t *key_count,
+		 struct key_def *key)
+{
+	*key_list = (struct key_def *)
+		realloc(*key_list, ++*key_count * sizeof(*key));
+	(*key_list)[*key_count - 1] = *key;
+}
+

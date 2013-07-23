@@ -316,7 +316,7 @@ box_free(void)
 }
 
 void
-box_init(bool init_storage)
+box_init()
 {
 	title("loading");
 	atexit(box_free);
@@ -328,16 +328,11 @@ box_init(bool init_storage)
 
 	/* recovery initialization */
 	recovery_init(cfg.snap_dir, cfg.wal_dir,
-		      recover_row, NULL,
-		      cfg.rows_per_wal,
-		      init_storage ? RECOVER_READONLY : 0);
+		      recover_row, NULL, cfg.rows_per_wal);
 	recovery_update_io_rate_limit(recovery_state, cfg.snap_io_rate_limit);
 	recovery_setup_panic(recovery_state, cfg.panic_on_snap_error, cfg.panic_on_wal_error);
 
 	stat_base = stat_register(requests_strs, requests_MAX);
-
-	if (init_storage)
-		return;
 
 	begin_build_primary_indexes();
 	recover_snap(recovery_state);

@@ -29,6 +29,7 @@
  * SUCH DAMAGE.
  */
 #include "index.h"
+#include "trigger.h"
 
 struct tuple;
 struct space;
@@ -38,6 +39,9 @@ struct txn {
 	struct space *space;
 	struct tuple *old_tuple;
 	struct tuple *new_tuple;
+
+	struct trigger on_commit;
+	struct trigger on_rollback;
 
 	/* Redo info: binary packet */
 	const char *data;
@@ -53,4 +57,5 @@ void txn_add_redo(struct txn *txn, uint16_t op, const char *data, uint32_t len);
 void txn_replace(struct txn *txn, struct space *space,
 		 struct tuple *old_tuple, struct tuple *new_tuple,
 		 enum dup_replace_mode mode);
+
 #endif /* TARANTOOL_BOX_TXN_H_INCLUDED */

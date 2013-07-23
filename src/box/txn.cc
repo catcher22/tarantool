@@ -93,6 +93,7 @@ txn_commit(struct txn *txn)
 			tnt_raise(LoggedError, ER_WAL_IO);
 
 	}
+	trigger_run(&txn->on_commit);
 }
 
 void
@@ -111,5 +112,6 @@ txn_rollback(struct txn *txn)
 		if (txn->new_tuple)
 			tuple_ref(txn->new_tuple, -1);
 	}
+	trigger_run(&txn->on_rollback);
 	TRASH(txn);
 }

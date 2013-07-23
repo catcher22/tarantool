@@ -95,6 +95,11 @@ key_def_set_part(struct key_def *def, uint32_t part_no,
 void
 key_def_destroy(struct key_def *def);
 
+/** Add a key to the list of keys. */
+void
+key_list_add_key(struct key_def **key_list, uint32_t *key_count,
+		 struct key_def *key);
+
 /** Space metadata. */
 struct space_def {
 	/** Space id. */

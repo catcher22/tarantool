@@ -275,19 +275,17 @@ space_config()
 		 * information on all keys before we can create
 		 * indexes.
 		 */
+		struct key_def *key_list = NULL;
 		uint32_t key_count = 0;
-		while (cfg_space->index[key_count] != NULL)
-			key_count++;
-
-		struct key_def *key_defs = (struct key_def *)
-			malloc(key_count * sizeof(struct key_def));
 
 		for (uint32_t j = 0; cfg_space->index[j] != NULL; ++j) {
 			auto cfg_index = cfg_space->index[j];
-			key_def_create_from_cfg(&key_defs[j], j, cfg_index);
+			struct key_def key_def;
+			key_def_create_from_cfg(&key_def, j, cfg_index);
+			key_list_add_key(&key_list, &key_count, &key_def);
 		}
-		(void) space_new(&space_def, key_defs, key_count);
-		free(key_defs);
+		(void) space_new(&space_def, key_list, key_count);
+		free(key_list);
 
 		say_info("space %i successfully configured", i);
 	}
