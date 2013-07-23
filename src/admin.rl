@@ -285,7 +285,7 @@ admin_dispatch(struct ev_io *coio, struct iobuf *iobuf, lua_State *L)
 		mod = "mo"("d")?;
 		palloc = "pa"("l"("l"("o"("c")?)?)?)?;
 		stat = "st"("a"("t")?)?;
-		plugins = "plugins";
+		plugins = "pl"("u"("g"("i"("n"("s")?)?)?)?)?;
 
 		help = "h"("e"("l"("p")?)?)?;
 		exit = "e"("x"("i"("t")?)?)? | "q"("u"("i"("t")?)?)?;
@@ -297,8 +297,8 @@ admin_dispatch(struct ev_io *coio, struct iobuf *iobuf, lua_State *L)
 		lua = "lu"("a")?;
 
 		set = "se"("t")?;
-		injection = "in"("j"("e"("c"("t"("i"("o"("n")?)?)?)?)?)?)?;
-		injections = injection"s";
+		injection = "inj"("e"("c"("t"("i"("o"("n")?)?)?)?)?)?;
+		injections = "inj"("e"("c"("t"("i"("o"("n"("s")?)?)?)?)?)?)?;
 		namech = alnum | punct;
 		name = namech+ >{ strstart = p; }  %{ strend = p; };
 		state_on = "on" %{ state = true; };
@@ -382,5 +382,5 @@ admin_init(const char *bind_ipaddr, int admin_port)
  * Local Variables:
  * mode: c
  * End:
- * vim: syntax=objc
+ * vim: syntax=cpp
  */
