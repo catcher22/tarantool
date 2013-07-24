@@ -56,7 +56,7 @@ txn_replace(struct txn *txn, struct space *space,
 	 * successfully, to not remove a tuple inserted by
 	 * another transaction in rollback().
 	 */
-	txn->old_tuple = space_replace(space, old_tuple, new_tuple, mode);
+	txn->old_tuple = space->replace(space, old_tuple, new_tuple, mode);
 	if (new_tuple) {
 		txn->new_tuple = new_tuple;
 		tuple_ref(txn->new_tuple, 1);
@@ -108,7 +108,8 @@ void
 txn_rollback(struct txn *txn)
 {
 	if (txn->old_tuple || txn->new_tuple) {
-		space_replace(txn->space, txn->new_tuple, txn->old_tuple, DUP_INSERT);
+		txn->space->replace(txn->space, txn->new_tuple,
+				    txn->old_tuple, DUP_INSERT);
 		if (txn->new_tuple)
 			tuple_ref(txn->new_tuple, -1);
 	}

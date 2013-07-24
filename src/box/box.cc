@@ -49,7 +49,6 @@ extern "C" {
 #include "port.h"
 #include "request.h"
 #include "txn.h"
-#include <third_party/base64.h>
 
 static void process_replica(struct port *port, struct request *request);
 static void process_ro(struct port *port, struct request *request);
@@ -61,10 +60,12 @@ static char status[64] = "unknown";
 
 static int stat_base;
 
+/** The snapshot row metadata repeats the structure of REPLACE request. */
 struct box_snap_row {
+	uint16_t op;
 	uint32_t space;
-	uint32_t tuple_size;
-	uint32_t data_size;
+	uint32_t flags;
+	uint32_t field_count;
 	char data[];
 } __attribute__((packed));
 
@@ -112,42 +113,6 @@ process_ro(struct port *port, struct request *request)
 	return process_rw(port, request);
 }
 
-static void
-recover_snap_row(const void *data)
-{
-	const struct box_snap_row *row = (const struct box_snap_row *) data;
-
-	struct space *space = space_find(row->space);
-	Index *index = space_index(space, 0);
-
-	struct tuple *tuple;
-	try {
-		const char *tuple_data = row->data;
-		tuple = tuple_new(space->format,
-				  row->tuple_size, &tuple_data,
-				  tuple_data + row->data_size);
-	} catch (const ClientError &e) {
-		say_error("\n"
-			  "********************************************\n"
-		          "* Found a corrupted tuple in the snapshot! *\n"
-		          "* This can be either due to a memory       *\n"
-		          "* corruption or a bug in the server.       *\n"
-		          "* The tuple can not be loaded.             *\n"
-		          "********************************************\n"
-		          "Tuple data, BAS64 encoded:                  \n");
-
-		int base64_buflen = base64_bufsize(row->data_size);
-		char *base64_buf = (char *) malloc(base64_buflen);
-		int len = base64_encode(row->data, row->data_size,
-					base64_buf, base64_buflen);
-		write(STDERR_FILENO, base64_buf, len);
-		free(base64_buf);
-		throw;
-	}
-	index->buildNext(tuple);
-	tuple_ref(tuple, 1);
-}
-
 static int
 recover_row(void *param __attribute__((unused)), const char *row, uint32_t rowlen)
 {
@@ -161,19 +126,12 @@ recover_row(void *param __attribute__((unused)), const char *row, uint32_t rowle
 	try {
 		const char *end = row + rowlen;
 		row += sizeof(struct header_v11);
-		uint16_t tag = pick_u16(&row, end);
+		(void) pick_u16(&row, end); /* drop tag - unused. */
 		(void) pick_u64(&row, end); /* drop cookie */
-		if (tag == SNAP) {
-			recover_snap_row(row);
-		} else if (tag == XLOG) {
-			uint16_t op = pick_u16(&row, end);
-			struct request request;
-			request_create(&request, op, row, end - row);
-			process_rw(&null_port, &request);
-		} else {
-			say_error("unknown row tag: %i", (int)tag);
-			return -1;
-		}
+		uint16_t op = pick_u16(&row, end);
+		struct request request;
+		request_create(&request, op, row, end - row);
+		process_rw(&null_port, &request);
 	} catch (const Exception& e) {
 		e.log();
 		return -1;
@@ -358,9 +316,10 @@ snapshot_write_tuple(struct log_io *l, struct fio_batch *batch,
 		     uint32_t n, struct tuple *tuple)
 {
 	struct box_snap_row header;
+	header.op = REPLACE;
 	header.space = n;
-	header.tuple_size = tuple->field_count;
-	header.data_size = tuple->bsize;
+	header.flags = BOX_ADD;
+	header.field_count = tuple->field_count;
 
 	snapshot_write_row(l, batch, (const char *) &header, sizeof(header),
 			   tuple->data, tuple->bsize);

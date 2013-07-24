@@ -36,7 +36,13 @@
 
 struct tarantool_cfg;
 
+typedef struct tuple *(*replace_func)(struct space *space, struct
+				      tuple *old_tuple, struct
+				      tuple *new_tuple, enum
+				      dup_replace_mode mode);
+
 struct space {
+	replace_func replace;
 	/**
 	 * The number of *enabled* indexes in the space.
 	 *
@@ -162,6 +168,14 @@ space_id(struct space *space) { return space->def.id; }
 struct tuple *
 space_replace(struct space *space, struct tuple *old_tuple,
 	      struct tuple *new_tuple, enum dup_replace_mode mode);
+
+/**
+ * A short-cut version of replace used during bulk load
+ * from snapshot.
+ */
+struct tuple *
+space_build(struct space *space, struct tuple *old_tuple,
+	    struct tuple *new_tuple, enum dup_replace_mode mode);
 
 /**
  * Check that the tuple has correct arity and correct field

@@ -1168,7 +1168,7 @@ snapshot_write_row(struct log_io *l, struct fio_batch *batch,
 				     sizeof(struct row_v11) +
 				     data_len + metadata_len);
 
-	row_v11_fill(row, 0, SNAP, snapshot_cookie,
+	row_v11_fill(row, recovery_state->lsn, SNAP, snapshot_cookie,
 		     metadata, metadata_len, data, data_len);
 	header_v11_sign(&row->header);
 

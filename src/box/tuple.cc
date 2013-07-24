@@ -38,6 +38,7 @@
 #include <fiber.h>
 #include "scoped_guard.h"
 #include <stdio.h>
+#include <third_party/base64.h>
 
 /** Global table of tuple formats */
 struct tuple_format **tuple_formats;
@@ -405,8 +406,24 @@ tuple_new(struct tuple_format *format, uint32_t field_count,
 {
 	size_t tuple_len = end - *data;
 
-	if (tuple_len != tuple_range_size(data, end, field_count))
+	if (tuple_len != tuple_range_size(data, end, field_count)) {
+		say_error("\n"
+			  "********************************************\n"
+		          "* Found a corrupted tuple in the snapshot! *\n"
+		          "* This can be either due to a memory       *\n"
+		          "* corruption or a bug in the server.       *\n"
+		          "* The tuple can not be loaded.             *\n"
+		          "********************************************\n"
+		          "Tuple data, BASE64 encoded:                 \n");
+
+		int base64_buflen = base64_bufsize(tuple_len);
+		char *base64_buf = (char *) malloc(base64_buflen);
+		int len = base64_encode(end - tuple_len, tuple_len,
+					base64_buf, base64_buflen);
+		write(STDERR_FILENO, base64_buf, len);
+		free(base64_buf);
 		tnt_raise(IllegalParams, "tuple_new(): incorrect tuple format");
+	}
 
 	struct tuple *new_tuple = tuple_alloc(format, tuple_len);
 	new_tuple->field_count = field_count;

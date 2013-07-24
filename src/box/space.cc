@@ -195,6 +195,20 @@ space_replace(struct space *space, struct tuple *old_tuple,
 	return NULL;
 }
 
+struct tuple *
+space_build(struct space *space, struct tuple *old_tuple,
+	    struct tuple *new_tuple, enum dup_replace_mode mode)
+{
+	assert(old_tuple == NULL && mode == DUP_INSERT);
+	(void) mode;
+	if (old_tuple) {
+		panic("Failed to commit transaction when loading "
+		      "from snapshot");
+	}
+	space->index[0]->buildNext(new_tuple);
+	return NULL; /* old tuple */
+}
+
 void
 space_validate_tuple(struct space *sp, struct tuple *new_tuple)
 {
@@ -311,6 +325,7 @@ begin_build_primary_indexes(void)
 				mh_i32ptr_node(spaces, i)->val;
 		Index *index = space->index[0];
 		index->beginBuild();
+		space->replace = space_build;
 	}
 }
 
@@ -323,6 +338,7 @@ end_build_primary_indexes(void)
 				mh_i32ptr_node(spaces, i)->val;
 		Index *index = space->index[0];
 		index->endBuild();
+		space->replace = space_replace;
 	}
 }
 
