@@ -246,6 +246,7 @@ tc_cmd_try(char *cmd, size_t size, int *reconnect)
 		break;
 	case TC_HELP:
 		tc_cmd_usage();
+		cmd = "help()";
 		break;
 	case TC_TEE:
 		if (tnt_lex(&lex, &tk) != TNT_TK_STRING) {
@@ -398,8 +399,6 @@ static char* tc_cli_readline_pipe() {
 	return str;
 }
 
-
-
 static int check_delim(char* str, size_t len, size_t sep_len) {
 	const char *sep = tc.opt.delim;
 	len = strip_end_ws(str);
@@ -489,3 +488,17 @@ next:
 
 #undef TC_ALLOCATION_ERROR
 #undef TC_REALLOCATION_ERROR
+
+int tc_cli_motd(void)
+{
+	char *message = NULL;
+	size_t size = 0;
+	if (tc_admin_wait(&tc.admin) == 0)
+		return 0;
+	int rc = tc_admin_reply(&tc.admin, &message, &size);
+	if (rc == 0) {
+		tc_printf("%s", message);
+		free(message);
+	}
+	return 0;
+}

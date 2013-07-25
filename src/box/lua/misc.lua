@@ -48,7 +48,6 @@ function box.counter.dec(space, ...)
 end
 
 
--- vim: set et ts=4 sts
 -- Assumes that spaceno has a TREE int32 (NUM) or int64 (NUM64) primary key
 -- inserts a tuple after getting the next value of the
 -- primary key and returns it back to the user
@@ -70,5 +69,18 @@ function box.auto_increment(spaceno, ...)
     return box.insert(spaceno, max + 1, ...)
 end
 
+
+-- This function automatically called by console client
+-- on help command.
+function help()
+	print("Tarantool Server Help.")
+end
+
+-- This function automatically called by the server for
+-- any new admin client.
+function motd()
+	print("Tarantool " .. box.info.version)
+	print("Uptime: " .. box.info.uptime)
+end
 
 -- vim: set et ts=4 sts

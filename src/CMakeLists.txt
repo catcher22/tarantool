@@ -18,17 +18,11 @@ if (CMAKE_COMPILER_IS_GNUCC)
 endif()
 
 #
-# Build admin.cc from admin.rl, but only if admin.rl was changed.
-# The same applies to memcached.cc/memcached.rl.
-# We track admin.cc and memcached.cc in revision control, and thus do not
+# Build memcached.cc from memcached.rl, but only if memcached.rl was changed.
+# We track memcached.cc in revision control, and thus do not
 # require engineers who do not modify .rl files to have Ragel
 # installed.
 #
-add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/src/admin.cc
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMAND ${RAGEL} -G2 src/admin.rl -o src/admin.cc
-    DEPENDS ${CMAKE_SOURCE_DIR}/src/admin.rl)
-
 add_custom_command(OUTPUT ${CMAKE_SOURCE_DIR}/src/memcached-grammar.cc
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND ${RAGEL} -G2 src/memcached-grammar.rl
