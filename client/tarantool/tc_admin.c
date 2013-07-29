@@ -106,18 +106,6 @@ int tc_admin_query(struct tc_admin *a, char *q)
 	return 0;
 }
 
-int tc_admin_wait(struct tc_admin *a)
-{
-	fd_set r;
-	FD_ZERO(&r);
-	FD_SET(a->fd, &r);
-	struct timeval tv = {
-		.tv_sec = 1,
-		.tv_usec = 500,
-	};
-	return select(a->fd + 1, &r, NULL, NULL, &tv);
-}
-
 int tc_admin_reply(struct tc_admin *a, char **r, size_t *size)
 {
 	char *buf = NULL;

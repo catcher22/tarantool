@@ -89,16 +89,6 @@ admin_dispatch(struct ev_io *coio, struct iobuf *iobuf, lua_State *L)
 }
 
 static void
-admin_motd(struct ev_io *coio, struct lua_State *L)
-{
-	struct tbuf *out = tbuf_new(fiber->gc_pool);
-	start(out);
-	tarantool_lua(L, out, "motd()");
-	end(out);
-	coio_write(coio, out->data, out->size);
-}
-
-static void
 admin_handler(va_list ap)
 {
 	struct ev_io coio = va_arg(ap, struct ev_io);
@@ -121,7 +111,6 @@ admin_handler(va_list ap)
 	 */
 	session_create(coio.fd);
 
-	admin_motd(&coio, L);
 	for (;;) {
 		if (admin_dispatch(&coio, iobuf, L) < 0)
 			return;

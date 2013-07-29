@@ -42,6 +42,5 @@ void tc_admin_close(struct tc_admin *a);
 
 int tc_admin_query(struct tc_admin *a, char *q);
 int tc_admin_reply(struct tc_admin *a, char **r, size_t *size);
-int tc_admin_wait(struct tc_admin *a);
 
 #endif /* TC_ADMIN_H_INCLUDED */
