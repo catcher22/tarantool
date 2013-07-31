@@ -69,18 +69,21 @@ function box.auto_increment(spaceno, ...)
     return box.insert(spaceno, max + 1, ...)
 end
 
-
 -- This function automatically called by console client
 -- on help command.
 function help()
-	print("Tarantool Server Help.")
+	print("server commands:")
+	print("")
+	print(" - box.reload_configuration()")
+	print(" - box.save_snapshot()")
+	print(" - box.save_coredump()")
 end
 
 -- This function automatically called by the server for
 -- any new admin client.
 function motd()
-	print("Tarantool " .. box.info.version)
-	print("Uptime: " .. box.info.uptime)
+	print(" - Tarantool " .. box.info.version)
+	print(" - Uptime: " .. box.info.uptime)
 end
 
 -- vim: set et ts=4 sts

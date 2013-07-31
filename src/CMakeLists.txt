@@ -105,6 +105,7 @@ set (common_sources
      crc32.c
      rope.c
      ipc.cc
+     lua/admin.cc
      lua/info.cc
      lua/stat.cc
      lua/slab.cc
