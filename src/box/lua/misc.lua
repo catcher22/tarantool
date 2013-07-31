@@ -72,11 +72,20 @@ end
 -- This function automatically called by console client
 -- on help command.
 function help()
-	print("server commands:")
+	print("server admin commands:")
 	print("")
-	print(" - box.reload_configuration()")
-	print(" - box.save_snapshot()")
+	print(" - box.show_info()")
+	print(" - box.show_slab()")
+	print(" - box.show_fiber()")
+	print(" - box.show_configuration()")
+	print(" - box.show_stat()")
+	print(" - box.show_injections()")
+	print(" - box.show_plugins()")
+	print(" - box.set_injection(name, state)")
 	print(" - box.save_coredump()")
+	print(" - box.save_snapshot()")
+	print(" - box.check_slab()")
+	print(" - box.reload_configuration()")
 end
 
 -- This function automatically called by the server for
@@ -85,5 +94,28 @@ function motd()
 	print(" - Tarantool " .. box.info.version)
 	print(" - Uptime: " .. box.info.uptime)
 end
+
+local function printof(t)
+	local function p(t, deep)
+		if type(t) == "table" then
+			for k,v in pairs(t) do
+				name = string.rep(" ", deep).."- "..k..": "
+				if type(v) == "table" then
+					print(name)
+					p(v, deep+1)
+				else
+					print(name, p(v, deep+1))
+				end
+			end
+			return ""
+		end
+		return t
+	end
+	return p(t, 1)
+end
+
+function box.show_info() printof(box.info()) end
+function box.show_slab() printof(box.slab()) end
+function box.show_stat() printof(box.stat()) end
 
 -- vim: set et ts=4 sts

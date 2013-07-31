@@ -34,13 +34,16 @@ extern "C" {
 #include "lualib.h"
 }
 
-#include <say.h>
 #include <string.h>
+#include <say.h>
+#include <errinj.h>
 #include "palloc.h"
+#include "salloc.h"
 #include "tbuf.h"
 #include "fiber.h"
 #include "tarantool.h"
 #include "box/box.h"
+#include "lua/init.h"
 
 static int
 lbox_reload_configuration(struct lua_State *L)
@@ -71,6 +74,62 @@ lbox_save_snapshot(struct lua_State *L)
 	return 1;
 }
 
+static int
+lbox_show_fiber(struct lua_State *L)
+{
+	struct tbuf *out = tbuf_new(fiber->gc_pool);
+	fiber_info(out);
+	lua_pushstring(L, out->data);
+	return 1;
+}
+
+static int
+lbox_show_plugins(struct lua_State *L)
+{
+	struct tbuf *out = tbuf_new(fiber->gc_pool);
+	show_plugins_stat(out);
+	lua_pushstring(L, out->data);
+	return 1;
+}
+
+static int
+lbox_show_injections(struct lua_State *L)
+{
+	struct tbuf *out = tbuf_new(fiber->gc_pool);
+	errinj_info(out);
+	lua_pushstring(L, out->data);
+	return 1;
+}
+
+static int
+lbox_set_injection(struct lua_State *L)
+{
+	char *name = (char*)luaL_checkstring(L, 1);
+	int state = luaL_checkint(L, 2);
+	if (errinj_set_byname(name, state)) {
+		lua_pushfstring(L, "can't find error injection '%s'", name);
+		return 1;
+	}
+	return 0;
+}
+
+
+static int
+lbox_show_configuration(struct lua_State *L)
+{
+	struct tbuf *out = tbuf_new(fiber->gc_pool);
+	show_cfg(out);
+	lua_pushstring(L, out->data);
+	return 1;
+}
+
+static int
+lbox_check_slab(struct lua_State *L __attribute__((unused)))
+{
+	slab_validate();
+	return 0;
+}
+
 int tarantool_lua_admin_init(struct lua_State *L)
 {
 	lua_getfield(L, LUA_GLOBALSINDEX, "box");
@@ -84,6 +143,30 @@ int tarantool_lua_admin_init(struct lua_State *L)
 
 	lua_pushstring(L, "reload_configuration");
 	lua_pushcfunction(L, lbox_reload_configuration);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "show_fiber");
+	lua_pushcfunction(L, lbox_show_fiber);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "show_plugins");
+	lua_pushcfunction(L, lbox_show_plugins);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "show_injections");
+	lua_pushcfunction(L, lbox_show_injections);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "set_injection");
+	lua_pushcfunction(L, lbox_set_injection);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "show_configuration");
+	lua_pushcfunction(L, lbox_show_configuration);
+	lua_settable(L, -3);
+
+	lua_pushstring(L, "check_slab");
+	lua_pushcfunction(L, lbox_check_slab);
 	lua_settable(L, -3);
 
 	lua_pop(L, 1);
