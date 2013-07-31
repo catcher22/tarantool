@@ -10,7 +10,7 @@ print """#
 """
 for i in range(10):
   sql("insert into t0 values ({0}, 'tuple')".format(i))
-admin("show stat")
+admin("box.show_stat()")
 print """#
 # restart server
 #
@@ -20,7 +20,7 @@ print """#
 # statistics must be zero
 #
 """
-admin("show stat")
+admin("box.show_stat()")
 
 # cleanup
 for i in range(10):

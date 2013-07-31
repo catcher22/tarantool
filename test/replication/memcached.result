@@ -40,9 +40,8 @@ END
 get 1
 END
 # check that expiration is working properly, when replica becomes master
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 get 1
 VALUE 1 0 21

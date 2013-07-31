@@ -1,4 +1,3 @@
-save coredump
+box.save_coredump()
 ---
-ok
 ...

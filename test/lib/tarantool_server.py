@@ -184,7 +184,7 @@ class TarantoolServer(Server):
         else:
             self.config = os.path.abspath(config)
             shutil.copy(self.config, os.path.join(self.vardir, self.default_config_name))
-        self.admin.execute("reload configuration", silent=silent)
+        self.admin.execute("box.reload_configuration()", silent=silent)
 
     def init(self):
         # init storage
@@ -198,7 +198,7 @@ class TarantoolServer(Server):
         if param:
             data = yaml.load(self.admin("box.info." + param, silent=True))[0]
         else:
-            data = yaml.load(self.admin("show info", silent=True))[info]
+            data = yaml.load(self.admin("box.show_info()", silent=True))[info]
         return data
 
     def wait_lsn(self, lsn):

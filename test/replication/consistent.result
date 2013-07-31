@@ -60,9 +60,8 @@ replica lsn = 11
 
 # reconfigure replica to master
 
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 insert to master [10, 20) entries
 insert into t0 values (10, 'mater 10')
@@ -148,9 +147,8 @@ replica lsn = 16
 
 # rollback replica
 
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 select from replica [10, 20) entries
 select * from t0 where k0 = 10
@@ -193,9 +191,8 @@ replica lsn = 21
 
 # reconfigure replica to master
 
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 insert to master [20, 30) entries
 insert into t0 values (20, 'mater 20')
@@ -306,9 +303,8 @@ replica lsn = 31
 
 # rollback replica
 
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 select from replica [20, 30) entries
 select * from t0 where k0 = 20
@@ -351,9 +347,8 @@ replica lsn = 31
 
 #reconfigure replica to master
 
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 insert to master [30, 40) entries
 insert into t0 values (30, 'mater 30')
@@ -514,9 +509,8 @@ replica lsn = 51
 
 # rollback replica
 
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 select from replica [30, 50) entries
 select * from t0 where k0 = 30

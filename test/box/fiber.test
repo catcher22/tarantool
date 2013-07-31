@@ -51,7 +51,7 @@ sql("call box.update('0', 'pass', '-p', 2, '\1\0\0\0')")
 sql("call box.update('0', 'pass', '-p', 2, '\1\0\0\0')")
 admin("box.update(0, 'pass', '+p', 2, 1)")
 sql("call box.delete('0', 'pass')")
-admin("reload configuration")
+admin("box.reload_configuration()")
 # must be read-only
 
 admin("box.insert(0, 'test')")

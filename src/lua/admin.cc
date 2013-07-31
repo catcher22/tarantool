@@ -50,7 +50,7 @@ lbox_reload_configuration(struct lua_State *L)
 {
 	struct tbuf *err = tbuf_new(fiber->gc_pool);
 	if (reload_cfg(err)) {
-		lua_pushstring(L, err->data);
+		lua_pushfstring(L, "fail:%s", err->data);
 		return 1;
 	}
 	return 0;
@@ -69,7 +69,7 @@ lbox_save_snapshot(struct lua_State *L)
 	int ret = snapshot();
 	if (ret == 0)
 		return 0;
-	lua_pushfstring(L, "can't save snapshot, errno %d (%s)",
+	lua_pushfstring(L, "fail: can't save snapshot, errno %d (%s)",
 	                ret, strerror(ret));
 	return 1;
 }
@@ -107,12 +107,11 @@ lbox_set_injection(struct lua_State *L)
 	char *name = (char*)luaL_checkstring(L, 1);
 	int state = luaL_checkint(L, 2);
 	if (errinj_set_byname(name, state)) {
-		lua_pushfstring(L, "can't find error injection '%s'", name);
+		lua_pushfstring(L, "fail: can't find error injection '%s'", name);
 		return 1;
 	}
 	return 0;
 }
-
 
 static int
 lbox_show_configuration(struct lua_State *L)

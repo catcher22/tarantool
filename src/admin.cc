@@ -57,32 +57,20 @@ extern "C" {
 #include "session.h"
 #include "scoped_guard.h"
 
-static inline void
-start(struct tbuf *out) {
-	tbuf_printf(out, "---" CRLF);
-}
-
-static inline void
-end(struct tbuf *out) {
-	tbuf_printf(out, "..." CRLF);
-}
-
 static int
 admin_dispatch(struct ev_io *coio, struct iobuf *iobuf, lua_State *L)
 {
 	struct ibuf *in = &iobuf->in;
 	struct tbuf *out = tbuf_new(fiber->gc_pool);
 	char *eol;
-
 	while ((eol = (char *) memchr(in->pos, '\n', in->end - in->pos)) == NULL) {
 		if (coio_bread(coio, in, 1) <= 0)
 			return -1;
 	}
-
 	eol[0] = '\0';
-	start(out);
+	tbuf_printf(out, "---" CRLF);
 	tarantool_lua(L, out, in->pos);
-	end(out);
+	tbuf_printf(out, "..." CRLF);
 	in->pos = (eol + 1);
 	coio_write(coio, out->data, out->size);
 	return 0;

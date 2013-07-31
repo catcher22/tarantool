@@ -15,17 +15,36 @@ STORED
 
 # recv reply 'get big' from the first memcached client 
 success: buf == reply
-show stat
+box.show_stat()
 ---
-statistics:
-  REPLACE:           { rps:  0    , total:  0           }
-  SELECT:            { rps:  0    , total:  0           }
-  UPDATE:            { rps:  0    , total:  0           }
-  DELETE_1_3:        { rps:  0    , total:  0           }
-  DELETE:            { rps:  0    , total:  0           }
-  CALL:              { rps:  0    , total:  0           }
-  MEMC_GET:          { rps:  0    , total:  0           }
-  MEMC_GET_MISS:     { rps:  0    , total:  0           }
-  MEMC_GET_HIT:      { rps:  0    , total:  0           }
-  MEMC_EXPIRED_KEYS: { rps:  0    , total:  0           }
+ - DELETE: 
+ - total: 0
+ - rps: 0
+ - MEMC_GET_MISS: 
+ - total: 0
+ - rps: 0
+ - SELECT: 
+ - total: 0
+ - rps: 0
+ - DELETE_1_3: 
+ - total: 0
+ - rps: 0
+ - CALL: 
+ - total: 0
+ - rps: 0
+ - REPLACE: 
+ - total: 0
+ - rps: 0
+ - MEMC_EXPIRED_KEYS: 
+ - total: 0
+ - rps: 0
+ - MEMC_GET_HIT: 
+ - total: 0
+ - rps: 0
+ - MEMC_GET: 
+ - total: 0
+ - rps: 0
+ - UPDATE: 
+ - total: 0
+ - rps: 0
 ...

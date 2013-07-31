@@ -17,7 +17,7 @@ server.stop()
 # start server with memcached off
 server.deploy("memcached/cfg/tarantool_memcached_off.cfg")
 # check values
-admin("show configuration")
+admin("box.show_configuration()")
 
 # stop current server
 server.stop()

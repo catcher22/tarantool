@@ -23,15 +23,26 @@ insert into t0 values (8, 'tuple')
 Insert OK, 1 row affected
 insert into t0 values (9, 'tuple')
 Insert OK, 1 row affected
-show stat
+box.show_stat()
 ---
-statistics:
-  REPLACE:    { rps:  2    , total:  10          }
-  SELECT:     { rps:  0    , total:  0           }
-  UPDATE:     { rps:  0    , total:  0           }
-  DELETE_1_3: { rps:  0    , total:  0           }
-  DELETE:     { rps:  0    , total:  0           }
-  CALL:       { rps:  0    , total:  0           }
+ - DELETE: 
+ - total: 0
+ - rps: 0
+ - SELECT: 
+ - total: 0
+ - rps: 0
+ - REPLACE: 
+ - total: 10
+ - rps: 2
+ - CALL: 
+ - total: 0
+ - rps: 0
+ - UPDATE: 
+ - total: 0
+ - rps: 0
+ - DELETE_1_3: 
+ - total: 0
+ - rps: 0
 ...
 #
 # restart server
@@ -41,15 +52,26 @@ statistics:
 # statistics must be zero
 #
 
-show stat
+box.show_stat()
 ---
-statistics:
-  REPLACE:    { rps:  0    , total:  0           }
-  SELECT:     { rps:  0    , total:  0           }
-  UPDATE:     { rps:  0    , total:  0           }
-  DELETE_1_3: { rps:  0    , total:  0           }
-  DELETE:     { rps:  0    , total:  0           }
-  CALL:       { rps:  0    , total:  0           }
+ - DELETE: 
+ - total: 0
+ - rps: 0
+ - SELECT: 
+ - total: 0
+ - rps: 0
+ - REPLACE: 
+ - total: 0
+ - rps: 0
+ - CALL: 
+ - total: 0
+ - rps: 0
+ - UPDATE: 
+ - total: 0
+ - rps: 0
+ - DELETE_1_3: 
+ - total: 0
+ - rps: 0
 ...
 delete from t0 where k0 = 0
 Delete OK, 1 row affected

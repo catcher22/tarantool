@@ -19,18 +19,16 @@ Found 1 tuple:
 [3]
 select * from t0 where k0 = 4
 No match
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
-save snapshot
+box.save_snapshot()
 ---
-fail: can't save snapshot, errno 17 (File exists)
+ - fail: can't save snapshot, errno 17 (File exists)
 ...
 box.space[0]:truncate()
 ---
 ...
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...

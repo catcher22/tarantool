@@ -27,50 +27,16 @@ import sys
 import re
 from tarantool_connection import TarantoolConnection
 
-#generation of "optional end" regexp
-def re_optional_end(begin, opt_end):
-    return begin + ''.join(map(lambda x: '(' + x, opt_end)) + (')?'*len(opt_end))
-cr = re_optional_end
-
-#generation of "two mandatory word, but second word may differ" regexp
-def re_compose(begin, end):
-    if end == None:
-        return begin
-    return begin+'\s*('+'|'.join(end)+')'
-
-#simple server cmd's regexp generation
-re_is_sim_admin_cmd = '\s*('+'|'.join([
-    re_compose(cr('e', 'xit'), None),
-    re_compose(cr('h', 'elp'), None),
-    re_compose(cr('sh','ow'), [cr('in', 'fo'), cr('fi', 'ber'), 
-        cr('co', 'nfiguration'), 'plugins', cr('sl', 'ab'), 
-        cr('pa', 'lloc'), cr('st', 'at'), 'injections']
-    ),
-    re_compose(cr('re', 'load'), [cr('co', 'nfiguration')]),
-    re_compose(cr('sa', 've'), [cr('co', 'redump'), cr('sn', 'apshot')])
-])+')\s*$'
-
-#beginnig of complex server cmd's regexp generation
-re_is_com_admin_cmd = '\s*('+'|'.join([
-    re_compose(cr('lu', 'a'), None), 
-    re_compose(cr('se', 't'), [cr('in', 'jection')])
-]) +')\s*'
-
-#simple+complex admin cmd's regexp objects
-is_admin_re_1 = re.compile(re_is_sim_admin_cmd, re.I)
-is_admin_re_2 = re.compile(re_is_com_admin_cmd, re.I)
-
 ADMIN_SEPARATOR = '\n'
 
 class AdminConnection(TarantoolConnection):
-    def execute_simple(self, command, silent, lua=False):
+    def execute_simple(self, command, silent):
         if not command:
             return
-        self.socket.sendall(('lua ' if lua else '') + command.replace('\n', ' ') + ADMIN_SEPARATOR)
+        self.socket.sendall(command.replace('\n', ' ') + ADMIN_SEPARATOR)
 
         bufsiz = 4096
         res = ""
-
         while True:
             buf = self.socket.recv(bufsiz)
             if not buf:
@@ -89,8 +55,4 @@ class AdminConnection(TarantoolConnection):
         return res
 
     def execute_no_reconnect(self, command, silent):
-        add_lua = False
-        rg1, rg2 = is_admin_re_1.match(command), is_admin_re_2.match(command)
-        if (not rg1 or len(rg1.group()) != len(command)) and not rg2:
-            add_lua=True
-        return self.execute_simple(command, silent, lua=add_lua)
+        return self.execute_simple(command, silent)

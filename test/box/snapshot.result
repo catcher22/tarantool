@@ -1514,20 +1514,19 @@ No match
 
 insert into t0 values (1, 'first tuple')
 Insert OK, 1 row affected
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
-save snapshot
+box.save_snapshot()
 ---
-fail: can't save snapshot, errno 17 (File exists)
+ - fail: can't save snapshot, errno 17 (File exists)
 ...
 insert into t0 values (2, 'second tuple')
 Insert OK, 1 row affected
 # Make 'var' directory read-only.
-save snapshot
+box.save_snapshot()
 ---
-fail: can't save snapshot, errno 13 (Permission denied)
+ - fail: can't save snapshot, errno 13 (Permission denied)
 ...
 delete from t0 where k0 = 1
 Delete OK, 1 row affected

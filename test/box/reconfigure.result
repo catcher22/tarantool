@@ -2,9 +2,9 @@ box.cfg.too_long_threshold
 ---
  - 0.5
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - Could not accept read only 'slab_alloc_arena' option
  - Could not accept read only 'pid_file' option
  - Could not accept read only 'logger' option
@@ -22,32 +22,31 @@ box.cfg.too_long_threshold
 ---
  - 0.5
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - Option 'primary_port' is not set (or has a default value)
  - Option 'space[0].enabled' is not set (or has a default value)
  - Option 'space[0].index[0].type' is not set (or has a default value)
  - Option 'space[0].index[0].key_field[0].fieldno' is not set (or has a default value)
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - at least one space or memcached port must be defined
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - Could not accept read only 'space[1].enabled' option
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - Could not accept read only 'space[0].index[0].key_field[1].fieldno' option
 ...
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 box.cfg.too_long_threshold
 ---
@@ -61,23 +60,22 @@ box.cfg.io_collect_interval
 ---
  - 0.01
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - empty configuration file 'tarantool.cfg'
 ...
 box.cfg.too_long_threshold
 ---
  - 2
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - can't open config `tarantool.cfg'
 ...
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 box.cfg.too_long_threshold
 ---
@@ -90,34 +88,29 @@ box.cfg.too_long_threshold
 #
 insert into t0 values (1, 'tuple')
 Insert OK, 1 row affected
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
-reload configuration
+box.reload_configuration()
 ---
-fail:
+ - fail:
  - can't open config `tarantool.cfg'
 ...
 insert into t0 values (2, 'tuple 2')
 Insert OK, 1 row affected
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 insert into t0 values (3, 'tuple 3')
 Insert OK, 1 row affected
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
-reload configuration
+box.reload_configuration()
 ---
-ok
 ...
 box.space[0]:truncate()
 ---

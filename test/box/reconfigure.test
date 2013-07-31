@@ -35,13 +35,13 @@ print """#
 # configuration'
 #"""
 sql("insert into t0 values (1, 'tuple')")
-admin("save snapshot")
+admin("box.save_snapshot()")
 server.reconfigure(None)
 sql("insert into t0 values (2, 'tuple 2')")
-admin("save snapshot")
+admin("box.save_snapshot()")
 server.reconfigure("box/tarantool_good.cfg")
 sql("insert into t0 values (3, 'tuple 3')")
-admin("save snapshot")
+admin("box.save_snapshot()")
 # Cleanup
 server.reconfigure(self.suite_ini["config"])
 admin("box.space[0]:truncate()")

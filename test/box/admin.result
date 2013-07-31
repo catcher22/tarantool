@@ -1,111 +1,113 @@
-exit
-show stat
+box.show_stat()
 ---
-statistics:
-  REPLACE:    { rps:  0    , total:  0           }
-  SELECT:     { rps:  0    , total:  0           }
-  UPDATE:     { rps:  0    , total:  0           }
-  DELETE_1_3: { rps:  0    , total:  0           }
-  DELETE:     { rps:  0    , total:  0           }
-  CALL:       { rps:  0    , total:  0           }
+ - DELETE: 
+ - total: 0
+ - rps: 0
+ - SELECT: 
+ - total: 0
+ - rps: 0
+ - REPLACE: 
+ - total: 0
+ - rps: 0
+ - CALL: 
+ - total: 0
+ - rps: 0
+ - UPDATE: 
+ - total: 0
+ - rps: 0
+ - DELETE_1_3: 
+ - total: 0
+ - rps: 0
 ...
-help
+help()
 ---
-available commands:
- - help
- - exit
- - show info
- - show fiber
- - show configuration
- - show slab
- - show palloc
- - show stat
- - show plugins
- - save coredump
- - save snapshot
- - lua command
- - reload configuration
- - show injections (debug mode only)
- - set injection <name> <state> (debug mode only)
+server admin commands:
+ - box.show_info()
+ - box.show_slab()
+ - box.show_fiber()
+ - box.show_configuration()
+ - box.show_stat()
+ - box.show_injections()
+ - box.show_plugins()
+ - box.set_injection(name, state)
+ - box.save_coredump()
+ - box.save_snapshot()
+ - box.check_slab()
+ - box.reload_configuration()
 ...
-show configuration
+box.show_configuration()
 ---
-configuration:
-  username: (null)
-  local_hot_standby: "false"
-  bind_ipaddr: "INADDR_ANY"
-  coredump: "false"
-  admin_port: "33015"
-  replication_port: "0"
-  log_level: "4"
-  slab_alloc_arena: "0.1"
-  slab_alloc_minimal: "64"
-  slab_alloc_factor: "2"
-  work_dir: (null)
-  snap_dir: "."
-  wal_dir: "."
-  script_dir: "."
-  pid_file: "box.pid"
-  logger: "cat - >> tarantool.log"
-  logger_nonblock: "true"
-  io_collect_interval: "0"
-  backlog: "1024"
-  readahead: "16320"
-  snap_io_rate_limit: "0"
-  rows_per_wal: "50"
-  wal_writer_inbox_size: "16384"
-  wal_mode: "fsync_delay"
-  wal_fsync_delay: "0"
-  wal_dir_rescan_delay: "0.1"
-  panic_on_snap_error: "true"
-  panic_on_wal_error: "false"
-  primary_port: "33013"
-  secondary_port: "33014"
-  too_long_threshold: "0.5"
-  custom_proc_title: (null)
-  memcached_port: "0"
-  memcached_space: "23"
-  memcached_expire: "false"
-  memcached_expire_per_loop: "1024"
-  memcached_expire_full_sweep: "3600"
-  replication_source: (null)
-  space[0].enabled: "true"
-  space[0].arity: "-1"
-  space[0].estimated_rows: "0"
-  space[0].index[0].type: "HASH"
-  space[0].index[0].unique: "true"
-  space[0].index[0].key_field[0].fieldno: "0"
-  space[0].index[0].key_field[0].type: "NUM"
-...
-show stat
----
-statistics:
-  REPLACE:    { rps:  0    , total:  0           }
-  SELECT:     { rps:  0    , total:  0           }
-  UPDATE:     { rps:  0    , total:  0           }
-  DELETE_1_3: { rps:  0    , total:  0           }
-  DELETE:     { rps:  0    , total:  0           }
-  CALL:       { rps:  0    , total:  0           }
+ - configuration:
+ - username: (null)
+ - local_hot_standby: "false"
+ - bind_ipaddr: "INADDR_ANY"
+ - coredump: "false"
+ - admin_port: "33015"
+ - replication_port: "0"
+ - log_level: "4"
+ - slab_alloc_arena: "0.1"
+ - slab_alloc_minimal: "64"
+ - slab_alloc_factor: "2"
+ - work_dir: (null)
+ - snap_dir: "."
+ - wal_dir: "."
+ - script_dir: "."
+ - pid_file: "box.pid"
+ - logger: "cat - >> tarantool.log"
+ - logger_nonblock: "true"
+ - io_collect_interval: "0"
+ - backlog: "1024"
+ - readahead: "16320"
+ - snap_io_rate_limit: "0"
+ - rows_per_wal: "50"
+ - wal_writer_inbox_size: "16384"
+ - wal_mode: "fsync_delay"
+ - wal_fsync_delay: "0"
+ - wal_dir_rescan_delay: "0.1"
+ - panic_on_snap_error: "true"
+ - panic_on_wal_error: "false"
+ - primary_port: "33013"
+ - secondary_port: "33014"
+ - too_long_threshold: "0.5"
+ - custom_proc_title: (null)
+ - memcached_port: "0"
+ - memcached_space: "23"
+ - memcached_expire: "false"
+ - memcached_expire_per_loop: "1024"
+ - memcached_expire_full_sweep: "3600"
+ - replication_source: (null)
+ - space[0].enabled: "true"
+ - space[0].arity: "-1"
+ - space[0].estimated_rows: "0"
+ - space[0].index[0].type: "HASH"
+ - space[0].index[0].unique: "true"
+ - space[0].index[0].key_field[0].fieldno: "0"
+ - space[0].index[0].key_field[0].type: "NUM"
+
 ...
 insert into t0 values (1, 'tuple')
 Insert OK, 1 row affected
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
 delete from t0 where k0 = 1
 Delete OK, 1 row affected
-show info
+box.show_info()
 ---
-info:
-  version: "1.minor.patch-<rev>-<commit>"
-  uptime: <uptime>
-  pid: <pid>
-  logger_pid: <pid>
-  snapshot_pid: <pid>
-  lsn: 3
-  recovery_lag: 0.000
-  recovery_last_update: 0.000
-  status: primary
-  config: "tarantool.cfg"
+ - version: 1.minor.patch-<rev>-<commit>
+ - status: primary
+ - pid: <pid>
+ - lsn: 3
+ - snapshot_pid: <pid>
+ - recovery_last_update: 0
+ - recovery_lag: 0
+ - uptime: <uptime>
+ - build: 
+ - flags:  -fno-omit-frame-pointer -fno-stack-protector -fexceptions -funwind-tables -std=c11 -Wall -Wextra -Wno-sign-compare -Wno-strict-aliasing -Werror -pthread
+ - target: Linux-i686-Debug
+ - compiler: /usr/bin/gcc /usr/bin/c++
+ - options: cmake . -DCMAKE_INSTALL_PREFIX=/usr/local -DENABLE_STATIC=OFF -DENABLE_TRACE=ON -DENABLE_BACKTRACE=ON -DENABLE_CLIENT=ON
+ - logger_pid: <pid>
+ - config: tarantool.cfg
 ...
+

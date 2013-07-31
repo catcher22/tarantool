@@ -2,9 +2,9 @@ dofile('utils.lua');
 
 -- integer keys;
 box.space[2]:insert(1, 'tuple');
-save snapshot;
+box.save_snapshot();
 box.space[2]:insert(2, 'tuple 2');
-save snapshot;
+box.save_snapshot();
 
 box.space[2]:insert(3, 'tuple 3');
 box.space[2]:select(0, 1);
@@ -24,9 +24,9 @@ box.space[2]:insert('12');
 
 -- string keys;
 box.space[3]:insert('identifier', 'tuple');
-save snapshot;
+box.save_snapshot();
 box.space[3]:insert('second', 'tuple 2');
-save snapshot;
+box.save_snapshot();
 box.select_range('3', '0', '100', 'second');
 box.select_range('3', '0', '100', 'identifier');
 

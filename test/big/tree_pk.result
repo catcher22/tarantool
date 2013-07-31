@@ -8,17 +8,15 @@ box.space[2]:insert(1, 'tuple')
 ---
  - 1: {'tuple'}
 ...
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
 box.space[2]:insert(2, 'tuple 2')
 ---
  - 2: {'tuple 2'}
 ...
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
 box.space[2]:insert(3, 'tuple 3')
 ---
@@ -74,17 +72,15 @@ box.space[3]:insert('identifier', 'tuple')
 ---
  - 'identifier': {'tuple'}
 ...
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
 box.space[3]:insert('second', 'tuple 2')
 ---
  - 'second': {'tuple 2'}
 ...
-save snapshot
+box.save_snapshot()
 ---
-ok
 ...
 box.select_range('3', '0', '100', 'second')
 ---

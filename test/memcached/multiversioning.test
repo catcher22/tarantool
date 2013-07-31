@@ -35,5 +35,5 @@ else:
 server.stop()
 server.deploy(self.suite_ini["config"])
 # check that we print clear memcached stats
-admin("show stat")
+admin("box.show_stat()")
 # vim: syntax=python

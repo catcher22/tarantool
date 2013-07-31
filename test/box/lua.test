@@ -3,8 +3,6 @@ import os
 import sys
 # Test Lua from admin console. Whenever producing output,
 # make sure it's a valid YAML.
-admin("lua", simple=True)
-admin("lua 1", simple=True)
 admin("print('  lua says: hello')")
 # What's in the box?
 admin("local t = {} for n in pairs(box) do table.insert(t, '  - box.' .. tostring(n)) end table.sort(t) for i = 1, #t do print(t[i]) end t = nil")
@@ -127,7 +125,7 @@ admin("fifo_top('test')")
 admin("box.delete(0, 'test')")
 admin("for k,v in pairs(box.cfg) do print(' - ', k, ': ', v) end")
 admin("for k,v in pairs(box.space[0]) do if type(v) ~= 'table' then print(' - ', k, ': ', v) end end")
-admin("reload configuration")
+admin("box.reload_configuration()")
 admin("for k,v in pairs(box.cfg) do print(' - ', k, ': ', v) end")
 admin("for k,v in pairs(box.space[0]) do if type(v) ~= 'table' then print(' - ', k, ': ', v) end end")
 # must be read-only
@@ -244,9 +242,9 @@ print """# A test case for Bug#933487
 # was created
 #"""
 admin("f = box.fiber.create(function () return true end)")
-admin("save snapshot")
-admin("save snapshot")
-admin("save snapshot")
+admin("box.save_snapshot()")
+admin("box.save_snapshot()")
+admin("box.save_snapshot()")
 admin("box.fiber.resume(f)")
 admin("f = box.fiber.create(function () return true end)")
 #

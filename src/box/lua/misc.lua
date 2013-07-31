@@ -102,9 +102,9 @@ local function printof(t)
 				name = string.rep(" ", deep).."- "..k..": "
 				if type(v) == "table" then
 					print(name)
-					p(v, deep+1)
+					p(v, deep)
 				else
-					print(name, p(v, deep+1))
+					print(name, p(v, deep))
 				end
 			end
 			return ""
