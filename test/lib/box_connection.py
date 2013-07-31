@@ -29,6 +29,8 @@ import socket
 import struct
 from tarantool_connection import TarantoolConnection
 
+from pprint import pprint
+
 try:
     inspect = __import__('inspect', globals(), locals(), [], -1)
     abspath = os.path.split(inspect.getfile(inspect.currentframe()))[0]
@@ -39,36 +41,35 @@ try:
 except (ImportError, OSError) as e:
     raise
 
+def log_call_log(space, function, *args, **kwargs):
+    def merge_args():
+        ans = ""
+        for i in args:
+            i = ("'%s'" % i if isinstance(i, basestring) else str(i))
+            ans = (i if not ans else ans + ", " + i)
+        for i, j in kwargs.items():
+            j = ("'%s'" % (i, j) if isinstance(j, basestring) else str(j))
+            ans = (i+' = '+j if not ans else ans+", %s = %s"%(i, j))
+        return ans
+    fmt = "space[%d].%s(%s)\n" if space else "%s(%s)"
+    if space:
+        fmt = fmt % (function.im_self.space_no)
+    formatted_string = fmt % (function.func_name, merge_args())
+    pprint( str(function) + " " + str(args) + " " + str(kwargs), sys.stderr)
+    print formatted_string
 
-class LogFunc(object):
-    def __init__ (self, space=False):
-        self.space = space
+    try:
+        ans = function(*args, **kwargs)
+    except tarantool.DatabaseError as e:
+        ans = "Error: " + str(e.args)
+    print str(ans)
+    return ans
 
-    def __call__(self, function):
-        def log_call_log(self, *args, **kwargs):
-            def merge_args():
-                ans = ""
-                for i in args:
-                    i = ("'%s'" if isinstance(i, basestring) else str(i))
-                    ans = (i if not ans else ans + ", " + i)
-                for i, j in kwargs.items():
-                    j = ("'%s'" if isinstance(j, basestring) else str(j))
-                    ans = (i+'='+j if not ans else ans+", %s = %s"%(i, j))
-                return ans
-            fmt = "space[%d].%s(%s)\n" if self.space else "%s(%s)"
-            if self.space:
-                fmt = fmt % (function.im_self.space_no)
-            formatted_string = fmt % (function.func_name, merge_args())
-            sys.stdout.write(formatted_string)
-            ans = function(*args, **kwargs)
-            sys.stdout.write(str(ans))
-            return ans
-        return log_call_log
 
 class BoxConnection(TarantoolConnection):
     def __init__(self, host, port):
         super(BoxConnection, self).__init__(host, port)
-        self.newcon = tarantool.Connection(host, port, connect_now=False)
+        self.newcon = tarantool.Connection(host, port, connect_now=False, reconnect_max_attempts=1000)
         self.space = {}
         self.sort = False
     
@@ -128,21 +129,33 @@ class BoxConnection(TarantoolConnection):
         space.call    = LogFunc(space=True)(space._call) 
         self.space[number] = space
 
-    @LogFunc()
     def insert(self, *args, **kwargs):
-        return self.newcon.insert(*args, **kwargs)
-    @LogFunc()
+        if not self.newcon._socket:
+            self.newcon.connect()
+        return log_call_log(False, self.newcon.insert, *args, **kwargs)
+
     def delete(self, *args, **kwargs):
-        return self.newcon.delete(*args, **kwargs)
-    @LogFunc()
+        if not self.newcon._socket:
+            self.newcon.connect()
+        print args, kwargs
+        return log_call_log(False, self.newcon.delete, *args,  **kwargs)
+
     def update(self, *args, **kwargs):
-        return self.newcon.update(*args, **kwargs)
-    @LogFunc()
+        if not self.newcon._socket:
+            self.newcon.connect()
+        return log_call_log(False, self.newcon.update, *args, **kwargs)
+
     def select(self, *args, **kwargs):
-        return self.newcon.select(*args, **kwargs)
-    @LogFunc()
+        if not self.newcon._socket:
+            self.newcon.connect()
+        return log_call_log(False, self.newcon.select, *args, **kwargs)
+
     def call  (self, *args, **kwargs):
-        return self.newcon.call  (*args, **kwargs)
-    @LogFunc()
-    def ping  (self, *args, **kwargs):
-        return self.newcon.ping  (*args, **kwargs)
+        if not self.newcon._socket:
+            self.newcon.connect()
+        return log_call_log(False, self.newcon.call, *args, **kwargs)
+
+    def ping  (self,  *args, **kwargs):
+        if not self.newcon._socket:
+            self.newcon.connect()
+        return log_call_log(False, self.newcon.ping, *args, **kwargs)
