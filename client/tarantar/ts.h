@@ -7,9 +7,11 @@ struct ts {
 	struct ts_reftable rt;
 	uint64_t last_snap_lsn;
 	uint64_t last_xlog_lsn;
-
+	uint64_t alloc;
 	struct slab_cache sc;
 	struct region ra;
 };
+
+void ts_oomcheck(void);
 
 #endif

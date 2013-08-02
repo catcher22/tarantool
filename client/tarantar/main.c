@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 
 #include <connector/c/include/tarantool/tnt.h>
 
@@ -79,6 +80,24 @@ ts_free(void)
 	slab_cache_destroy(&tss.sc);
 }
 
+void
+ts_oomcheck(void)
+{
+#ifdef __linux__
+	struct mallinfo mi = mallinfo();
+	if (tss.opts.limit > 0 && mi.uordblks > tss.opts.limit) {
+		printf("\nmemory limit reached (%"PRIu64")\n", tss.opts.limit);
+		exit(2);
+	}
+	return;
+#else
+	if (tss.opts.limit > 0 && tss.alloc > tss.opts.limit) {
+		printf("\nmemory limit reached (%"PRIu64")\n", tss.opts.limit);
+		exit(2);
+	}
+#endif
+}
+
 int main(int argc, char *argv[])
 {
 	int rc = ts_init();
@@ -110,10 +129,11 @@ int main(int argc, char *argv[])
 	if (rc == -1)
 		goto done;
 
-	printf("work_dir: %s\n", tss.opts.cfg.work_dir);
-	printf("snap_dir: %s\n", tss.opts.cfg.snap_dir);
-	printf("wal_dir:  %s\n", tss.opts.cfg.wal_dir);
-	printf("spaces:   %d\n", mh_size(tss.s.t));
+	printf("work_dir:     %s\n", tss.opts.cfg.work_dir);
+	printf("snap_dir:     %s\n", tss.opts.cfg.snap_dir);
+	printf("wal_dir:      %s\n", tss.opts.cfg.wal_dir);
+	printf("spaces:       %d\n", mh_size(tss.s.t));
+	printf("memory_limit: %dM\n", (int)(tss.opts.limit / 1024 / 1024));
 
 	/* indexate snapshot and xlog data */
 	rc = ts_indexate();

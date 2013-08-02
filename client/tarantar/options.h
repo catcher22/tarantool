@@ -8,6 +8,7 @@ enum ts_options_mode {
 };
 
 struct ts_options {
+	uint64_t limit;
 	enum ts_options_mode mode;
 	const char *file_config;
 	struct tarantool_cfg cfg;
