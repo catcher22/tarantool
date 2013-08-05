@@ -25,8 +25,10 @@ import os
 import sys
 import sql
 import copy
+import errno
 import socket
 import struct
+import warnings
 from tarantool_connection import TarantoolConnection
 
 from pprint import pprint
@@ -41,7 +43,7 @@ try:
 except (ImportError, OSError) as e:
     raise
 
-def log_call_log(space, function, *args, **kwargs):
+def log_call_log(space, function, newcon, *args, **kwargs):
     def merge_args():
         ans = ""
         for i in args:
@@ -51,13 +53,27 @@ def log_call_log(space, function, *args, **kwargs):
             j = ("'%s'" % (i, j) if isinstance(j, basestring) else str(j))
             ans = (i+' = '+j if not ans else ans+", %s = %s"%(i, j))
         return ans
+
+    def reconnect(con):
+        try:
+            if con._socket:
+                con._socket.settimeout(0)
+            if not con._socket or con._socket.recv(0, socket.MSG_DONTWAIT) == '':
+                con.connect()
+        except socket.error as e:
+            if e.errno == errno.EAGAIN:
+                pass
+            else:
+                con.connect()
+
     fmt = "space[%d].%s(%s)\n" if space else "%s(%s)"
     if space:
         fmt = fmt % (function.im_self.space_no)
     formatted_string = fmt % (function.func_name, merge_args())
-    pprint( str(function) + " " + str(args) + " " + str(kwargs), sys.stderr)
     print formatted_string
-
+    warnings.simplefilter("ignore")
+    if not newcon._socket:
+        newcon.connect()
     try:
         ans = function(*args, **kwargs)
     except tarantool.DatabaseError as e:
@@ -69,7 +85,8 @@ def log_call_log(space, function, *args, **kwargs):
 class BoxConnection(TarantoolConnection):
     def __init__(self, host, port):
         super(BoxConnection, self).__init__(host, port)
-        self.newcon = tarantool.Connection(host, port, connect_now=False, reconnect_max_attempts=1000)
+        self.newcon = tarantool.Connection(host, port, 
+                connect_now=False, reconnect_max_attempts=2, socket_timeout=None)
         self.space = {}
         self.sort = False
     
@@ -130,32 +147,19 @@ class BoxConnection(TarantoolConnection):
         self.space[number] = space
 
     def insert(self, *args, **kwargs):
-        if not self.newcon._socket:
-            self.newcon.connect()
-        return log_call_log(False, self.newcon.insert, *args, **kwargs)
+        return log_call_log(False, self.newcon.insert, self.newcon, *args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if not self.newcon._socket:
-            self.newcon.connect()
-        print args, kwargs
-        return log_call_log(False, self.newcon.delete, *args,  **kwargs)
+        return log_call_log(False, self.newcon.delete, self.newcon, *args,  **kwargs)
 
     def update(self, *args, **kwargs):
-        if not self.newcon._socket:
-            self.newcon.connect()
-        return log_call_log(False, self.newcon.update, *args, **kwargs)
+        return log_call_log(False, self.newcon.update, self.newcon, *args, **kwargs)
 
     def select(self, *args, **kwargs):
-        if not self.newcon._socket:
-            self.newcon.connect()
-        return log_call_log(False, self.newcon.select, *args, **kwargs)
+        return log_call_log(False, self.newcon.select, self.newcon, *args, **kwargs)
 
     def call  (self, *args, **kwargs):
-        if not self.newcon._socket:
-            self.newcon.connect()
-        return log_call_log(False, self.newcon.call, *args, **kwargs)
+        return log_call_log(False, self.newcon.call  , self.newcon, *args, **kwargs)
 
     def ping  (self,  *args, **kwargs):
-        if not self.newcon._socket:
-            self.newcon.connect()
-        return log_call_log(False, self.newcon.ping, *args, **kwargs)
+        return log_call_log(False, self.newcon.ping  , self.newcon, *args, **kwargs)
