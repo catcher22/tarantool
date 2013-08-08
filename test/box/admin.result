@@ -87,14 +87,14 @@ statistics:
   DELETE:     { rps:  0    , total:  0           }
   CALL:       { rps:  0    , total:  0           }
 ...
-insert into t0 values (1, 'tuple')
-Insert OK, 1 row affected
+>>> insert(0, (1, 'tuple'), not_presented = True)
+(1, u'tuple')
 save snapshot
 ---
 ok
 ...
-delete from t0 where k0 = 1
-Delete OK, 1 row affected
+>>> delete(0, 1)
+(1, u'tuple')
 show info
 ---
 info:

@@ -43,7 +43,7 @@ try:
 except (ImportError, OSError) as e:
     raise
 
-def log_call_log(space, function, newcon, *args, **kwargs):
+def log_call_log(function, boxcon, *args, **kwargs):
     def merge_args():
         ans = ""
         for i in args:
@@ -54,31 +54,18 @@ def log_call_log(space, function, newcon, *args, **kwargs):
             ans = (i+' = '+j if not ans else ans+", %s = %s"%(i, j))
         return ans
 
-    def reconnect(con):
-        try:
-            if con._socket:
-                con._socket.settimeout(0)
-            if not con._socket or con._socket.recv(0, socket.MSG_DONTWAIT) == '':
-                con.connect()
-        except socket.error as e:
-            if e.errno == errno.EAGAIN:
-                pass
-            else:
-                con.connect()
-
-    fmt = "space[%d].%s(%s)\n" if space else "%s(%s)"
-    if space:
-        fmt = fmt % (function.im_self.space_no)
-    formatted_string = fmt % (function.func_name, merge_args())
-    print formatted_string
-    warnings.simplefilter("ignore")
-    if not newcon._socket:
-        newcon.connect()
+    print ">>> %s(%s)" % (function.func_name, merge_args())
+#    warnings.simplefilter("ignore")
     try:
-        ans = function(*args, **kwargs)
+        ans = function(*args, return_tuple = True, **kwargs)
     except tarantool.DatabaseError as e:
         ans = "Error: " + str(e.args)
-    print str(ans)
+        print ans
+        return ans
+    if boxcon.sort:
+        ans = sorted(ans)
+    for i in ans:
+        print str(i)
     return ans
 
 
@@ -89,7 +76,7 @@ class BoxConnection(TarantoolConnection):
                 connect_now=False, reconnect_max_attempts=2, socket_timeout=None)
         self.space = {}
         self.sort = False
-    
+ 
     def recvall(self, length):
         res = ""
         while len(res) < length:
@@ -130,36 +117,27 @@ class BoxConnection(TarantoolConnection):
 
         return statement.unpack(response) + "\n"
 
-    def add_space(number):
-        if number in self.space:
-            return self.space[number]
-        space = self.newcon.space(number)
-        space._insert = copy.copy(space.insert)
-        space.insert  = LogFunc(space=True)(space._insert) 
-        space._delete = copy.copy(space.delete)
-        space.delete  = LogFunc(space=True)(space._delete) 
-        space._update = copy.copy(space.update)
-        space.update  = LogFunc(space=True)(space._update) 
-        space._select = copy.copy(space.select)
-        space.select  = LogFunc(space=True)(space._select) 
-        space._call   = copy.copy(space.call)
-        space.call    = LogFunc(space=True)(space._call) 
-        self.space[number] = space
+    def set_schema(self, schema_dict):
+        self.newcon.schema = tarantool.Schema(schema_dict)
 
     def insert(self, *args, **kwargs):
-        return log_call_log(False, self.newcon.insert, self.newcon, *args, **kwargs)
+        kwargs['not_presented'] = True
+        return log_call_log(self.newcon.insert, self, *args, **kwargs)
+
+    def replace(self, *args, **kwargs):
+        return log_call_log(self.newcon.insert, self, *args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        return log_call_log(False, self.newcon.delete, self.newcon, *args,  **kwargs)
+        return log_call_log(self.newcon.delete, self, *args, **kwargs)
 
     def update(self, *args, **kwargs):
-        return log_call_log(False, self.newcon.update, self.newcon, *args, **kwargs)
+        return log_call_log(self.newcon.update, self, *args, **kwargs)
 
     def select(self, *args, **kwargs):
-        return log_call_log(False, self.newcon.select, self.newcon, *args, **kwargs)
+        return log_call_log(self.newcon.select, self, *args, **kwargs)
 
     def call  (self, *args, **kwargs):
-        return log_call_log(False, self.newcon.call  , self.newcon, *args, **kwargs)
+        return log_call_log(self.newcon.call  , self, *args, **kwargs)
 
     def ping  (self,  *args, **kwargs):
-        return log_call_log(False, self.newcon.ping  , self.newcon, *args, **kwargs)
+        return log_call_log(self.newcon.ping  , self, *args, **kwargs)

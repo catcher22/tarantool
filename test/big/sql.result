@@ -3,40 +3,38 @@
 # "SELECT fails with a disjunct and small LIMIT"
 # https://bugs.launchpad.net/tarantool/+bug/729758
 #
-insert into t0 values ('Doe', 'Richard')
-Insert OK, 1 row affected
-insert into t0 values ('Roe', 'Richard')
-Insert OK, 1 row affected
-insert into t0 values ('Woe', 'Richard')
-Insert OK, 1 row affected
-insert into t0 values ('Major', 'Tomas')
-Insert OK, 1 row affected
-insert into t0 values ('Kytes', 'Tomas')
-Insert OK, 1 row affected
-select * from t0 where k1='Richard' or k1='Tomas' or k1='Tomas' limit 5
-Found 5 tuples:
-['Doe', 'Richard']
-['Kytes', 'Tomas']
-['Major', 'Tomas']
-['Roe', 'Richard']
-['Woe', 'Richard']
+>>> insert(0, ('Doe', 'Richard'), not_presented = True)
+(u'Doe', u'Richard')
+>>> insert(0, ('Roe', 'Richard'), not_presented = True)
+(u'Roe', u'Richard')
+>>> insert(0, ('Woe', 'Richard'), not_presented = True)
+(u'Woe', u'Richard')
+>>> insert(0, ('Major', 'Tomas'), not_presented = True)
+(u'Major', u'Tomas')
+>>> insert(0, ('Kytes', 'Tomas'), not_presented = True)
+(u'Kytes', u'Tomas')
+>>> select(0, ['Richard', 'Tomas', 'Tomas'], index = 1, limit = 5)
+(u'Doe', u'Richard')
+(u'Kytes', u'Tomas')
+(u'Major', u'Tomas')
+(u'Roe', u'Richard')
+(u'Woe', u'Richard')
 #
 # A test case for Bug#729879
 # "Zero limit is treated the same as no limit"
 # https://bugs.launchpad.net/tarantool/+bug/729879
 #
-select * from t0 where k1='Richard' or k1='Tomas' limit 0
-No match
-delete from t0 where k0='Doe'
-Delete OK, 1 row affected
-delete from t0 where k0='Roe'
-Delete OK, 1 row affected
-delete from t0 where k0='Woe'
-Delete OK, 1 row affected
-delete from t0 where k0='Major'
-Delete OK, 1 row affected
-delete from t0 where k0='Kytes'
-Delete OK, 1 row affected
+>>> select(0, ['Richard', 'Tomas'], index = 1, limit = 0)
+>>> delete(0, 'Doe')
+(u'Doe', u'Richard')
+>>> delete(0, 'Roe')
+(u'Roe', u'Richard')
+>>> delete(0, 'Woe')
+(u'Woe', u'Richard')
+>>> delete(0, 'Major')
+(u'Major', u'Tomas')
+>>> delete(0, 'Kytes')
+(u'Kytes', u'Tomas')
 #
 # A test case for Bug#730593
 # "Bad data if incomplete tuple"
@@ -45,87 +43,73 @@ Delete OK, 1 row affected
 # we can't insert tuples with cardinality 1 and
 # get away with it.
 #
-insert into t0 values ('Britney')
-An error occurred: ER_ILLEGAL_PARAMS, 'Illegal parameters, tuple must have all indexed fields'
-select * from t0 where k1='Anything'
-No match
-insert into t0 values ('Stephanie')
-An error occurred: ER_ILLEGAL_PARAMS, 'Illegal parameters, tuple must have all indexed fields'
-select * from t0 where k1='Anything'
-No match
-insert into t0 values ('Spears', 'Britney')
-Insert OK, 1 row affected
-select * from t0 where k0='Spears'
-Found 1 tuple:
-['Spears', 'Britney']
-select * from t0 where k1='Anything'
-No match
-select * from t0 where k1='Britney'
-Found 1 tuple:
-['Spears', 'Britney']
-call box.select_range('0', '0', '100', 'Spears')
-Found 1 tuple:
-['Spears', 'Britney']
-call box.select_range('0', '1', '100', 'Britney')
-Found 1 tuple:
-['Spears', 'Britney']
-delete from t0 where k0='Spears'
-Delete OK, 1 row affected
+>>> insert(0, ('Britney',), not_presented = True)
+Error: (2, u'Illegal parameters, tuple must have all indexed fields')
+>>> select(0, 'Anything', index = 1)
+>>> insert(0, ('Stephanie',), not_presented = True)
+Error: (2, u'Illegal parameters, tuple must have all indexed fields')
+>>> select(0, 'Anything', index = 1)
+>>> insert(0, ('Spears', 'Britney'), not_presented = True)
+(u'Spears', u'Britney')
+>>> select(0, 'Spears', index = 0)
+(u'Spears', u'Britney')
+>>> select(0, 'Anything', index = 1)
+>>> select(0, 'Britney', index = 1)
+(u'Spears', u'Britney')
+>>> call('box.select_range', ('0', '0', '100', 'Spears'))
+('Spears', 'Britney')
+>>> call('box.select_range', ('0', '1', '100', 'Britney'))
+('Spears', 'Britney')
+>>> delete(0, 'Spears')
+(u'Spears', u'Britney')
 #
 # Test composite keys with trees
 #
-insert into t1 values ('key1', 'part1', 'part2')
-Insert OK, 1 row affected
-replace into t1 values ('key1', 'part1', 'part2')
-Replace OK, 1 row affected
-insert into t1 values ('key2', 'part1', 'part2_a')
-Insert OK, 1 row affected
-insert into t1 values ('key3', 'part1', 'part2_b')
-Insert OK, 1 row affected
+>>> insert(1, ('key1', 'part1', 'part2'), not_presented = True)
+(u'key1', u'part1', u'part2')
+>>> insert(1, ('key1', 'part1', 'part2'))
+(u'key1', u'part1', u'part2')
+>>> insert(1, ('key2', 'part1', 'part2_a'), not_presented = True)
+(u'key2', u'part1', u'part2_a')
+>>> insert(1, ('key3', 'part1', 'part2_b'), not_presented = True)
+(u'key3', u'part1', u'part2_b')
 for k, v in box.space[1]:pairs() do print(v) end
 ---
 846816619: {'part1', 'part2_a'}
 863593835: {'part1', 'part2_b'}
 830039403: {'part1', 'part2'}
 ...
-select * from t1 where k0='key1'
-Found 1 tuple:
-[830039403, 'part1', 'part2']
-select * from t1 where k0='key2'
-Found 1 tuple:
-[846816619, 'part1', 'part2_a']
-select * from t1 where k0='key3'
-Found 1 tuple:
-[863593835, 'part1', 'part2_b']
-select * from t1 where k1='part1'
-Found 3 tuples:
-[830039403, 'part1', 'part2']
-[846816619, 'part1', 'part2_a']
-[863593835, 'part1', 'part2_b']
-call box.select_range('1', '1', '100', 'part1')
-Found 3 tuples:
-[830039403, 'part1', 'part2']
-[846816619, 'part1', 'part2_a']
-[863593835, 'part1', 'part2_b']
-call box.select_range('1', '0', '100', 'key2')
-Found 3 tuples:
-[830039403, 'part1', 'part2']
-[846816619, 'part1', 'part2_a']
-[863593835, 'part1', 'part2_b']
-call box.select_range('1', '1', '100', 'part1', 'part2_a')
-Found 2 tuples:
-[846816619, 'part1', 'part2_a']
-[863593835, 'part1', 'part2_b']
-insert into t5 values ('01234567', 'part1', 'part2')
-Insert OK, 1 row affected
-insert into t5 values ('11234567', 'part1', 'part2')
-Insert OK, 1 row affected
-insert into t5 values ('21234567', 'part1', 'part2_a')
-Insert OK, 1 row affected
-insert into t5 values ('31234567', 'part1_a', 'part2')
-Insert OK, 1 row affected
-insert into t5 values ('41234567', 'part1_a', 'part2_a')
-Insert OK, 1 row affected
+>>> select(1, 'key1')
+(u'key1', u'part1', u'part2')
+>>> select(1, 'key2')
+(u'key2', u'part1', u'part2_a')
+>>> select(1, 'key3')
+(u'key3', u'part1', u'part2_b')
+>>> select(1, 'part1', index = 1)
+(u'key1', u'part1', u'part2')
+(u'key2', u'part1', u'part2_a')
+(u'key3', u'part1', u'part2_b')
+>>> call('box.select_range', ('1', '1', '100', 'part1'))
+('key1', 'part1', 'part2')
+('key2', 'part1', 'part2_a')
+('key3', 'part1', 'part2_b')
+>>> call('box.select_range', ('1', '0', '100', 'key2'))
+('key1', 'part1', 'part2')
+('key2', 'part1', 'part2_a')
+('key3', 'part1', 'part2_b')
+>>> call('box.select_range', ('1', '1', '100', 'part1', 'part2_a'))
+('key2', 'part1', 'part2_a')
+('key3', 'part1', 'part2_b')
+>>> insert(5, ('01234567', 'part1', 'part2'), not_presented = True)
+(u'01234567', u'part1', u'part2')
+>>> insert(5, ('11234567', 'part1', 'part2'), not_presented = True)
+(u'11234567', u'part1', u'part2')
+>>> insert(5, ('21234567', 'part1', 'part2_a'), not_presented = True)
+(u'21234567', u'part1', u'part2_a')
+>>> insert(5, ('31234567', 'part1_a', 'part2'), not_presented = True)
+(u'31234567', u'part1_a', u'part2')
+>>> insert(5, ('41234567', 'part1_a', 'part2_a'), not_presented = True)
+(u'41234567', u'part1_a', u'part2_a')
 for k, v in box.space[5]:pairs() do print(v) end
 ---
 3978425819141910832: {'part1', 'part2'}
@@ -134,93 +118,76 @@ for k, v in box.space[5]:pairs() do print(v) end
 3978425819141910835: {'part1_a', 'part2'}
 3978425819141910836: {'part1_a', 'part2_a'}
 ...
-select * from t5 where k0='01234567'
-Found 1 tuple:
-['01234567', 'part1', 'part2']
-select * from t5 where k0='11234567'
-Found 1 tuple:
-['11234567', 'part1', 'part2']
-select * from t5 where k0='21234567'
-Found 1 tuple:
-['21234567', 'part1', 'part2_a']
-select * from t5 where k1='part1'
-Found 3 tuples:
-['01234567', 'part1', 'part2']
-['11234567', 'part1', 'part2']
-['21234567', 'part1', 'part2_a']
-select * from t5 where k1='part1_a'
-Found 2 tuples:
-['31234567', 'part1_a', 'part2']
-['41234567', 'part1_a', 'part2_a']
-select * from t5 where k1='part_none'
-No match
-call box.select('5', '1', 'part1', 'part2')
-Found 2 tuples:
-['01234567', 'part1', 'part2']
-['11234567', 'part1', 'part2']
-insert into t7 values (1, 'hello')
-Insert OK, 1 row affected
-insert into t7 values (2, 'brave')
-Insert OK, 1 row affected
-insert into t7 values (3, 'new')
-Insert OK, 1 row affected
-insert into t7 values (4, 'world')
-Insert OK, 1 row affected
+>>> select(5, '01234567')
+(u'01234567', u'part1', u'part2')
+>>> select(5, '11234567')
+(u'11234567', u'part1', u'part2')
+>>> select(5, '21234567')
+(u'21234567', u'part1', u'part2_a')
+>>> select(5, 'part1', index = 1)
+(u'01234567', u'part1', u'part2')
+(u'11234567', u'part1', u'part2')
+(u'21234567', u'part1', u'part2_a')
+>>> select(5, 'part1_a', index = 1)
+(u'31234567', u'part1_a', u'part2')
+(u'41234567', u'part1_a', u'part2_a')
+>>> select(5, 'part_none', index = 1)
+>>> call('box.select', ('5', '1', 'part1', 'part2'))
+('01234567', 'part1', 'part2')
+('11234567', 'part1', 'part2')
+>>> insert(7, (1, 'hello'), not_presented = True)
+(1, u'hello')
+>>> insert(7, (2, 'brave'), not_presented = True)
+(2, u'brave')
+>>> insert(7, (3, 'new'), not_presented = True)
+(3, u'new')
+>>> insert(7, (4, 'world'), not_presented = True)
+(4, u'world')
 #
 # Bug#929654 - secondary hash index is not built with build_indexes()
 #
-select * from t7 where k1='hello'
-Found 1 tuple:
-[1, 'hello']
-select * from t7 where k1='brave'
-Found 1 tuple:
-[2, 'brave']
-select * from t7 where k1='new'
-Found 1 tuple:
-[3, 'new']
-select * from t7 where k1='world'
-Found 1 tuple:
-[4, 'world']
+>>> select(7, 'hello', index = 1)
+(1, u'hello')
+>>> select(7, 'brave', index = 1)
+(2, u'brave')
+>>> select(7, 'new', index = 1)
+(3, u'new')
+>>> select(7, 'world', index = 1)
+(4, u'world')
 box.space[7]:truncate()
 ---
 ...
-select * from t1 where k0='key1'
-Found 1 tuple:
-[830039403, 'part1', 'part2']
-select * from t1 where k0='key2'
-Found 1 tuple:
-[846816619, 'part1', 'part2_a']
-select * from t1 where k0='key3'
-Found 1 tuple:
-[863593835, 'part1', 'part2_b']
-select * from t1 where k1='part1'
-Found 3 tuples:
-[830039403, 'part1', 'part2']
-[846816619, 'part1', 'part2_a']
-[863593835, 'part1', 'part2_b']
-delete from t1 where k0='key1'
-Delete OK, 1 row affected
-delete from t1 where k0='key2'
-Delete OK, 1 row affected
-delete from t1 where k0='key3'
-Delete OK, 1 row affected
-select * from t5 where k1='part1'
-Found 3 tuples:
-['01234567', 'part1', 'part2']
-['11234567', 'part1', 'part2']
-['21234567', 'part1', 'part2_a']
-select * from t5 where k1='part2'
-No match
-delete from t5 where k0='01234567'
-Delete OK, 1 row affected
-delete from t5 where k0='11234567'
-Delete OK, 1 row affected
-delete from t5 where k0='21234567'
-Delete OK, 1 row affected
-delete from t5 where k0='31234567'
-Delete OK, 1 row affected
-delete from t5 where k0='41234567'
-Delete OK, 1 row affected
+>>> select(1, 'key1')
+(u'key1', u'part1', u'part2')
+>>> select(1, 'key2')
+(u'key2', u'part1', u'part2_a')
+>>> select(1, 'key3')
+(u'key3', u'part1', u'part2_b')
+>>> select(1, 'part1', index = 1)
+(u'key1', u'part1', u'part2')
+(u'key2', u'part1', u'part2_a')
+(u'key3', u'part1', u'part2_b')
+>>> delete(1, 'key1')
+(u'key1', u'part1', u'part2')
+>>> delete(1, 'key2')
+(u'key2', u'part1', u'part2_a')
+>>> delete(1, 'key3')
+(u'key3', u'part1', u'part2_b')
+>>> select(5, 'part1', index = 1)
+(u'01234567', u'part1', u'part2')
+(u'11234567', u'part1', u'part2')
+(u'21234567', u'part1', u'part2_a')
+>>> select(5, 'part2', index = 1)
+>>> delete(5, '01234567')
+(u'01234567', u'part1', u'part2')
+>>> delete(5, '11234567')
+(u'11234567', u'part1', u'part2')
+>>> delete(5, '21234567')
+(u'21234567', u'part1', u'part2_a')
+>>> delete(5, '31234567')
+(u'31234567', u'part1_a', u'part2')
+>>> delete(5, '41234567')
+(u'41234567', u'part1_a', u'part2_a')
 for k, v in box.space[5]:pairs() do print(v) end
 ---
 ...
@@ -230,113 +197,107 @@ for k, v in box.space[5]:pairs() do print(v) end
 # Partial REPLACE corrupts index.
 #
 
-insert into t4 values ('Spears', 'Britney')
-Insert OK, 1 row affected
-select * from t4 where k0='Spears'
-Found 1 tuple:
-['Spears', 'Britney']
-select * from t4 where k1='Britney'
-Found 1 tuple:
-['Spears', 'Britney']
-replace into t4 values ('Spears')
-An error occurred: ER_ILLEGAL_PARAMS, 'Illegal parameters, tuple must have all indexed fields'
-select * from t4 where k0='Spears'
-Found 1 tuple:
-['Spears', 'Britney']
-delete from t4 where k0='Spears'
-Delete OK, 1 row affected
-insert into t4 values (1, 'duplicate one')
-Insert OK, 1 row affected
-insert into t4 values (2, 'duplicate one')
-Insert OK, 1 row affected
-insert into t4 values (3, 'duplicate one')
-Insert OK, 1 row affected
-insert into t4 values (4, 'duplicate one')
-Insert OK, 1 row affected
-insert into t4 values (5, 'duplicate one')
-Insert OK, 1 row affected
-insert into t4 values (6, 'duplicate two')
-Insert OK, 1 row affected
-insert into t4 values (7, 'duplicate two')
-Insert OK, 1 row affected
-insert into t4 values (8, 'duplicate two')
-Insert OK, 1 row affected
-insert into t4 values (9, 'duplicate two')
-Insert OK, 1 row affected
-insert into t4 values (10, 'duplicate two')
-Insert OK, 1 row affected
-insert into t4 values (11, 'duplicate three')
-Insert OK, 1 row affected
-insert into t4 values (12, 'duplicate three')
-Insert OK, 1 row affected
-insert into t4 values (13, 'duplicate three')
-Insert OK, 1 row affected
-insert into t4 values (14, 'duplicate three')
-Insert OK, 1 row affected
-insert into t4 values (15, 'duplicate three')
-Insert OK, 1 row affected
-select * from t4 where k1='duplicate one'
-Found 5 tuples:
-[1, 'duplicate one']
-[2, 'duplicate one']
-[3, 'duplicate one']
-[4, 'duplicate one']
-[5, 'duplicate one']
-select * from t4 where k1='duplicate two'
-Found 5 tuples:
-[10, 'duplicate two']
-[6, 'duplicate two']
-[7, 'duplicate two']
-[8, 'duplicate two']
-[9, 'duplicate two']
-select * from t4 where k1='duplicate three'
-Found 5 tuples:
-[11, 'duplicate three']
-[12, 'duplicate three']
-[13, 'duplicate three']
-[14, 'duplicate three']
-[15, 'duplicate three']
-delete from t4 where k0=1
-Delete OK, 1 row affected
-delete from t4 where k0=2
-Delete OK, 1 row affected
-delete from t4 where k0=3
-Delete OK, 1 row affected
-delete from t4 where k0=4
-Delete OK, 1 row affected
-delete from t4 where k0=5
-Delete OK, 1 row affected
-delete from t4 where k0=6
-Delete OK, 1 row affected
-delete from t4 where k0=7
-Delete OK, 1 row affected
-delete from t4 where k0=8
-Delete OK, 1 row affected
-delete from t4 where k0=9
-Delete OK, 1 row affected
-delete from t4 where k0=10
-Delete OK, 1 row affected
-delete from t4 where k0=11
-Delete OK, 1 row affected
-delete from t4 where k0=12
-Delete OK, 1 row affected
-delete from t4 where k0=13
-Delete OK, 1 row affected
-delete from t4 where k0=14
-Delete OK, 1 row affected
-delete from t4 where k0=15
-Delete OK, 1 row affected
-insert into t4 values(1, 'Aardvark ')
-Insert OK, 1 row affected
-insert into t4 values(2, 'Bilimbi')
-Insert OK, 1 row affected
-insert into t4 values(3, 'Creature ')
-Insert OK, 1 row affected
+>>> insert(4, ('Spears', 'Britney'), not_presented = True)
+(u'Spears', u'Britney')
+>>> select(4, 'Spears')
+(u'Spears', u'Britney')
+>>> select(4, 'Britney', index = 1)
+(u'Spears', u'Britney')
+>>> insert(4, ('Spears',))
+Error: (2, u'Illegal parameters, tuple must have all indexed fields')
+>>> select(4, 'Spears')
+(u'Spears', u'Britney')
+>>> delete(4, 'Spears')
+(u'Spears', u'Britney')
+>>> insert(4, (1, 'duplicate one'), not_presented = True)
+(u'1', u'duplicate one')
+>>> insert(4, (2, 'duplicate one'), not_presented = True)
+(u'2', u'duplicate one')
+>>> insert(4, (3, 'duplicate one'), not_presented = True)
+(u'3', u'duplicate one')
+>>> insert(4, (4, 'duplicate one'), not_presented = True)
+(u'4', u'duplicate one')
+>>> insert(4, (5, 'duplicate one'), not_presented = True)
+(u'5', u'duplicate one')
+>>> insert(4, (6, 'duplicate two'), not_presented = True)
+(u'6', u'duplicate two')
+>>> insert(4, (7, 'duplicate two'), not_presented = True)
+(u'7', u'duplicate two')
+>>> insert(4, (8, 'duplicate two'), not_presented = True)
+(u'8', u'duplicate two')
+>>> insert(4, (9, 'duplicate two'), not_presented = True)
+(u'9', u'duplicate two')
+>>> insert(4, (10, 'duplicate two'), not_presented = True)
+(u'10', u'duplicate two')
+>>> insert(4, (11, 'duplicate three'), not_presented = True)
+(u'11', u'duplicate three')
+>>> insert(4, (12, 'duplicate three'), not_presented = True)
+(u'12', u'duplicate three')
+>>> insert(4, (13, 'duplicate three'), not_presented = True)
+(u'13', u'duplicate three')
+>>> insert(4, (14, 'duplicate three'), not_presented = True)
+(u'14', u'duplicate three')
+>>> insert(4, (15, 'duplicate three'), not_presented = True)
+(u'15', u'duplicate three')
+>>> select(4, 'duplicate one', index = 1)
+(u'1', u'duplicate one')
+(u'2', u'duplicate one')
+(u'3', u'duplicate one')
+(u'4', u'duplicate one')
+(u'5', u'duplicate one')
+>>> select(4, 'duplicate two', index = 1)
+(u'10', u'duplicate two')
+(u'6', u'duplicate two')
+(u'7', u'duplicate two')
+(u'8', u'duplicate two')
+(u'9', u'duplicate two')
+>>> select(4, 'duplicate three', index = 1)
+(u'11', u'duplicate three')
+(u'12', u'duplicate three')
+(u'13', u'duplicate three')
+(u'14', u'duplicate three')
+(u'15', u'duplicate three')
+>>> delete(4, 1)
+(u'1', u'duplicate one')
+>>> delete(4, 2)
+(u'2', u'duplicate one')
+>>> delete(4, 3)
+(u'3', u'duplicate one')
+>>> delete(4, 4)
+(u'4', u'duplicate one')
+>>> delete(4, 5)
+(u'5', u'duplicate one')
+>>> delete(4, 6)
+(u'6', u'duplicate two')
+>>> delete(4, 7)
+(u'7', u'duplicate two')
+>>> delete(4, 8)
+(u'8', u'duplicate two')
+>>> delete(4, 9)
+(u'9', u'duplicate two')
+>>> delete(4, 10)
+(u'10', u'duplicate two')
+>>> delete(4, 11)
+(u'11', u'duplicate three')
+>>> delete(4, 12)
+(u'12', u'duplicate three')
+>>> delete(4, 13)
+(u'13', u'duplicate three')
+>>> delete(4, 14)
+(u'14', u'duplicate three')
+>>> delete(4, 15)
+(u'15', u'duplicate three')
+>>> insert(4, (1, 'Aardvark '), not_presented = True)
+(u'1', u'Aardvark ')
+>>> insert(4, (2, 'Bilimbi'), not_presented = True)
+(u'2', u'Bilimbi')
+>>> insert(4, (3, 'Creature '), not_presented = True)
+(u'3', u'Creature ')
 for k, v in box.space[4]:pairs() do print(v) end
 ---
-2: {'Bilimbi'}
-3: {'Creature '}
-1: {'Aardvark '}
+'3': {'Creature '}
+'2': {'Bilimbi'}
+'1': {'Aardvark '}
 ...
 box.space[4].index[0].idx:min()
 ---
@@ -348,15 +309,15 @@ error: 'HASH does not support max()'
 ...
 box.space[4].index[1].idx:min()
 ---
- - 1: {'Aardvark '}
+ - '1': {'Aardvark '}
 ...
 box.space[4].index[1].idx:max()
 ---
- - 3: {'Creature '}
+ - '3': {'Creature '}
 ...
-delete from t4 where k0=1
-Delete OK, 1 row affected
-delete from t4 where k0=2
-Delete OK, 1 row affected
-delete from t4 where k0=3
-Delete OK, 1 row affected
+>>> delete(4, 1)
+(u'1', u'Aardvark ')
+>>> delete(4, 2)
+(u'2', u'Bilimbi')
+>>> delete(4, 3)
+(u'3', u'Creature ')

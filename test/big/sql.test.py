@@ -1,26 +1,84 @@
-# encoding: utf-8
-#
+import tarantool
 sql.sort = True
+sql.set_schema({
+    0 : {
+        'default_type': tarantool.STR,
+        'fields' : {
+            0 : tarantool.STR,
+            1 : tarantool.STR
+            },
+        'indexes' : {
+            0 : [0], # HASH
+            1 : [1]  # TREE
+            }
+        },
+    1 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.STR,
+            1 : tarantool.STR,
+            2 : tarantool.STR
+            },
+        'indexes' : {
+            0 : [0],   # HASH
+            1 : [1, 2] # TREE
+            }
+        },
+    4 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.STR,
+            1 : tarantool.STR
+            },
+        'indexes' : {
+            0 : [0], # HASH
+            1 : [1]  # TREE
+            }
+        },
+    5 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.STR,
+            1 : tarantool.STR,
+            2 : tarantool.STR
+            },
+        'indexes' : {
+            0 : [0],   # TREE
+            1 : [1, 2] # TREE
+            }
+        },
+    7 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.NUM,
+            1 : tarantool.STR
+            },
+        'indexes' : {
+            0 : [0], # HASH
+            1 : [1]  # HASH
+            }
+        }
+    })
 
 print """#
 # A test case for Bug#729758
 # "SELECT fails with a disjunct and small LIMIT"
 # https://bugs.launchpad.net/tarantool/+bug/729758
 #"""
-
 sql.insert(0, ('Doe', 'Richard'))
 sql.insert(0, ('Roe', 'Richard'))
 sql.insert(0, ('Woe', 'Richard'))
 sql.insert(0, ('Major', 'Tomas'))
 sql.insert(0, ('Kytes', 'Tomas'))
-sql("select * from t0 where k1='Richard' or k1='Tomas' or k1='Tomas' limit 5")
+sql.select(0, ['Richard', 'Tomas', 'Tomas'], index = 1, limit = 5)
+
 
 print """#
 # A test case for Bug#729879
 # "Zero limit is treated the same as no limit"
 # https://bugs.launchpad.net/tarantool/+bug/729879
 #"""
-sql("select * from t0 where k1='Richard' or k1='Tomas' limit 0")
+sql.select(0, ['Richard', 'Tomas'], index = 1, limit = 0)
 
 # Cleanup
 sql.delete(0, 'Doe')
@@ -38,32 +96,32 @@ print """#
 # get away with it.
 #"""
 sql.insert(0, ('Britney',))
-sql("select * from t0 where k1='Anything'")
+sql.select(0, 'Anything', index = 1)
 sql.insert(0, ('Stephanie',))
-sql("select * from t0 where k1='Anything'")
+sql.select(0, 'Anything', index = 1)
 sql.insert(0, ('Spears', 'Britney'))
-sql("select * from t0 where k0='Spears'")
-sql("select * from t0 where k1='Anything'")
-sql("select * from t0 where k1='Britney'")
-sql("call box.select_range('0', '0', '100', 'Spears')")
-sql("call box.select_range('0', '1', '100', 'Britney')")
+sql.select(0, 'Spears', index = 0)
+sql.select(0, 'Anything', index = 1)
+sql.select(0, 'Britney', index = 1)
+sql.call("box.select_range", ('0', '0', '100', 'Spears'))
+sql.call("box.select_range", ('0', '1', '100', 'Britney'))
 sql.delete(0, 'Spears')
 print """#
 # Test composite keys with trees
 #"""
 sql.insert(1, ('key1', 'part1', 'part2'))
 # Test a duplicate insert on unique index that once resulted in a crash (bug #926080)
-sql("replace into t1 values ('key1', 'part1', 'part2')")
+sql.replace(1, ('key1', 'part1', 'part2'))
 sql.insert(1, ('key2', 'part1', 'part2_a'))
 sql.insert(1, ('key3', 'part1', 'part2_b'))
 admin("for k, v in box.space[1]:pairs() do print(v) end")
-sql("select * from t1 where k0='key1'")
-sql("select * from t1 where k0='key2'")
-sql("select * from t1 where k0='key3'")
-sql("select * from t1 where k1='part1'")
-sql("call box.select_range('1', '1', '100', 'part1')")
-sql("call box.select_range('1', '0', '100', 'key2')")
-sql("call box.select_range('1', '1', '100', 'part1', 'part2_a')")
+sql.select(1, 'key1')
+sql.select(1, 'key2')
+sql.select(1, 'key3')
+sql.select(1, 'part1', index=1)
+sql.call("box.select_range", ('1', '1', '100', 'part1'))
+sql.call("box.select_range", ('1', '0', '100', 'key2'))
+sql.call("box.select_range", ('1', '1', '100', 'part1', 'part2_a'))
 # check non-unique multipart keys
 sql.insert(5, ('01234567', 'part1', 'part2'))
 sql.insert(5, ('11234567', 'part1', 'part2'))
@@ -71,13 +129,13 @@ sql.insert(5, ('21234567', 'part1', 'part2_a'))
 sql.insert(5, ('31234567', 'part1_a', 'part2'))
 sql.insert(5, ('41234567', 'part1_a', 'part2_a'))
 admin("for k, v in box.space[5]:pairs() do print(v) end")
-sql("select * from t5 where k0='01234567'")
-sql("select * from t5 where k0='11234567'")
-sql("select * from t5 where k0='21234567'")
-sql("select * from t5 where k1='part1'")
-sql("select * from t5 where k1='part1_a'")
-sql("select * from t5 where k1='part_none'")
-sql("call box.select('5', '1', 'part1', 'part2')")
+sql.select(5, '01234567')
+sql.select(5, '11234567')
+sql.select(5, '21234567')
+sql.select(5, 'part1', index=1)
+sql.select(5, 'part1_a', index=1)
+sql.select(5, 'part_none', index=1)
+sql.call('box.select', ('5', '1', 'part1', 'part2'))
 sql.insert(7, (1, 'hello'))
 sql.insert(7, (2, 'brave'))
 sql.insert(7, (3, 'new'))
@@ -88,18 +146,20 @@ server.start()
 print """#
 # Bug#929654 - secondary hash index is not built with build_indexes()
 #"""
-sql("select * from t7 where k1='hello'")
-sql("select * from t7 where k1='brave'")
-sql("select * from t7 where k1='new'")
-sql("select * from t7 where k1='world'")
+sql.select(7, 'hello', index=1)
+sql.select(7, 'brave', index=1)
+sql.select(7, 'new', index=1)
+sql.select(7, 'world', index=1)
 admin("box.space[7]:truncate()")
-sql("select * from t1 where k0='key1'")
-sql("select * from t1 where k0='key2'")
-sql("select * from t1 where k0='key3'")
-sql("select * from t1 where k1='part1'")
-
-sql("select * from t5 where k1='part1'")
-sql("select * from t5 where k1='part2'")
+sql.select(1, 'key1')
+sql.select(1, 'key2')
+sql.select(1, 'key3')
+sql.select(1, 'part1', index=1)
+sql.delete(1, 'key1')
+sql.delete(1, 'key2')
+sql.delete(1, 'key3')
+sql.select(5, 'part1', index=1)
+sql.select(5, 'part2', index=1)
 # cleanup
 sql.delete(5, '01234567')
 sql.delete(5, '11234567')
@@ -110,20 +170,19 @@ admin("for k, v in box.space[5]:pairs() do print(v) end")
 
 print """
 #
-# A test case for: http://bugs.launchpad.net/bugs/735140p
-
+# A test case for: http://bugs.launchpad.net/bugs/735140
 # Partial REPLACE corrupts index.
 #
 """
 # clean data and restart with appropriate config
 
 sql.insert(4, ('Spears', 'Britney'))
-sql("select * from t4 where k0='Spears'")
-sql("select * from t4 where k1='Britney'")
+sql.select(4, 'Spears')
+sql.select(4, 'Britney', index=1)
 # try to insert the incoplete tuple
-sql("replace into t4 values ('Spears')")
+sql.replace(4, ('Spears',))
 # check that nothing has been updated
-sql("select * from t4 where k0='Spears'")
+sql.select(4, 'Spears')
 # cleanup
 sql.delete(4, 'Spears')
 
@@ -145,9 +204,9 @@ sql.insert(4, (12, 'duplicate three'))
 sql.insert(4, (13, 'duplicate three'))
 sql.insert(4, (14, 'duplicate three'))
 sql.insert(4, (15, 'duplicate three'))
-sql("select * from t4 where k1='duplicate one'")
-sql("select * from t4 where k1='duplicate two'")
-sql("select * from t4 where k1='duplicate three'")
+sql.select(4, 'duplicate one', index=1)
+sql.select(4, 'duplicate two', index=1)
+sql.select(4, 'duplicate three', index=1)
 sql.delete(4, 1)
 sql.delete(4, 2)
 sql.delete(4, 3)
@@ -179,4 +238,3 @@ sql.delete(4, 2)
 sql.delete(4, 3)
 
 sql.sort = False
-# vim: syntax=python
