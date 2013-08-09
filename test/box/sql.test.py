@@ -1,7 +1,8 @@
 # encoding: utf-8
-sql("ping")
+
+sql.ping()
 # xxx: bug -- currently selects no rows
-sql("select * from t0")
+sql.select(0, (,))
 sql("insert into t0 values (1, 'I am a tuple')")
 sql("select * from t0 where k0 = 1")
 # currently there is no way to find out how many records

@@ -87,14 +87,18 @@ statistics:
   DELETE:     { rps:  0    , total:  0           }
   CALL:       { rps:  0    , total:  0           }
 ...
->>> insert(0, (1, 'tuple'), not_presented = True)
-(1, u'tuple')
+insert(0, (1, 'tuple'), not_presented = True)
+---
+ -  ['1', 'tuple']
+...
 save snapshot
 ---
 ok
 ...
->>> delete(0, 1)
-(1, u'tuple')
+delete(0, 1)
+---
+ -  ['1', 'tuple']
+...
 show info
 ---
 info:

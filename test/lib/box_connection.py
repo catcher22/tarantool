@@ -29,6 +29,7 @@ import errno
 import socket
 import struct
 import warnings
+import yaml 
 from tarantool_connection import TarantoolConnection
 
 from pprint import pprint
@@ -53,19 +54,36 @@ def log_call_log(function, boxcon, *args, **kwargs):
             j = ("'%s'" % (i, j) if isinstance(j, basestring) else str(j))
             ans = (i+' = '+j if not ans else ans+", %s = %s"%(i, j))
         return ans
-
-    print ">>> %s(%s)" % (function.func_name, merge_args())
-#    warnings.simplefilter("ignore")
+    def print_tuple(t):
+        if not t:
+            return '[]'
+        return "".join(["['", str(t[0]), "'"] + 
+                       map(lambda x: ", '"+str(x)+"'", t[1:]) + 
+                       ["]"])
+    error = False
+    print "%s(%s)" % (function.func_name, merge_args())
     try:
+        if function.func_name == 'ping':
+            ans = function(*args, **kwargs)
+            print "---\n{0}\n...".format(ans)
+            return ans
         ans = function(*args, return_tuple = True, **kwargs)
     except tarantool.DatabaseError as e:
+        error = True
         ans = "Error: " + str(e.args)
-        print ans
-        return ans
-    if boxcon.sort:
+    if boxcon.sort and not error:
         ans = sorted(ans)
-    for i in ans:
-        print str(i)
+    if not ans[:]:
+        error = True
+        ans = "No match"
+    print "---"
+    if error:
+        print ans
+    else:
+        for i in ans:
+            print " - ", print_tuple(i)
+    print "..."
+
     return ans
 
 

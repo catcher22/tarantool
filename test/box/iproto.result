@@ -9,6 +9,7 @@
 # sending the package with invalid length
 12
 # checking what is server alive
-ping
-ok
+ping(notime = True)
 ---
+True
+...
