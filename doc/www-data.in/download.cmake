@@ -131,7 +131,7 @@ The server roadmap is maintained on [Launchpad](http://launchpad.net/tarantool).
 
 - Perl driver, [DR:Tarantool](http://search.cpan.org/~unera/DR-Tarantool-0.37/lib/DR/Tarantool.pm)
 - Java driver, [Maven repository](http://dgreenru.github.com/tarantool-java)
-- Ruby driver, [http://github.com/mailru/tarantool-ruby](https://github.com/tarantool/tarantool-ruby)
+- Ruby driver, [http://github.com/mailru/tarantool-ruby](https://github.com/mailru/tarantool-ruby)
 - Python driver, [http://pypi.python.org/pypi/tarantool](http://pypi.python.org/pypi/tarantool)
 - PHP driver, [https://github.com/tarantool/tarantool-php](https://github.com/tarantool/tarantool-php)
 - node.js driver,
@@ -172,83 +172,6 @@ Tarantool использует стандартную схему нумеров�
 
 Для использования в высоконагруженных проектах
 рекомендуются пакеты, опубликованные на этом сайте.
-
-#### RedHat, FreeBSD, Mac OS X
-
-<table border=1 title="Download the latest build, @PACKAGE_VERSION@" width=100%>
-
-<!-- RPM -->
-
-  <th colspan=3>RedHat</th>
-
-  <tr>
-    <td>
-        RedHat <b>.rpm</b>
-    </td>
-
-    <td align=center>
-        <a href="http://tarantool.org/dist/tarantool-@PACKAGE_VERSION@-linux-i686.rpm">32-bit</a>
-    </td>
-
-    <td align=center>
-        <a
-        href="http://tarantool.org/dist/tarantool-@PACKAGE_VERSION@-linux-x86_64.rpm">64-bit</a>
-    </td>
-  </tr>
-
-  <tr>
-    <td>
-        RedHat <b>.rpm</b>, with debug info
-    </td>
-    <td align=center>
-        <a
-        href="http://tarantool.org/dist/tarantool-@PACKAGE_VERSION@-linux-i686-debug.rpm">32-bit</a>
-    </td>
-
-    <td align=center>
-        <a
-        href="http://tarantool.org/dist/tarantool-@PACKAGE_VERSION@-linux-x86_64-debug.rpm">64-bit</a>
-    </td>
-  </tr>
-
-<!-- .tar.gz -->
-  <th colspan=3>Other Linux distributions</th>
-
-  <tr>
-    <td>
-        Binary tarball (<b>.tar.gz</b>)
-    </td>
-    <td align=center>
-        <a href="http://tarantool.org/dist/tarantool-@PACKAGE_VERSION@-linux-i686.tar.gz">32-bit</a>
-    </td>
-
-    <td align=center>
-        <a href="http://tarantool.org/dist/tarantool-@PACKAGE_VERSION@-linux-x86_64.tar.gz">64-bit</a>
-    </td>
-  </tr>
-
-  <th colspan=3>FreeBSD</th>
-
-<!-- .tar.gz -->
-
-  <tr>
-    <td>
-        Binary tarball (<b>.tar.gz</b>)
-    </td>
-    <td align=center>
-        <a
-        href="http://tarantool.org/dist/tarantool-@PACKAGE_VERSION@-freebsd-i386.tar.gz">32-bit</a>
-    </td>
-
-    <td align=center>
-    </td>
-  </tr>
-  <th colspan=4>Mac OS X</th>
-  <tr>
-    <td align=center colspan=4>brew install http://tarantool.org/dist/tarantool.rb</td>
-  <tr>
-
-</table>
 
 #### Debian GNU/Linux and Ubuntu
 
