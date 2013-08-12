@@ -5,21 +5,18 @@ from lib.tarantool_server import TarantoolServer
 
 # master server
 master = server
-master_sql = master.sql
 
 # hot standby server
 hot_standby = TarantoolServer()
 hot_standby.deploy("replication/cfg/hot_standby.cfg",
                    hot_standby.find_exe(self.args.builddir),
                    os.path.join(self.args.vardir, "hot_standby"), need_init=False)
-hot_standby_sql = hot_standby.sql
 
 # replica server
 replica = TarantoolServer()
 replica.deploy("replication/cfg/replica.cfg",
                replica.find_exe(self.args.builddir),
                os.path.join(self.args.vardir, "replica"))
-replica_sql = replica.sql
 
 # Begin tuple id
 id = 1
@@ -29,14 +26,14 @@ print """
 # Insert 10 tuples to master
 """
 for i in range(id, id + 10):
-    master_sql("insert into t0 values (%d, 'the tuple %d')" % (i, i))
+    master.sql.insert(0, (i, 'the tuple ' + str(i)))
 
 
 print """
 # Select 10 tuples from master
 """
 for i in range(id, id + 10):
-    master_sql("select * from t0 where k0 = %d" % i)
+    master.sql.select(0, i)
 
 
 print """
@@ -44,7 +41,7 @@ print """
 """
 replica.wait_lsn(11)
 for i in range(id, id + 10):
-    replica_sql("select * from t0 where k0 = %d" % i)
+    replica.sql.select(0, i)
 
 
 print """
@@ -61,14 +58,14 @@ print """
 # Insert 10 tuples to hot_standby
 """
 for i in range(id, id + 10):
-    hot_standby_sql("insert into t0 values (%d, 'the tuple %d')" % (i, i))
+    hot_standby.sql.insert(0, (i, 'the tuple ' + str(i)))
 
 
 print """
 # Select 10 tuples from hot_standby
 """
 for i in range(id, id + 10):
-    hot_standby_sql("select * from t0 where k0 = %d" % i)
+    hot_standby.sql.select(0, i)
 
 
 print """
@@ -76,7 +73,7 @@ print """
 """
 replica.wait_lsn(21)
 for i in range(id, id + 10):
-    replica_sql("select * from t0 where k0 = %d" % i)
+    replica.sql.select(0, i)
 
 
 # Cleanup.
