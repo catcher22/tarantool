@@ -11,5 +11,5 @@
 # checking what is server alive
 ping(notime = True)
 ---
-True
+Success
 ...

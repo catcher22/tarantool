@@ -9,7 +9,7 @@ print """#
 #
 """
 for i in range(10):
-  sql("insert into t0 values ({0}, 'tuple')".format(i))
+  sql.insert(0, (i, 'tuple'))
 admin("show stat")
 print """#
 # restart server
@@ -24,6 +24,6 @@ admin("show stat")
 
 # cleanup
 for i in range(10):
-  sql("delete from t0 where k0 = {0}".format(i))
+  sql.delete(0, i)
 
 # vim: syntax=python

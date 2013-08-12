@@ -60,6 +60,8 @@ def log_call_log(function, boxcon, *args, **kwargs):
         return "".join(["['", str(t[0]), "'"] + 
                        map(lambda x: ", '"+str(x)+"'", t[1:]) + 
                        ["]"])
+   
+    warnings.simplefilter("ignore")
     error = False
     print "%s(%s)" % (function.func_name, merge_args())
     try:
