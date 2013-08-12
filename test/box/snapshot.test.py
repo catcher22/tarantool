@@ -1,9 +1,19 @@
-# encoding: utf-8
-#
 import os
 import time
 import yaml
 from signal import SIGUSR1
+import tarantool
+sql.set_schema({
+    0 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.NUM
+            },
+        'indexes' : {
+            0 : [0] # HASH
+            }
+        }
+    })
 
 print """
 # Verify that the server starts from a pre-recorded snapshot.
@@ -15,7 +25,7 @@ snapshot = os.path.join(vardir, "00000000000000000500.snap")
 os.symlink(os.path.abspath("box/00000000000000000500.snap"), snapshot)
 server.start()
 for i in range(0, 501):
-  sql("select * from t0 where k0={0}".format(i))
+  sql.select(0, i)
 print "# Restore the default server..."
 server.stop()
 os.unlink(snapshot)
@@ -28,7 +38,7 @@ print """#
 # error that happens when saving snapshot is propagated
 # to the caller.
 """
-sql("insert into t0 values (1, 'first tuple')")
+sql.insert(0, (1, 'first tuple'))
 admin("save snapshot")
 
 # In absence of data modifications, two consecutive
@@ -39,7 +49,7 @@ admin("save snapshot")
 admin("save snapshot")
 #
 # Increment LSN
-sql("insert into t0 values (2, 'second tuple')")
+sql.insert(0, (2, 'second tuple'))
 #
 # Check for other errors, e.g. "Permission denied".
 print "# Make 'var' directory read-only."
@@ -48,8 +58,8 @@ admin("save snapshot")
 
 # cleanup
 os.chmod(vardir, 0755)
-sql("delete from t0 where k0 = 1")
-sql("delete from t0 where k0 = 2")
+sql.delete(0, 1)
+sql.delete(0, 2)
 
 print """#
 # A test case for http://bugs.launchpad.net/bugs/727174
@@ -60,7 +70,7 @@ print """
 # Increment the lsn number, to make sure there is no such snapshot yet
 #"""
 
-sql("insert into t0 values (1, 'Test tuple')")
+sql.insert(0, (1, 'Test tuple'))
 
 result = admin("show info", silent=True)
 info = yaml.load(result)["info"]
@@ -84,6 +94,6 @@ if iteration == 0 or iteration >= MAX_ITERATIONS:
 else:
   print "Snapshot exists."
 
-sql("delete from t0 where k0=1")
+sql.delete(0, 1)
 
 # vim: syntax=python spell

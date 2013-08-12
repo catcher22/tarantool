@@ -88,8 +88,10 @@ box.cfg.too_long_threshold
 # Valgrind reports use of not initialized memory after 'reload
 # configuration'
 #
-insert into t0 values (1, 'tuple')
-Insert OK, 1 row affected
+insert(0, (1, 'tuple'), not_presented = True)
+---
+ -  ['1', 'tuple']
+...
 save snapshot
 ---
 ok
@@ -99,8 +101,10 @@ reload configuration
 fail:
  - can't open config `tarantool.cfg'
 ...
-insert into t0 values (2, 'tuple 2')
-Insert OK, 1 row affected
+insert(0, (2, 'tuple 2'), not_presented = True)
+---
+ -  ['2', 'tuple 2']
+...
 save snapshot
 ---
 ok
@@ -109,8 +113,10 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (3, 'tuple 3')
-Insert OK, 1 row affected
+insert(0, (3, 'tuple 3'), not_presented = True)
+---
+ -  ['3', 'tuple 3']
+...
 save snapshot
 ---
 ok

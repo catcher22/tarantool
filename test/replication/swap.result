@@ -1,54 +1,84 @@
 test 0 iteration
-insert into t0 values (0, 'tuple 0')
-Insert OK, 1 row affected
-insert into t0 values (1, 'tuple 1')
-Insert OK, 1 row affected
-insert into t0 values (2, 'tuple 2')
-Insert OK, 1 row affected
-insert into t0 values (3, 'tuple 3')
-Insert OK, 1 row affected
-insert into t0 values (4, 'tuple 4')
-Insert OK, 1 row affected
-select * from t0 where k0 = 0
-Found 1 tuple:
-[0, 'tuple 0']
-select * from t0 where k0 = 1
-Found 1 tuple:
-[1, 'tuple 1']
-select * from t0 where k0 = 2
-Found 1 tuple:
-[2, 'tuple 2']
-select * from t0 where k0 = 3
-Found 1 tuple:
-[3, 'tuple 3']
-select * from t0 where k0 = 4
-Found 1 tuple:
-[4, 'tuple 4']
-insert into t0 values (5, 'tuple 5')
-Insert OK, 1 row affected
-insert into t0 values (6, 'tuple 6')
-Insert OK, 1 row affected
-insert into t0 values (7, 'tuple 7')
-Insert OK, 1 row affected
-insert into t0 values (8, 'tuple 8')
-Insert OK, 1 row affected
-insert into t0 values (9, 'tuple 9')
-Insert OK, 1 row affected
-select * from t0 where k0 = 5
-Found 1 tuple:
-[5, 'tuple 5']
-select * from t0 where k0 = 6
-Found 1 tuple:
-[6, 'tuple 6']
-select * from t0 where k0 = 7
-Found 1 tuple:
-[7, 'tuple 7']
-select * from t0 where k0 = 8
-Found 1 tuple:
-[8, 'tuple 8']
-select * from t0 where k0 = 9
-Found 1 tuple:
-[9, 'tuple 9']
+insert(0, (0, 'tuple 0'), not_presented = True)
+---
+ -  ['0', 'tuple 0']
+...
+insert(0, (1, 'tuple 1'), not_presented = True)
+---
+ -  ['1', 'tuple 1']
+...
+insert(0, (2, 'tuple 2'), not_presented = True)
+---
+ -  ['2', 'tuple 2']
+...
+insert(0, (3, 'tuple 3'), not_presented = True)
+---
+ -  ['3', 'tuple 3']
+...
+insert(0, (4, 'tuple 4'), not_presented = True)
+---
+ -  ['4', 'tuple 4']
+...
+select(0, 0)
+---
+ -  ['0', 'tuple 0']
+...
+select(0, 1)
+---
+ -  ['1', 'tuple 1']
+...
+select(0, 2)
+---
+ -  ['2', 'tuple 2']
+...
+select(0, 3)
+---
+ -  ['3', 'tuple 3']
+...
+select(0, 4)
+---
+ -  ['4', 'tuple 4']
+...
+insert(0, (5, 'tuple 5'), not_presented = True)
+---
+ -  ['5', 'tuple 5']
+...
+insert(0, (6, 'tuple 6'), not_presented = True)
+---
+ -  ['6', 'tuple 6']
+...
+insert(0, (7, 'tuple 7'), not_presented = True)
+---
+ -  ['7', 'tuple 7']
+...
+insert(0, (8, 'tuple 8'), not_presented = True)
+---
+ -  ['8', 'tuple 8']
+...
+insert(0, (9, 'tuple 9'), not_presented = True)
+---
+ -  ['9', 'tuple 9']
+...
+select(0, 5)
+---
+ -  ['5', 'tuple 5']
+...
+select(0, 6)
+---
+ -  ['6', 'tuple 6']
+...
+select(0, 7)
+---
+ -  ['7', 'tuple 7']
+...
+select(0, 8)
+---
+ -  ['8', 'tuple 8']
+...
+select(0, 9)
+---
+ -  ['9', 'tuple 9']
+...
 swap servers
 reload configuration
 ---
@@ -58,56 +88,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (10, 'tuple 10')
-Insert OK, 1 row affected
-insert into t0 values (11, 'tuple 11')
-Insert OK, 1 row affected
-insert into t0 values (12, 'tuple 12')
-Insert OK, 1 row affected
-insert into t0 values (13, 'tuple 13')
-Insert OK, 1 row affected
-insert into t0 values (14, 'tuple 14')
-Insert OK, 1 row affected
-select * from t0 where k0 = 10
-Found 1 tuple:
-[10, 'tuple 10']
-select * from t0 where k0 = 11
-Found 1 tuple:
-[11, 'tuple 11']
-select * from t0 where k0 = 12
-Found 1 tuple:
-[12, 'tuple 12']
-select * from t0 where k0 = 13
-Found 1 tuple:
-[13, 'tuple 13']
-select * from t0 where k0 = 14
-Found 1 tuple:
-[14, 'tuple 14']
-insert into t0 values (15, 'tuple 15')
-Insert OK, 1 row affected
-insert into t0 values (16, 'tuple 16')
-Insert OK, 1 row affected
-insert into t0 values (17, 'tuple 17')
-Insert OK, 1 row affected
-insert into t0 values (18, 'tuple 18')
-Insert OK, 1 row affected
-insert into t0 values (19, 'tuple 19')
-Insert OK, 1 row affected
-select * from t0 where k0 = 15
-Found 1 tuple:
-[15, 'tuple 15']
-select * from t0 where k0 = 16
-Found 1 tuple:
-[16, 'tuple 16']
-select * from t0 where k0 = 17
-Found 1 tuple:
-[17, 'tuple 17']
-select * from t0 where k0 = 18
-Found 1 tuple:
-[18, 'tuple 18']
-select * from t0 where k0 = 19
-Found 1 tuple:
-[19, 'tuple 19']
+insert(0, (10, 'tuple 10'), not_presented = True)
+---
+ -  ['10', 'tuple 10']
+...
+insert(0, (11, 'tuple 11'), not_presented = True)
+---
+ -  ['11', 'tuple 11']
+...
+insert(0, (12, 'tuple 12'), not_presented = True)
+---
+ -  ['12', 'tuple 12']
+...
+insert(0, (13, 'tuple 13'), not_presented = True)
+---
+ -  ['13', 'tuple 13']
+...
+insert(0, (14, 'tuple 14'), not_presented = True)
+---
+ -  ['14', 'tuple 14']
+...
+select(0, 10)
+---
+ -  ['10', 'tuple 10']
+...
+select(0, 11)
+---
+ -  ['11', 'tuple 11']
+...
+select(0, 12)
+---
+ -  ['12', 'tuple 12']
+...
+select(0, 13)
+---
+ -  ['13', 'tuple 13']
+...
+select(0, 14)
+---
+ -  ['14', 'tuple 14']
+...
+insert(0, (15, 'tuple 15'), not_presented = True)
+---
+ -  ['15', 'tuple 15']
+...
+insert(0, (16, 'tuple 16'), not_presented = True)
+---
+ -  ['16', 'tuple 16']
+...
+insert(0, (17, 'tuple 17'), not_presented = True)
+---
+ -  ['17', 'tuple 17']
+...
+insert(0, (18, 'tuple 18'), not_presented = True)
+---
+ -  ['18', 'tuple 18']
+...
+insert(0, (19, 'tuple 19'), not_presented = True)
+---
+ -  ['19', 'tuple 19']
+...
+select(0, 15)
+---
+ -  ['15', 'tuple 15']
+...
+select(0, 16)
+---
+ -  ['16', 'tuple 16']
+...
+select(0, 17)
+---
+ -  ['17', 'tuple 17']
+...
+select(0, 18)
+---
+ -  ['18', 'tuple 18']
+...
+select(0, 19)
+---
+ -  ['19', 'tuple 19']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -118,56 +178,86 @@ reload configuration
 ok
 ...
 test 1 iteration
-insert into t0 values (20, 'tuple 20')
-Insert OK, 1 row affected
-insert into t0 values (21, 'tuple 21')
-Insert OK, 1 row affected
-insert into t0 values (22, 'tuple 22')
-Insert OK, 1 row affected
-insert into t0 values (23, 'tuple 23')
-Insert OK, 1 row affected
-insert into t0 values (24, 'tuple 24')
-Insert OK, 1 row affected
-select * from t0 where k0 = 20
-Found 1 tuple:
-[20, 'tuple 20']
-select * from t0 where k0 = 21
-Found 1 tuple:
-[21, 'tuple 21']
-select * from t0 where k0 = 22
-Found 1 tuple:
-[22, 'tuple 22']
-select * from t0 where k0 = 23
-Found 1 tuple:
-[23, 'tuple 23']
-select * from t0 where k0 = 24
-Found 1 tuple:
-[24, 'tuple 24']
-insert into t0 values (25, 'tuple 25')
-Insert OK, 1 row affected
-insert into t0 values (26, 'tuple 26')
-Insert OK, 1 row affected
-insert into t0 values (27, 'tuple 27')
-Insert OK, 1 row affected
-insert into t0 values (28, 'tuple 28')
-Insert OK, 1 row affected
-insert into t0 values (29, 'tuple 29')
-Insert OK, 1 row affected
-select * from t0 where k0 = 25
-Found 1 tuple:
-[25, 'tuple 25']
-select * from t0 where k0 = 26
-Found 1 tuple:
-[26, 'tuple 26']
-select * from t0 where k0 = 27
-Found 1 tuple:
-[27, 'tuple 27']
-select * from t0 where k0 = 28
-Found 1 tuple:
-[28, 'tuple 28']
-select * from t0 where k0 = 29
-Found 1 tuple:
-[29, 'tuple 29']
+insert(0, (20, 'tuple 20'), not_presented = True)
+---
+ -  ['20', 'tuple 20']
+...
+insert(0, (21, 'tuple 21'), not_presented = True)
+---
+ -  ['21', 'tuple 21']
+...
+insert(0, (22, 'tuple 22'), not_presented = True)
+---
+ -  ['22', 'tuple 22']
+...
+insert(0, (23, 'tuple 23'), not_presented = True)
+---
+ -  ['23', 'tuple 23']
+...
+insert(0, (24, 'tuple 24'), not_presented = True)
+---
+ -  ['24', 'tuple 24']
+...
+select(0, 20)
+---
+ -  ['20', 'tuple 20']
+...
+select(0, 21)
+---
+ -  ['21', 'tuple 21']
+...
+select(0, 22)
+---
+ -  ['22', 'tuple 22']
+...
+select(0, 23)
+---
+ -  ['23', 'tuple 23']
+...
+select(0, 24)
+---
+ -  ['24', 'tuple 24']
+...
+insert(0, (25, 'tuple 25'), not_presented = True)
+---
+ -  ['25', 'tuple 25']
+...
+insert(0, (26, 'tuple 26'), not_presented = True)
+---
+ -  ['26', 'tuple 26']
+...
+insert(0, (27, 'tuple 27'), not_presented = True)
+---
+ -  ['27', 'tuple 27']
+...
+insert(0, (28, 'tuple 28'), not_presented = True)
+---
+ -  ['28', 'tuple 28']
+...
+insert(0, (29, 'tuple 29'), not_presented = True)
+---
+ -  ['29', 'tuple 29']
+...
+select(0, 25)
+---
+ -  ['25', 'tuple 25']
+...
+select(0, 26)
+---
+ -  ['26', 'tuple 26']
+...
+select(0, 27)
+---
+ -  ['27', 'tuple 27']
+...
+select(0, 28)
+---
+ -  ['28', 'tuple 28']
+...
+select(0, 29)
+---
+ -  ['29', 'tuple 29']
+...
 swap servers
 reload configuration
 ---
@@ -177,56 +267,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (30, 'tuple 30')
-Insert OK, 1 row affected
-insert into t0 values (31, 'tuple 31')
-Insert OK, 1 row affected
-insert into t0 values (32, 'tuple 32')
-Insert OK, 1 row affected
-insert into t0 values (33, 'tuple 33')
-Insert OK, 1 row affected
-insert into t0 values (34, 'tuple 34')
-Insert OK, 1 row affected
-select * from t0 where k0 = 30
-Found 1 tuple:
-[30, 'tuple 30']
-select * from t0 where k0 = 31
-Found 1 tuple:
-[31, 'tuple 31']
-select * from t0 where k0 = 32
-Found 1 tuple:
-[32, 'tuple 32']
-select * from t0 where k0 = 33
-Found 1 tuple:
-[33, 'tuple 33']
-select * from t0 where k0 = 34
-Found 1 tuple:
-[34, 'tuple 34']
-insert into t0 values (35, 'tuple 35')
-Insert OK, 1 row affected
-insert into t0 values (36, 'tuple 36')
-Insert OK, 1 row affected
-insert into t0 values (37, 'tuple 37')
-Insert OK, 1 row affected
-insert into t0 values (38, 'tuple 38')
-Insert OK, 1 row affected
-insert into t0 values (39, 'tuple 39')
-Insert OK, 1 row affected
-select * from t0 where k0 = 35
-Found 1 tuple:
-[35, 'tuple 35']
-select * from t0 where k0 = 36
-Found 1 tuple:
-[36, 'tuple 36']
-select * from t0 where k0 = 37
-Found 1 tuple:
-[37, 'tuple 37']
-select * from t0 where k0 = 38
-Found 1 tuple:
-[38, 'tuple 38']
-select * from t0 where k0 = 39
-Found 1 tuple:
-[39, 'tuple 39']
+insert(0, (30, 'tuple 30'), not_presented = True)
+---
+ -  ['30', 'tuple 30']
+...
+insert(0, (31, 'tuple 31'), not_presented = True)
+---
+ -  ['31', 'tuple 31']
+...
+insert(0, (32, 'tuple 32'), not_presented = True)
+---
+ -  ['32', 'tuple 32']
+...
+insert(0, (33, 'tuple 33'), not_presented = True)
+---
+ -  ['33', 'tuple 33']
+...
+insert(0, (34, 'tuple 34'), not_presented = True)
+---
+ -  ['34', 'tuple 34']
+...
+select(0, 30)
+---
+ -  ['30', 'tuple 30']
+...
+select(0, 31)
+---
+ -  ['31', 'tuple 31']
+...
+select(0, 32)
+---
+ -  ['32', 'tuple 32']
+...
+select(0, 33)
+---
+ -  ['33', 'tuple 33']
+...
+select(0, 34)
+---
+ -  ['34', 'tuple 34']
+...
+insert(0, (35, 'tuple 35'), not_presented = True)
+---
+ -  ['35', 'tuple 35']
+...
+insert(0, (36, 'tuple 36'), not_presented = True)
+---
+ -  ['36', 'tuple 36']
+...
+insert(0, (37, 'tuple 37'), not_presented = True)
+---
+ -  ['37', 'tuple 37']
+...
+insert(0, (38, 'tuple 38'), not_presented = True)
+---
+ -  ['38', 'tuple 38']
+...
+insert(0, (39, 'tuple 39'), not_presented = True)
+---
+ -  ['39', 'tuple 39']
+...
+select(0, 35)
+---
+ -  ['35', 'tuple 35']
+...
+select(0, 36)
+---
+ -  ['36', 'tuple 36']
+...
+select(0, 37)
+---
+ -  ['37', 'tuple 37']
+...
+select(0, 38)
+---
+ -  ['38', 'tuple 38']
+...
+select(0, 39)
+---
+ -  ['39', 'tuple 39']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -237,56 +357,86 @@ reload configuration
 ok
 ...
 test 2 iteration
-insert into t0 values (40, 'tuple 40')
-Insert OK, 1 row affected
-insert into t0 values (41, 'tuple 41')
-Insert OK, 1 row affected
-insert into t0 values (42, 'tuple 42')
-Insert OK, 1 row affected
-insert into t0 values (43, 'tuple 43')
-Insert OK, 1 row affected
-insert into t0 values (44, 'tuple 44')
-Insert OK, 1 row affected
-select * from t0 where k0 = 40
-Found 1 tuple:
-[40, 'tuple 40']
-select * from t0 where k0 = 41
-Found 1 tuple:
-[41, 'tuple 41']
-select * from t0 where k0 = 42
-Found 1 tuple:
-[42, 'tuple 42']
-select * from t0 where k0 = 43
-Found 1 tuple:
-[43, 'tuple 43']
-select * from t0 where k0 = 44
-Found 1 tuple:
-[44, 'tuple 44']
-insert into t0 values (45, 'tuple 45')
-Insert OK, 1 row affected
-insert into t0 values (46, 'tuple 46')
-Insert OK, 1 row affected
-insert into t0 values (47, 'tuple 47')
-Insert OK, 1 row affected
-insert into t0 values (48, 'tuple 48')
-Insert OK, 1 row affected
-insert into t0 values (49, 'tuple 49')
-Insert OK, 1 row affected
-select * from t0 where k0 = 45
-Found 1 tuple:
-[45, 'tuple 45']
-select * from t0 where k0 = 46
-Found 1 tuple:
-[46, 'tuple 46']
-select * from t0 where k0 = 47
-Found 1 tuple:
-[47, 'tuple 47']
-select * from t0 where k0 = 48
-Found 1 tuple:
-[48, 'tuple 48']
-select * from t0 where k0 = 49
-Found 1 tuple:
-[49, 'tuple 49']
+insert(0, (40, 'tuple 40'), not_presented = True)
+---
+ -  ['40', 'tuple 40']
+...
+insert(0, (41, 'tuple 41'), not_presented = True)
+---
+ -  ['41', 'tuple 41']
+...
+insert(0, (42, 'tuple 42'), not_presented = True)
+---
+ -  ['42', 'tuple 42']
+...
+insert(0, (43, 'tuple 43'), not_presented = True)
+---
+ -  ['43', 'tuple 43']
+...
+insert(0, (44, 'tuple 44'), not_presented = True)
+---
+ -  ['44', 'tuple 44']
+...
+select(0, 40)
+---
+ -  ['40', 'tuple 40']
+...
+select(0, 41)
+---
+ -  ['41', 'tuple 41']
+...
+select(0, 42)
+---
+ -  ['42', 'tuple 42']
+...
+select(0, 43)
+---
+ -  ['43', 'tuple 43']
+...
+select(0, 44)
+---
+ -  ['44', 'tuple 44']
+...
+insert(0, (45, 'tuple 45'), not_presented = True)
+---
+ -  ['45', 'tuple 45']
+...
+insert(0, (46, 'tuple 46'), not_presented = True)
+---
+ -  ['46', 'tuple 46']
+...
+insert(0, (47, 'tuple 47'), not_presented = True)
+---
+ -  ['47', 'tuple 47']
+...
+insert(0, (48, 'tuple 48'), not_presented = True)
+---
+ -  ['48', 'tuple 48']
+...
+insert(0, (49, 'tuple 49'), not_presented = True)
+---
+ -  ['49', 'tuple 49']
+...
+select(0, 45)
+---
+ -  ['45', 'tuple 45']
+...
+select(0, 46)
+---
+ -  ['46', 'tuple 46']
+...
+select(0, 47)
+---
+ -  ['47', 'tuple 47']
+...
+select(0, 48)
+---
+ -  ['48', 'tuple 48']
+...
+select(0, 49)
+---
+ -  ['49', 'tuple 49']
+...
 swap servers
 reload configuration
 ---
@@ -296,56 +446,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (50, 'tuple 50')
-Insert OK, 1 row affected
-insert into t0 values (51, 'tuple 51')
-Insert OK, 1 row affected
-insert into t0 values (52, 'tuple 52')
-Insert OK, 1 row affected
-insert into t0 values (53, 'tuple 53')
-Insert OK, 1 row affected
-insert into t0 values (54, 'tuple 54')
-Insert OK, 1 row affected
-select * from t0 where k0 = 50
-Found 1 tuple:
-[50, 'tuple 50']
-select * from t0 where k0 = 51
-Found 1 tuple:
-[51, 'tuple 51']
-select * from t0 where k0 = 52
-Found 1 tuple:
-[52, 'tuple 52']
-select * from t0 where k0 = 53
-Found 1 tuple:
-[53, 'tuple 53']
-select * from t0 where k0 = 54
-Found 1 tuple:
-[54, 'tuple 54']
-insert into t0 values (55, 'tuple 55')
-Insert OK, 1 row affected
-insert into t0 values (56, 'tuple 56')
-Insert OK, 1 row affected
-insert into t0 values (57, 'tuple 57')
-Insert OK, 1 row affected
-insert into t0 values (58, 'tuple 58')
-Insert OK, 1 row affected
-insert into t0 values (59, 'tuple 59')
-Insert OK, 1 row affected
-select * from t0 where k0 = 55
-Found 1 tuple:
-[55, 'tuple 55']
-select * from t0 where k0 = 56
-Found 1 tuple:
-[56, 'tuple 56']
-select * from t0 where k0 = 57
-Found 1 tuple:
-[57, 'tuple 57']
-select * from t0 where k0 = 58
-Found 1 tuple:
-[58, 'tuple 58']
-select * from t0 where k0 = 59
-Found 1 tuple:
-[59, 'tuple 59']
+insert(0, (50, 'tuple 50'), not_presented = True)
+---
+ -  ['50', 'tuple 50']
+...
+insert(0, (51, 'tuple 51'), not_presented = True)
+---
+ -  ['51', 'tuple 51']
+...
+insert(0, (52, 'tuple 52'), not_presented = True)
+---
+ -  ['52', 'tuple 52']
+...
+insert(0, (53, 'tuple 53'), not_presented = True)
+---
+ -  ['53', 'tuple 53']
+...
+insert(0, (54, 'tuple 54'), not_presented = True)
+---
+ -  ['54', 'tuple 54']
+...
+select(0, 50)
+---
+ -  ['50', 'tuple 50']
+...
+select(0, 51)
+---
+ -  ['51', 'tuple 51']
+...
+select(0, 52)
+---
+ -  ['52', 'tuple 52']
+...
+select(0, 53)
+---
+ -  ['53', 'tuple 53']
+...
+select(0, 54)
+---
+ -  ['54', 'tuple 54']
+...
+insert(0, (55, 'tuple 55'), not_presented = True)
+---
+ -  ['55', 'tuple 55']
+...
+insert(0, (56, 'tuple 56'), not_presented = True)
+---
+ -  ['56', 'tuple 56']
+...
+insert(0, (57, 'tuple 57'), not_presented = True)
+---
+ -  ['57', 'tuple 57']
+...
+insert(0, (58, 'tuple 58'), not_presented = True)
+---
+ -  ['58', 'tuple 58']
+...
+insert(0, (59, 'tuple 59'), not_presented = True)
+---
+ -  ['59', 'tuple 59']
+...
+select(0, 55)
+---
+ -  ['55', 'tuple 55']
+...
+select(0, 56)
+---
+ -  ['56', 'tuple 56']
+...
+select(0, 57)
+---
+ -  ['57', 'tuple 57']
+...
+select(0, 58)
+---
+ -  ['58', 'tuple 58']
+...
+select(0, 59)
+---
+ -  ['59', 'tuple 59']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -356,56 +536,86 @@ reload configuration
 ok
 ...
 test 3 iteration
-insert into t0 values (60, 'tuple 60')
-Insert OK, 1 row affected
-insert into t0 values (61, 'tuple 61')
-Insert OK, 1 row affected
-insert into t0 values (62, 'tuple 62')
-Insert OK, 1 row affected
-insert into t0 values (63, 'tuple 63')
-Insert OK, 1 row affected
-insert into t0 values (64, 'tuple 64')
-Insert OK, 1 row affected
-select * from t0 where k0 = 60
-Found 1 tuple:
-[60, 'tuple 60']
-select * from t0 where k0 = 61
-Found 1 tuple:
-[61, 'tuple 61']
-select * from t0 where k0 = 62
-Found 1 tuple:
-[62, 'tuple 62']
-select * from t0 where k0 = 63
-Found 1 tuple:
-[63, 'tuple 63']
-select * from t0 where k0 = 64
-Found 1 tuple:
-[64, 'tuple 64']
-insert into t0 values (65, 'tuple 65')
-Insert OK, 1 row affected
-insert into t0 values (66, 'tuple 66')
-Insert OK, 1 row affected
-insert into t0 values (67, 'tuple 67')
-Insert OK, 1 row affected
-insert into t0 values (68, 'tuple 68')
-Insert OK, 1 row affected
-insert into t0 values (69, 'tuple 69')
-Insert OK, 1 row affected
-select * from t0 where k0 = 65
-Found 1 tuple:
-[65, 'tuple 65']
-select * from t0 where k0 = 66
-Found 1 tuple:
-[66, 'tuple 66']
-select * from t0 where k0 = 67
-Found 1 tuple:
-[67, 'tuple 67']
-select * from t0 where k0 = 68
-Found 1 tuple:
-[68, 'tuple 68']
-select * from t0 where k0 = 69
-Found 1 tuple:
-[69, 'tuple 69']
+insert(0, (60, 'tuple 60'), not_presented = True)
+---
+ -  ['60', 'tuple 60']
+...
+insert(0, (61, 'tuple 61'), not_presented = True)
+---
+ -  ['61', 'tuple 61']
+...
+insert(0, (62, 'tuple 62'), not_presented = True)
+---
+ -  ['62', 'tuple 62']
+...
+insert(0, (63, 'tuple 63'), not_presented = True)
+---
+ -  ['63', 'tuple 63']
+...
+insert(0, (64, 'tuple 64'), not_presented = True)
+---
+ -  ['64', 'tuple 64']
+...
+select(0, 60)
+---
+ -  ['60', 'tuple 60']
+...
+select(0, 61)
+---
+ -  ['61', 'tuple 61']
+...
+select(0, 62)
+---
+ -  ['62', 'tuple 62']
+...
+select(0, 63)
+---
+ -  ['63', 'tuple 63']
+...
+select(0, 64)
+---
+ -  ['64', 'tuple 64']
+...
+insert(0, (65, 'tuple 65'), not_presented = True)
+---
+ -  ['65', 'tuple 65']
+...
+insert(0, (66, 'tuple 66'), not_presented = True)
+---
+ -  ['66', 'tuple 66']
+...
+insert(0, (67, 'tuple 67'), not_presented = True)
+---
+ -  ['67', 'tuple 67']
+...
+insert(0, (68, 'tuple 68'), not_presented = True)
+---
+ -  ['68', 'tuple 68']
+...
+insert(0, (69, 'tuple 69'), not_presented = True)
+---
+ -  ['69', 'tuple 69']
+...
+select(0, 65)
+---
+ -  ['65', 'tuple 65']
+...
+select(0, 66)
+---
+ -  ['66', 'tuple 66']
+...
+select(0, 67)
+---
+ -  ['67', 'tuple 67']
+...
+select(0, 68)
+---
+ -  ['68', 'tuple 68']
+...
+select(0, 69)
+---
+ -  ['69', 'tuple 69']
+...
 swap servers
 reload configuration
 ---
@@ -415,56 +625,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (70, 'tuple 70')
-Insert OK, 1 row affected
-insert into t0 values (71, 'tuple 71')
-Insert OK, 1 row affected
-insert into t0 values (72, 'tuple 72')
-Insert OK, 1 row affected
-insert into t0 values (73, 'tuple 73')
-Insert OK, 1 row affected
-insert into t0 values (74, 'tuple 74')
-Insert OK, 1 row affected
-select * from t0 where k0 = 70
-Found 1 tuple:
-[70, 'tuple 70']
-select * from t0 where k0 = 71
-Found 1 tuple:
-[71, 'tuple 71']
-select * from t0 where k0 = 72
-Found 1 tuple:
-[72, 'tuple 72']
-select * from t0 where k0 = 73
-Found 1 tuple:
-[73, 'tuple 73']
-select * from t0 where k0 = 74
-Found 1 tuple:
-[74, 'tuple 74']
-insert into t0 values (75, 'tuple 75')
-Insert OK, 1 row affected
-insert into t0 values (76, 'tuple 76')
-Insert OK, 1 row affected
-insert into t0 values (77, 'tuple 77')
-Insert OK, 1 row affected
-insert into t0 values (78, 'tuple 78')
-Insert OK, 1 row affected
-insert into t0 values (79, 'tuple 79')
-Insert OK, 1 row affected
-select * from t0 where k0 = 75
-Found 1 tuple:
-[75, 'tuple 75']
-select * from t0 where k0 = 76
-Found 1 tuple:
-[76, 'tuple 76']
-select * from t0 where k0 = 77
-Found 1 tuple:
-[77, 'tuple 77']
-select * from t0 where k0 = 78
-Found 1 tuple:
-[78, 'tuple 78']
-select * from t0 where k0 = 79
-Found 1 tuple:
-[79, 'tuple 79']
+insert(0, (70, 'tuple 70'), not_presented = True)
+---
+ -  ['70', 'tuple 70']
+...
+insert(0, (71, 'tuple 71'), not_presented = True)
+---
+ -  ['71', 'tuple 71']
+...
+insert(0, (72, 'tuple 72'), not_presented = True)
+---
+ -  ['72', 'tuple 72']
+...
+insert(0, (73, 'tuple 73'), not_presented = True)
+---
+ -  ['73', 'tuple 73']
+...
+insert(0, (74, 'tuple 74'), not_presented = True)
+---
+ -  ['74', 'tuple 74']
+...
+select(0, 70)
+---
+ -  ['70', 'tuple 70']
+...
+select(0, 71)
+---
+ -  ['71', 'tuple 71']
+...
+select(0, 72)
+---
+ -  ['72', 'tuple 72']
+...
+select(0, 73)
+---
+ -  ['73', 'tuple 73']
+...
+select(0, 74)
+---
+ -  ['74', 'tuple 74']
+...
+insert(0, (75, 'tuple 75'), not_presented = True)
+---
+ -  ['75', 'tuple 75']
+...
+insert(0, (76, 'tuple 76'), not_presented = True)
+---
+ -  ['76', 'tuple 76']
+...
+insert(0, (77, 'tuple 77'), not_presented = True)
+---
+ -  ['77', 'tuple 77']
+...
+insert(0, (78, 'tuple 78'), not_presented = True)
+---
+ -  ['78', 'tuple 78']
+...
+insert(0, (79, 'tuple 79'), not_presented = True)
+---
+ -  ['79', 'tuple 79']
+...
+select(0, 75)
+---
+ -  ['75', 'tuple 75']
+...
+select(0, 76)
+---
+ -  ['76', 'tuple 76']
+...
+select(0, 77)
+---
+ -  ['77', 'tuple 77']
+...
+select(0, 78)
+---
+ -  ['78', 'tuple 78']
+...
+select(0, 79)
+---
+ -  ['79', 'tuple 79']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -475,56 +715,86 @@ reload configuration
 ok
 ...
 test 4 iteration
-insert into t0 values (80, 'tuple 80')
-Insert OK, 1 row affected
-insert into t0 values (81, 'tuple 81')
-Insert OK, 1 row affected
-insert into t0 values (82, 'tuple 82')
-Insert OK, 1 row affected
-insert into t0 values (83, 'tuple 83')
-Insert OK, 1 row affected
-insert into t0 values (84, 'tuple 84')
-Insert OK, 1 row affected
-select * from t0 where k0 = 80
-Found 1 tuple:
-[80, 'tuple 80']
-select * from t0 where k0 = 81
-Found 1 tuple:
-[81, 'tuple 81']
-select * from t0 where k0 = 82
-Found 1 tuple:
-[82, 'tuple 82']
-select * from t0 where k0 = 83
-Found 1 tuple:
-[83, 'tuple 83']
-select * from t0 where k0 = 84
-Found 1 tuple:
-[84, 'tuple 84']
-insert into t0 values (85, 'tuple 85')
-Insert OK, 1 row affected
-insert into t0 values (86, 'tuple 86')
-Insert OK, 1 row affected
-insert into t0 values (87, 'tuple 87')
-Insert OK, 1 row affected
-insert into t0 values (88, 'tuple 88')
-Insert OK, 1 row affected
-insert into t0 values (89, 'tuple 89')
-Insert OK, 1 row affected
-select * from t0 where k0 = 85
-Found 1 tuple:
-[85, 'tuple 85']
-select * from t0 where k0 = 86
-Found 1 tuple:
-[86, 'tuple 86']
-select * from t0 where k0 = 87
-Found 1 tuple:
-[87, 'tuple 87']
-select * from t0 where k0 = 88
-Found 1 tuple:
-[88, 'tuple 88']
-select * from t0 where k0 = 89
-Found 1 tuple:
-[89, 'tuple 89']
+insert(0, (80, 'tuple 80'), not_presented = True)
+---
+ -  ['80', 'tuple 80']
+...
+insert(0, (81, 'tuple 81'), not_presented = True)
+---
+ -  ['81', 'tuple 81']
+...
+insert(0, (82, 'tuple 82'), not_presented = True)
+---
+ -  ['82', 'tuple 82']
+...
+insert(0, (83, 'tuple 83'), not_presented = True)
+---
+ -  ['83', 'tuple 83']
+...
+insert(0, (84, 'tuple 84'), not_presented = True)
+---
+ -  ['84', 'tuple 84']
+...
+select(0, 80)
+---
+ -  ['80', 'tuple 80']
+...
+select(0, 81)
+---
+ -  ['81', 'tuple 81']
+...
+select(0, 82)
+---
+ -  ['82', 'tuple 82']
+...
+select(0, 83)
+---
+ -  ['83', 'tuple 83']
+...
+select(0, 84)
+---
+ -  ['84', 'tuple 84']
+...
+insert(0, (85, 'tuple 85'), not_presented = True)
+---
+ -  ['85', 'tuple 85']
+...
+insert(0, (86, 'tuple 86'), not_presented = True)
+---
+ -  ['86', 'tuple 86']
+...
+insert(0, (87, 'tuple 87'), not_presented = True)
+---
+ -  ['87', 'tuple 87']
+...
+insert(0, (88, 'tuple 88'), not_presented = True)
+---
+ -  ['88', 'tuple 88']
+...
+insert(0, (89, 'tuple 89'), not_presented = True)
+---
+ -  ['89', 'tuple 89']
+...
+select(0, 85)
+---
+ -  ['85', 'tuple 85']
+...
+select(0, 86)
+---
+ -  ['86', 'tuple 86']
+...
+select(0, 87)
+---
+ -  ['87', 'tuple 87']
+...
+select(0, 88)
+---
+ -  ['88', 'tuple 88']
+...
+select(0, 89)
+---
+ -  ['89', 'tuple 89']
+...
 swap servers
 reload configuration
 ---
@@ -534,56 +804,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (90, 'tuple 90')
-Insert OK, 1 row affected
-insert into t0 values (91, 'tuple 91')
-Insert OK, 1 row affected
-insert into t0 values (92, 'tuple 92')
-Insert OK, 1 row affected
-insert into t0 values (93, 'tuple 93')
-Insert OK, 1 row affected
-insert into t0 values (94, 'tuple 94')
-Insert OK, 1 row affected
-select * from t0 where k0 = 90
-Found 1 tuple:
-[90, 'tuple 90']
-select * from t0 where k0 = 91
-Found 1 tuple:
-[91, 'tuple 91']
-select * from t0 where k0 = 92
-Found 1 tuple:
-[92, 'tuple 92']
-select * from t0 where k0 = 93
-Found 1 tuple:
-[93, 'tuple 93']
-select * from t0 where k0 = 94
-Found 1 tuple:
-[94, 'tuple 94']
-insert into t0 values (95, 'tuple 95')
-Insert OK, 1 row affected
-insert into t0 values (96, 'tuple 96')
-Insert OK, 1 row affected
-insert into t0 values (97, 'tuple 97')
-Insert OK, 1 row affected
-insert into t0 values (98, 'tuple 98')
-Insert OK, 1 row affected
-insert into t0 values (99, 'tuple 99')
-Insert OK, 1 row affected
-select * from t0 where k0 = 95
-Found 1 tuple:
-[95, 'tuple 95']
-select * from t0 where k0 = 96
-Found 1 tuple:
-[96, 'tuple 96']
-select * from t0 where k0 = 97
-Found 1 tuple:
-[97, 'tuple 97']
-select * from t0 where k0 = 98
-Found 1 tuple:
-[98, 'tuple 98']
-select * from t0 where k0 = 99
-Found 1 tuple:
-[99, 'tuple 99']
+insert(0, (90, 'tuple 90'), not_presented = True)
+---
+ -  ['90', 'tuple 90']
+...
+insert(0, (91, 'tuple 91'), not_presented = True)
+---
+ -  ['91', 'tuple 91']
+...
+insert(0, (92, 'tuple 92'), not_presented = True)
+---
+ -  ['92', 'tuple 92']
+...
+insert(0, (93, 'tuple 93'), not_presented = True)
+---
+ -  ['93', 'tuple 93']
+...
+insert(0, (94, 'tuple 94'), not_presented = True)
+---
+ -  ['94', 'tuple 94']
+...
+select(0, 90)
+---
+ -  ['90', 'tuple 90']
+...
+select(0, 91)
+---
+ -  ['91', 'tuple 91']
+...
+select(0, 92)
+---
+ -  ['92', 'tuple 92']
+...
+select(0, 93)
+---
+ -  ['93', 'tuple 93']
+...
+select(0, 94)
+---
+ -  ['94', 'tuple 94']
+...
+insert(0, (95, 'tuple 95'), not_presented = True)
+---
+ -  ['95', 'tuple 95']
+...
+insert(0, (96, 'tuple 96'), not_presented = True)
+---
+ -  ['96', 'tuple 96']
+...
+insert(0, (97, 'tuple 97'), not_presented = True)
+---
+ -  ['97', 'tuple 97']
+...
+insert(0, (98, 'tuple 98'), not_presented = True)
+---
+ -  ['98', 'tuple 98']
+...
+insert(0, (99, 'tuple 99'), not_presented = True)
+---
+ -  ['99', 'tuple 99']
+...
+select(0, 95)
+---
+ -  ['95', 'tuple 95']
+...
+select(0, 96)
+---
+ -  ['96', 'tuple 96']
+...
+select(0, 97)
+---
+ -  ['97', 'tuple 97']
+...
+select(0, 98)
+---
+ -  ['98', 'tuple 98']
+...
+select(0, 99)
+---
+ -  ['99', 'tuple 99']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -594,56 +894,86 @@ reload configuration
 ok
 ...
 test 5 iteration
-insert into t0 values (100, 'tuple 100')
-Insert OK, 1 row affected
-insert into t0 values (101, 'tuple 101')
-Insert OK, 1 row affected
-insert into t0 values (102, 'tuple 102')
-Insert OK, 1 row affected
-insert into t0 values (103, 'tuple 103')
-Insert OK, 1 row affected
-insert into t0 values (104, 'tuple 104')
-Insert OK, 1 row affected
-select * from t0 where k0 = 100
-Found 1 tuple:
-[100, 'tuple 100']
-select * from t0 where k0 = 101
-Found 1 tuple:
-[101, 'tuple 101']
-select * from t0 where k0 = 102
-Found 1 tuple:
-[102, 'tuple 102']
-select * from t0 where k0 = 103
-Found 1 tuple:
-[103, 'tuple 103']
-select * from t0 where k0 = 104
-Found 1 tuple:
-[104, 'tuple 104']
-insert into t0 values (105, 'tuple 105')
-Insert OK, 1 row affected
-insert into t0 values (106, 'tuple 106')
-Insert OK, 1 row affected
-insert into t0 values (107, 'tuple 107')
-Insert OK, 1 row affected
-insert into t0 values (108, 'tuple 108')
-Insert OK, 1 row affected
-insert into t0 values (109, 'tuple 109')
-Insert OK, 1 row affected
-select * from t0 where k0 = 105
-Found 1 tuple:
-[105, 'tuple 105']
-select * from t0 where k0 = 106
-Found 1 tuple:
-[106, 'tuple 106']
-select * from t0 where k0 = 107
-Found 1 tuple:
-[107, 'tuple 107']
-select * from t0 where k0 = 108
-Found 1 tuple:
-[108, 'tuple 108']
-select * from t0 where k0 = 109
-Found 1 tuple:
-[109, 'tuple 109']
+insert(0, (100, 'tuple 100'), not_presented = True)
+---
+ -  ['100', 'tuple 100']
+...
+insert(0, (101, 'tuple 101'), not_presented = True)
+---
+ -  ['101', 'tuple 101']
+...
+insert(0, (102, 'tuple 102'), not_presented = True)
+---
+ -  ['102', 'tuple 102']
+...
+insert(0, (103, 'tuple 103'), not_presented = True)
+---
+ -  ['103', 'tuple 103']
+...
+insert(0, (104, 'tuple 104'), not_presented = True)
+---
+ -  ['104', 'tuple 104']
+...
+select(0, 100)
+---
+ -  ['100', 'tuple 100']
+...
+select(0, 101)
+---
+ -  ['101', 'tuple 101']
+...
+select(0, 102)
+---
+ -  ['102', 'tuple 102']
+...
+select(0, 103)
+---
+ -  ['103', 'tuple 103']
+...
+select(0, 104)
+---
+ -  ['104', 'tuple 104']
+...
+insert(0, (105, 'tuple 105'), not_presented = True)
+---
+ -  ['105', 'tuple 105']
+...
+insert(0, (106, 'tuple 106'), not_presented = True)
+---
+ -  ['106', 'tuple 106']
+...
+insert(0, (107, 'tuple 107'), not_presented = True)
+---
+ -  ['107', 'tuple 107']
+...
+insert(0, (108, 'tuple 108'), not_presented = True)
+---
+ -  ['108', 'tuple 108']
+...
+insert(0, (109, 'tuple 109'), not_presented = True)
+---
+ -  ['109', 'tuple 109']
+...
+select(0, 105)
+---
+ -  ['105', 'tuple 105']
+...
+select(0, 106)
+---
+ -  ['106', 'tuple 106']
+...
+select(0, 107)
+---
+ -  ['107', 'tuple 107']
+...
+select(0, 108)
+---
+ -  ['108', 'tuple 108']
+...
+select(0, 109)
+---
+ -  ['109', 'tuple 109']
+...
 swap servers
 reload configuration
 ---
@@ -653,56 +983,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (110, 'tuple 110')
-Insert OK, 1 row affected
-insert into t0 values (111, 'tuple 111')
-Insert OK, 1 row affected
-insert into t0 values (112, 'tuple 112')
-Insert OK, 1 row affected
-insert into t0 values (113, 'tuple 113')
-Insert OK, 1 row affected
-insert into t0 values (114, 'tuple 114')
-Insert OK, 1 row affected
-select * from t0 where k0 = 110
-Found 1 tuple:
-[110, 'tuple 110']
-select * from t0 where k0 = 111
-Found 1 tuple:
-[111, 'tuple 111']
-select * from t0 where k0 = 112
-Found 1 tuple:
-[112, 'tuple 112']
-select * from t0 where k0 = 113
-Found 1 tuple:
-[113, 'tuple 113']
-select * from t0 where k0 = 114
-Found 1 tuple:
-[114, 'tuple 114']
-insert into t0 values (115, 'tuple 115')
-Insert OK, 1 row affected
-insert into t0 values (116, 'tuple 116')
-Insert OK, 1 row affected
-insert into t0 values (117, 'tuple 117')
-Insert OK, 1 row affected
-insert into t0 values (118, 'tuple 118')
-Insert OK, 1 row affected
-insert into t0 values (119, 'tuple 119')
-Insert OK, 1 row affected
-select * from t0 where k0 = 115
-Found 1 tuple:
-[115, 'tuple 115']
-select * from t0 where k0 = 116
-Found 1 tuple:
-[116, 'tuple 116']
-select * from t0 where k0 = 117
-Found 1 tuple:
-[117, 'tuple 117']
-select * from t0 where k0 = 118
-Found 1 tuple:
-[118, 'tuple 118']
-select * from t0 where k0 = 119
-Found 1 tuple:
-[119, 'tuple 119']
+insert(0, (110, 'tuple 110'), not_presented = True)
+---
+ -  ['110', 'tuple 110']
+...
+insert(0, (111, 'tuple 111'), not_presented = True)
+---
+ -  ['111', 'tuple 111']
+...
+insert(0, (112, 'tuple 112'), not_presented = True)
+---
+ -  ['112', 'tuple 112']
+...
+insert(0, (113, 'tuple 113'), not_presented = True)
+---
+ -  ['113', 'tuple 113']
+...
+insert(0, (114, 'tuple 114'), not_presented = True)
+---
+ -  ['114', 'tuple 114']
+...
+select(0, 110)
+---
+ -  ['110', 'tuple 110']
+...
+select(0, 111)
+---
+ -  ['111', 'tuple 111']
+...
+select(0, 112)
+---
+ -  ['112', 'tuple 112']
+...
+select(0, 113)
+---
+ -  ['113', 'tuple 113']
+...
+select(0, 114)
+---
+ -  ['114', 'tuple 114']
+...
+insert(0, (115, 'tuple 115'), not_presented = True)
+---
+ -  ['115', 'tuple 115']
+...
+insert(0, (116, 'tuple 116'), not_presented = True)
+---
+ -  ['116', 'tuple 116']
+...
+insert(0, (117, 'tuple 117'), not_presented = True)
+---
+ -  ['117', 'tuple 117']
+...
+insert(0, (118, 'tuple 118'), not_presented = True)
+---
+ -  ['118', 'tuple 118']
+...
+insert(0, (119, 'tuple 119'), not_presented = True)
+---
+ -  ['119', 'tuple 119']
+...
+select(0, 115)
+---
+ -  ['115', 'tuple 115']
+...
+select(0, 116)
+---
+ -  ['116', 'tuple 116']
+...
+select(0, 117)
+---
+ -  ['117', 'tuple 117']
+...
+select(0, 118)
+---
+ -  ['118', 'tuple 118']
+...
+select(0, 119)
+---
+ -  ['119', 'tuple 119']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -713,56 +1073,86 @@ reload configuration
 ok
 ...
 test 6 iteration
-insert into t0 values (120, 'tuple 120')
-Insert OK, 1 row affected
-insert into t0 values (121, 'tuple 121')
-Insert OK, 1 row affected
-insert into t0 values (122, 'tuple 122')
-Insert OK, 1 row affected
-insert into t0 values (123, 'tuple 123')
-Insert OK, 1 row affected
-insert into t0 values (124, 'tuple 124')
-Insert OK, 1 row affected
-select * from t0 where k0 = 120
-Found 1 tuple:
-[120, 'tuple 120']
-select * from t0 where k0 = 121
-Found 1 tuple:
-[121, 'tuple 121']
-select * from t0 where k0 = 122
-Found 1 tuple:
-[122, 'tuple 122']
-select * from t0 where k0 = 123
-Found 1 tuple:
-[123, 'tuple 123']
-select * from t0 where k0 = 124
-Found 1 tuple:
-[124, 'tuple 124']
-insert into t0 values (125, 'tuple 125')
-Insert OK, 1 row affected
-insert into t0 values (126, 'tuple 126')
-Insert OK, 1 row affected
-insert into t0 values (127, 'tuple 127')
-Insert OK, 1 row affected
-insert into t0 values (128, 'tuple 128')
-Insert OK, 1 row affected
-insert into t0 values (129, 'tuple 129')
-Insert OK, 1 row affected
-select * from t0 where k0 = 125
-Found 1 tuple:
-[125, 'tuple 125']
-select * from t0 where k0 = 126
-Found 1 tuple:
-[126, 'tuple 126']
-select * from t0 where k0 = 127
-Found 1 tuple:
-[127, 'tuple 127']
-select * from t0 where k0 = 128
-Found 1 tuple:
-[128, 'tuple 128']
-select * from t0 where k0 = 129
-Found 1 tuple:
-[129, 'tuple 129']
+insert(0, (120, 'tuple 120'), not_presented = True)
+---
+ -  ['120', 'tuple 120']
+...
+insert(0, (121, 'tuple 121'), not_presented = True)
+---
+ -  ['121', 'tuple 121']
+...
+insert(0, (122, 'tuple 122'), not_presented = True)
+---
+ -  ['122', 'tuple 122']
+...
+insert(0, (123, 'tuple 123'), not_presented = True)
+---
+ -  ['123', 'tuple 123']
+...
+insert(0, (124, 'tuple 124'), not_presented = True)
+---
+ -  ['124', 'tuple 124']
+...
+select(0, 120)
+---
+ -  ['120', 'tuple 120']
+...
+select(0, 121)
+---
+ -  ['121', 'tuple 121']
+...
+select(0, 122)
+---
+ -  ['122', 'tuple 122']
+...
+select(0, 123)
+---
+ -  ['123', 'tuple 123']
+...
+select(0, 124)
+---
+ -  ['124', 'tuple 124']
+...
+insert(0, (125, 'tuple 125'), not_presented = True)
+---
+ -  ['125', 'tuple 125']
+...
+insert(0, (126, 'tuple 126'), not_presented = True)
+---
+ -  ['126', 'tuple 126']
+...
+insert(0, (127, 'tuple 127'), not_presented = True)
+---
+ -  ['127', 'tuple 127']
+...
+insert(0, (128, 'tuple 128'), not_presented = True)
+---
+ -  ['128', 'tuple 128']
+...
+insert(0, (129, 'tuple 129'), not_presented = True)
+---
+ -  ['129', 'tuple 129']
+...
+select(0, 125)
+---
+ -  ['125', 'tuple 125']
+...
+select(0, 126)
+---
+ -  ['126', 'tuple 126']
+...
+select(0, 127)
+---
+ -  ['127', 'tuple 127']
+...
+select(0, 128)
+---
+ -  ['128', 'tuple 128']
+...
+select(0, 129)
+---
+ -  ['129', 'tuple 129']
+...
 swap servers
 reload configuration
 ---
@@ -772,56 +1162,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (130, 'tuple 130')
-Insert OK, 1 row affected
-insert into t0 values (131, 'tuple 131')
-Insert OK, 1 row affected
-insert into t0 values (132, 'tuple 132')
-Insert OK, 1 row affected
-insert into t0 values (133, 'tuple 133')
-Insert OK, 1 row affected
-insert into t0 values (134, 'tuple 134')
-Insert OK, 1 row affected
-select * from t0 where k0 = 130
-Found 1 tuple:
-[130, 'tuple 130']
-select * from t0 where k0 = 131
-Found 1 tuple:
-[131, 'tuple 131']
-select * from t0 where k0 = 132
-Found 1 tuple:
-[132, 'tuple 132']
-select * from t0 where k0 = 133
-Found 1 tuple:
-[133, 'tuple 133']
-select * from t0 where k0 = 134
-Found 1 tuple:
-[134, 'tuple 134']
-insert into t0 values (135, 'tuple 135')
-Insert OK, 1 row affected
-insert into t0 values (136, 'tuple 136')
-Insert OK, 1 row affected
-insert into t0 values (137, 'tuple 137')
-Insert OK, 1 row affected
-insert into t0 values (138, 'tuple 138')
-Insert OK, 1 row affected
-insert into t0 values (139, 'tuple 139')
-Insert OK, 1 row affected
-select * from t0 where k0 = 135
-Found 1 tuple:
-[135, 'tuple 135']
-select * from t0 where k0 = 136
-Found 1 tuple:
-[136, 'tuple 136']
-select * from t0 where k0 = 137
-Found 1 tuple:
-[137, 'tuple 137']
-select * from t0 where k0 = 138
-Found 1 tuple:
-[138, 'tuple 138']
-select * from t0 where k0 = 139
-Found 1 tuple:
-[139, 'tuple 139']
+insert(0, (130, 'tuple 130'), not_presented = True)
+---
+ -  ['130', 'tuple 130']
+...
+insert(0, (131, 'tuple 131'), not_presented = True)
+---
+ -  ['131', 'tuple 131']
+...
+insert(0, (132, 'tuple 132'), not_presented = True)
+---
+ -  ['132', 'tuple 132']
+...
+insert(0, (133, 'tuple 133'), not_presented = True)
+---
+ -  ['133', 'tuple 133']
+...
+insert(0, (134, 'tuple 134'), not_presented = True)
+---
+ -  ['134', 'tuple 134']
+...
+select(0, 130)
+---
+ -  ['130', 'tuple 130']
+...
+select(0, 131)
+---
+ -  ['131', 'tuple 131']
+...
+select(0, 132)
+---
+ -  ['132', 'tuple 132']
+...
+select(0, 133)
+---
+ -  ['133', 'tuple 133']
+...
+select(0, 134)
+---
+ -  ['134', 'tuple 134']
+...
+insert(0, (135, 'tuple 135'), not_presented = True)
+---
+ -  ['135', 'tuple 135']
+...
+insert(0, (136, 'tuple 136'), not_presented = True)
+---
+ -  ['136', 'tuple 136']
+...
+insert(0, (137, 'tuple 137'), not_presented = True)
+---
+ -  ['137', 'tuple 137']
+...
+insert(0, (138, 'tuple 138'), not_presented = True)
+---
+ -  ['138', 'tuple 138']
+...
+insert(0, (139, 'tuple 139'), not_presented = True)
+---
+ -  ['139', 'tuple 139']
+...
+select(0, 135)
+---
+ -  ['135', 'tuple 135']
+...
+select(0, 136)
+---
+ -  ['136', 'tuple 136']
+...
+select(0, 137)
+---
+ -  ['137', 'tuple 137']
+...
+select(0, 138)
+---
+ -  ['138', 'tuple 138']
+...
+select(0, 139)
+---
+ -  ['139', 'tuple 139']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -832,56 +1252,86 @@ reload configuration
 ok
 ...
 test 7 iteration
-insert into t0 values (140, 'tuple 140')
-Insert OK, 1 row affected
-insert into t0 values (141, 'tuple 141')
-Insert OK, 1 row affected
-insert into t0 values (142, 'tuple 142')
-Insert OK, 1 row affected
-insert into t0 values (143, 'tuple 143')
-Insert OK, 1 row affected
-insert into t0 values (144, 'tuple 144')
-Insert OK, 1 row affected
-select * from t0 where k0 = 140
-Found 1 tuple:
-[140, 'tuple 140']
-select * from t0 where k0 = 141
-Found 1 tuple:
-[141, 'tuple 141']
-select * from t0 where k0 = 142
-Found 1 tuple:
-[142, 'tuple 142']
-select * from t0 where k0 = 143
-Found 1 tuple:
-[143, 'tuple 143']
-select * from t0 where k0 = 144
-Found 1 tuple:
-[144, 'tuple 144']
-insert into t0 values (145, 'tuple 145')
-Insert OK, 1 row affected
-insert into t0 values (146, 'tuple 146')
-Insert OK, 1 row affected
-insert into t0 values (147, 'tuple 147')
-Insert OK, 1 row affected
-insert into t0 values (148, 'tuple 148')
-Insert OK, 1 row affected
-insert into t0 values (149, 'tuple 149')
-Insert OK, 1 row affected
-select * from t0 where k0 = 145
-Found 1 tuple:
-[145, 'tuple 145']
-select * from t0 where k0 = 146
-Found 1 tuple:
-[146, 'tuple 146']
-select * from t0 where k0 = 147
-Found 1 tuple:
-[147, 'tuple 147']
-select * from t0 where k0 = 148
-Found 1 tuple:
-[148, 'tuple 148']
-select * from t0 where k0 = 149
-Found 1 tuple:
-[149, 'tuple 149']
+insert(0, (140, 'tuple 140'), not_presented = True)
+---
+ -  ['140', 'tuple 140']
+...
+insert(0, (141, 'tuple 141'), not_presented = True)
+---
+ -  ['141', 'tuple 141']
+...
+insert(0, (142, 'tuple 142'), not_presented = True)
+---
+ -  ['142', 'tuple 142']
+...
+insert(0, (143, 'tuple 143'), not_presented = True)
+---
+ -  ['143', 'tuple 143']
+...
+insert(0, (144, 'tuple 144'), not_presented = True)
+---
+ -  ['144', 'tuple 144']
+...
+select(0, 140)
+---
+ -  ['140', 'tuple 140']
+...
+select(0, 141)
+---
+ -  ['141', 'tuple 141']
+...
+select(0, 142)
+---
+ -  ['142', 'tuple 142']
+...
+select(0, 143)
+---
+ -  ['143', 'tuple 143']
+...
+select(0, 144)
+---
+ -  ['144', 'tuple 144']
+...
+insert(0, (145, 'tuple 145'), not_presented = True)
+---
+ -  ['145', 'tuple 145']
+...
+insert(0, (146, 'tuple 146'), not_presented = True)
+---
+ -  ['146', 'tuple 146']
+...
+insert(0, (147, 'tuple 147'), not_presented = True)
+---
+ -  ['147', 'tuple 147']
+...
+insert(0, (148, 'tuple 148'), not_presented = True)
+---
+ -  ['148', 'tuple 148']
+...
+insert(0, (149, 'tuple 149'), not_presented = True)
+---
+ -  ['149', 'tuple 149']
+...
+select(0, 145)
+---
+ -  ['145', 'tuple 145']
+...
+select(0, 146)
+---
+ -  ['146', 'tuple 146']
+...
+select(0, 147)
+---
+ -  ['147', 'tuple 147']
+...
+select(0, 148)
+---
+ -  ['148', 'tuple 148']
+...
+select(0, 149)
+---
+ -  ['149', 'tuple 149']
+...
 swap servers
 reload configuration
 ---
@@ -891,56 +1341,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (150, 'tuple 150')
-Insert OK, 1 row affected
-insert into t0 values (151, 'tuple 151')
-Insert OK, 1 row affected
-insert into t0 values (152, 'tuple 152')
-Insert OK, 1 row affected
-insert into t0 values (153, 'tuple 153')
-Insert OK, 1 row affected
-insert into t0 values (154, 'tuple 154')
-Insert OK, 1 row affected
-select * from t0 where k0 = 150
-Found 1 tuple:
-[150, 'tuple 150']
-select * from t0 where k0 = 151
-Found 1 tuple:
-[151, 'tuple 151']
-select * from t0 where k0 = 152
-Found 1 tuple:
-[152, 'tuple 152']
-select * from t0 where k0 = 153
-Found 1 tuple:
-[153, 'tuple 153']
-select * from t0 where k0 = 154
-Found 1 tuple:
-[154, 'tuple 154']
-insert into t0 values (155, 'tuple 155')
-Insert OK, 1 row affected
-insert into t0 values (156, 'tuple 156')
-Insert OK, 1 row affected
-insert into t0 values (157, 'tuple 157')
-Insert OK, 1 row affected
-insert into t0 values (158, 'tuple 158')
-Insert OK, 1 row affected
-insert into t0 values (159, 'tuple 159')
-Insert OK, 1 row affected
-select * from t0 where k0 = 155
-Found 1 tuple:
-[155, 'tuple 155']
-select * from t0 where k0 = 156
-Found 1 tuple:
-[156, 'tuple 156']
-select * from t0 where k0 = 157
-Found 1 tuple:
-[157, 'tuple 157']
-select * from t0 where k0 = 158
-Found 1 tuple:
-[158, 'tuple 158']
-select * from t0 where k0 = 159
-Found 1 tuple:
-[159, 'tuple 159']
+insert(0, (150, 'tuple 150'), not_presented = True)
+---
+ -  ['150', 'tuple 150']
+...
+insert(0, (151, 'tuple 151'), not_presented = True)
+---
+ -  ['151', 'tuple 151']
+...
+insert(0, (152, 'tuple 152'), not_presented = True)
+---
+ -  ['152', 'tuple 152']
+...
+insert(0, (153, 'tuple 153'), not_presented = True)
+---
+ -  ['153', 'tuple 153']
+...
+insert(0, (154, 'tuple 154'), not_presented = True)
+---
+ -  ['154', 'tuple 154']
+...
+select(0, 150)
+---
+ -  ['150', 'tuple 150']
+...
+select(0, 151)
+---
+ -  ['151', 'tuple 151']
+...
+select(0, 152)
+---
+ -  ['152', 'tuple 152']
+...
+select(0, 153)
+---
+ -  ['153', 'tuple 153']
+...
+select(0, 154)
+---
+ -  ['154', 'tuple 154']
+...
+insert(0, (155, 'tuple 155'), not_presented = True)
+---
+ -  ['155', 'tuple 155']
+...
+insert(0, (156, 'tuple 156'), not_presented = True)
+---
+ -  ['156', 'tuple 156']
+...
+insert(0, (157, 'tuple 157'), not_presented = True)
+---
+ -  ['157', 'tuple 157']
+...
+insert(0, (158, 'tuple 158'), not_presented = True)
+---
+ -  ['158', 'tuple 158']
+...
+insert(0, (159, 'tuple 159'), not_presented = True)
+---
+ -  ['159', 'tuple 159']
+...
+select(0, 155)
+---
+ -  ['155', 'tuple 155']
+...
+select(0, 156)
+---
+ -  ['156', 'tuple 156']
+...
+select(0, 157)
+---
+ -  ['157', 'tuple 157']
+...
+select(0, 158)
+---
+ -  ['158', 'tuple 158']
+...
+select(0, 159)
+---
+ -  ['159', 'tuple 159']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -951,56 +1431,86 @@ reload configuration
 ok
 ...
 test 8 iteration
-insert into t0 values (160, 'tuple 160')
-Insert OK, 1 row affected
-insert into t0 values (161, 'tuple 161')
-Insert OK, 1 row affected
-insert into t0 values (162, 'tuple 162')
-Insert OK, 1 row affected
-insert into t0 values (163, 'tuple 163')
-Insert OK, 1 row affected
-insert into t0 values (164, 'tuple 164')
-Insert OK, 1 row affected
-select * from t0 where k0 = 160
-Found 1 tuple:
-[160, 'tuple 160']
-select * from t0 where k0 = 161
-Found 1 tuple:
-[161, 'tuple 161']
-select * from t0 where k0 = 162
-Found 1 tuple:
-[162, 'tuple 162']
-select * from t0 where k0 = 163
-Found 1 tuple:
-[163, 'tuple 163']
-select * from t0 where k0 = 164
-Found 1 tuple:
-[164, 'tuple 164']
-insert into t0 values (165, 'tuple 165')
-Insert OK, 1 row affected
-insert into t0 values (166, 'tuple 166')
-Insert OK, 1 row affected
-insert into t0 values (167, 'tuple 167')
-Insert OK, 1 row affected
-insert into t0 values (168, 'tuple 168')
-Insert OK, 1 row affected
-insert into t0 values (169, 'tuple 169')
-Insert OK, 1 row affected
-select * from t0 where k0 = 165
-Found 1 tuple:
-[165, 'tuple 165']
-select * from t0 where k0 = 166
-Found 1 tuple:
-[166, 'tuple 166']
-select * from t0 where k0 = 167
-Found 1 tuple:
-[167, 'tuple 167']
-select * from t0 where k0 = 168
-Found 1 tuple:
-[168, 'tuple 168']
-select * from t0 where k0 = 169
-Found 1 tuple:
-[169, 'tuple 169']
+insert(0, (160, 'tuple 160'), not_presented = True)
+---
+ -  ['160', 'tuple 160']
+...
+insert(0, (161, 'tuple 161'), not_presented = True)
+---
+ -  ['161', 'tuple 161']
+...
+insert(0, (162, 'tuple 162'), not_presented = True)
+---
+ -  ['162', 'tuple 162']
+...
+insert(0, (163, 'tuple 163'), not_presented = True)
+---
+ -  ['163', 'tuple 163']
+...
+insert(0, (164, 'tuple 164'), not_presented = True)
+---
+ -  ['164', 'tuple 164']
+...
+select(0, 160)
+---
+ -  ['160', 'tuple 160']
+...
+select(0, 161)
+---
+ -  ['161', 'tuple 161']
+...
+select(0, 162)
+---
+ -  ['162', 'tuple 162']
+...
+select(0, 163)
+---
+ -  ['163', 'tuple 163']
+...
+select(0, 164)
+---
+ -  ['164', 'tuple 164']
+...
+insert(0, (165, 'tuple 165'), not_presented = True)
+---
+ -  ['165', 'tuple 165']
+...
+insert(0, (166, 'tuple 166'), not_presented = True)
+---
+ -  ['166', 'tuple 166']
+...
+insert(0, (167, 'tuple 167'), not_presented = True)
+---
+ -  ['167', 'tuple 167']
+...
+insert(0, (168, 'tuple 168'), not_presented = True)
+---
+ -  ['168', 'tuple 168']
+...
+insert(0, (169, 'tuple 169'), not_presented = True)
+---
+ -  ['169', 'tuple 169']
+...
+select(0, 165)
+---
+ -  ['165', 'tuple 165']
+...
+select(0, 166)
+---
+ -  ['166', 'tuple 166']
+...
+select(0, 167)
+---
+ -  ['167', 'tuple 167']
+...
+select(0, 168)
+---
+ -  ['168', 'tuple 168']
+...
+select(0, 169)
+---
+ -  ['169', 'tuple 169']
+...
 swap servers
 reload configuration
 ---
@@ -1010,56 +1520,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (170, 'tuple 170')
-Insert OK, 1 row affected
-insert into t0 values (171, 'tuple 171')
-Insert OK, 1 row affected
-insert into t0 values (172, 'tuple 172')
-Insert OK, 1 row affected
-insert into t0 values (173, 'tuple 173')
-Insert OK, 1 row affected
-insert into t0 values (174, 'tuple 174')
-Insert OK, 1 row affected
-select * from t0 where k0 = 170
-Found 1 tuple:
-[170, 'tuple 170']
-select * from t0 where k0 = 171
-Found 1 tuple:
-[171, 'tuple 171']
-select * from t0 where k0 = 172
-Found 1 tuple:
-[172, 'tuple 172']
-select * from t0 where k0 = 173
-Found 1 tuple:
-[173, 'tuple 173']
-select * from t0 where k0 = 174
-Found 1 tuple:
-[174, 'tuple 174']
-insert into t0 values (175, 'tuple 175')
-Insert OK, 1 row affected
-insert into t0 values (176, 'tuple 176')
-Insert OK, 1 row affected
-insert into t0 values (177, 'tuple 177')
-Insert OK, 1 row affected
-insert into t0 values (178, 'tuple 178')
-Insert OK, 1 row affected
-insert into t0 values (179, 'tuple 179')
-Insert OK, 1 row affected
-select * from t0 where k0 = 175
-Found 1 tuple:
-[175, 'tuple 175']
-select * from t0 where k0 = 176
-Found 1 tuple:
-[176, 'tuple 176']
-select * from t0 where k0 = 177
-Found 1 tuple:
-[177, 'tuple 177']
-select * from t0 where k0 = 178
-Found 1 tuple:
-[178, 'tuple 178']
-select * from t0 where k0 = 179
-Found 1 tuple:
-[179, 'tuple 179']
+insert(0, (170, 'tuple 170'), not_presented = True)
+---
+ -  ['170', 'tuple 170']
+...
+insert(0, (171, 'tuple 171'), not_presented = True)
+---
+ -  ['171', 'tuple 171']
+...
+insert(0, (172, 'tuple 172'), not_presented = True)
+---
+ -  ['172', 'tuple 172']
+...
+insert(0, (173, 'tuple 173'), not_presented = True)
+---
+ -  ['173', 'tuple 173']
+...
+insert(0, (174, 'tuple 174'), not_presented = True)
+---
+ -  ['174', 'tuple 174']
+...
+select(0, 170)
+---
+ -  ['170', 'tuple 170']
+...
+select(0, 171)
+---
+ -  ['171', 'tuple 171']
+...
+select(0, 172)
+---
+ -  ['172', 'tuple 172']
+...
+select(0, 173)
+---
+ -  ['173', 'tuple 173']
+...
+select(0, 174)
+---
+ -  ['174', 'tuple 174']
+...
+insert(0, (175, 'tuple 175'), not_presented = True)
+---
+ -  ['175', 'tuple 175']
+...
+insert(0, (176, 'tuple 176'), not_presented = True)
+---
+ -  ['176', 'tuple 176']
+...
+insert(0, (177, 'tuple 177'), not_presented = True)
+---
+ -  ['177', 'tuple 177']
+...
+insert(0, (178, 'tuple 178'), not_presented = True)
+---
+ -  ['178', 'tuple 178']
+...
+insert(0, (179, 'tuple 179'), not_presented = True)
+---
+ -  ['179', 'tuple 179']
+...
+select(0, 175)
+---
+ -  ['175', 'tuple 175']
+...
+select(0, 176)
+---
+ -  ['176', 'tuple 176']
+...
+select(0, 177)
+---
+ -  ['177', 'tuple 177']
+...
+select(0, 178)
+---
+ -  ['178', 'tuple 178']
+...
+select(0, 179)
+---
+ -  ['179', 'tuple 179']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1070,56 +1610,86 @@ reload configuration
 ok
 ...
 test 9 iteration
-insert into t0 values (180, 'tuple 180')
-Insert OK, 1 row affected
-insert into t0 values (181, 'tuple 181')
-Insert OK, 1 row affected
-insert into t0 values (182, 'tuple 182')
-Insert OK, 1 row affected
-insert into t0 values (183, 'tuple 183')
-Insert OK, 1 row affected
-insert into t0 values (184, 'tuple 184')
-Insert OK, 1 row affected
-select * from t0 where k0 = 180
-Found 1 tuple:
-[180, 'tuple 180']
-select * from t0 where k0 = 181
-Found 1 tuple:
-[181, 'tuple 181']
-select * from t0 where k0 = 182
-Found 1 tuple:
-[182, 'tuple 182']
-select * from t0 where k0 = 183
-Found 1 tuple:
-[183, 'tuple 183']
-select * from t0 where k0 = 184
-Found 1 tuple:
-[184, 'tuple 184']
-insert into t0 values (185, 'tuple 185')
-Insert OK, 1 row affected
-insert into t0 values (186, 'tuple 186')
-Insert OK, 1 row affected
-insert into t0 values (187, 'tuple 187')
-Insert OK, 1 row affected
-insert into t0 values (188, 'tuple 188')
-Insert OK, 1 row affected
-insert into t0 values (189, 'tuple 189')
-Insert OK, 1 row affected
-select * from t0 where k0 = 185
-Found 1 tuple:
-[185, 'tuple 185']
-select * from t0 where k0 = 186
-Found 1 tuple:
-[186, 'tuple 186']
-select * from t0 where k0 = 187
-Found 1 tuple:
-[187, 'tuple 187']
-select * from t0 where k0 = 188
-Found 1 tuple:
-[188, 'tuple 188']
-select * from t0 where k0 = 189
-Found 1 tuple:
-[189, 'tuple 189']
+insert(0, (180, 'tuple 180'), not_presented = True)
+---
+ -  ['180', 'tuple 180']
+...
+insert(0, (181, 'tuple 181'), not_presented = True)
+---
+ -  ['181', 'tuple 181']
+...
+insert(0, (182, 'tuple 182'), not_presented = True)
+---
+ -  ['182', 'tuple 182']
+...
+insert(0, (183, 'tuple 183'), not_presented = True)
+---
+ -  ['183', 'tuple 183']
+...
+insert(0, (184, 'tuple 184'), not_presented = True)
+---
+ -  ['184', 'tuple 184']
+...
+select(0, 180)
+---
+ -  ['180', 'tuple 180']
+...
+select(0, 181)
+---
+ -  ['181', 'tuple 181']
+...
+select(0, 182)
+---
+ -  ['182', 'tuple 182']
+...
+select(0, 183)
+---
+ -  ['183', 'tuple 183']
+...
+select(0, 184)
+---
+ -  ['184', 'tuple 184']
+...
+insert(0, (185, 'tuple 185'), not_presented = True)
+---
+ -  ['185', 'tuple 185']
+...
+insert(0, (186, 'tuple 186'), not_presented = True)
+---
+ -  ['186', 'tuple 186']
+...
+insert(0, (187, 'tuple 187'), not_presented = True)
+---
+ -  ['187', 'tuple 187']
+...
+insert(0, (188, 'tuple 188'), not_presented = True)
+---
+ -  ['188', 'tuple 188']
+...
+insert(0, (189, 'tuple 189'), not_presented = True)
+---
+ -  ['189', 'tuple 189']
+...
+select(0, 185)
+---
+ -  ['185', 'tuple 185']
+...
+select(0, 186)
+---
+ -  ['186', 'tuple 186']
+...
+select(0, 187)
+---
+ -  ['187', 'tuple 187']
+...
+select(0, 188)
+---
+ -  ['188', 'tuple 188']
+...
+select(0, 189)
+---
+ -  ['189', 'tuple 189']
+...
 swap servers
 reload configuration
 ---
@@ -1129,56 +1699,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (190, 'tuple 190')
-Insert OK, 1 row affected
-insert into t0 values (191, 'tuple 191')
-Insert OK, 1 row affected
-insert into t0 values (192, 'tuple 192')
-Insert OK, 1 row affected
-insert into t0 values (193, 'tuple 193')
-Insert OK, 1 row affected
-insert into t0 values (194, 'tuple 194')
-Insert OK, 1 row affected
-select * from t0 where k0 = 190
-Found 1 tuple:
-[190, 'tuple 190']
-select * from t0 where k0 = 191
-Found 1 tuple:
-[191, 'tuple 191']
-select * from t0 where k0 = 192
-Found 1 tuple:
-[192, 'tuple 192']
-select * from t0 where k0 = 193
-Found 1 tuple:
-[193, 'tuple 193']
-select * from t0 where k0 = 194
-Found 1 tuple:
-[194, 'tuple 194']
-insert into t0 values (195, 'tuple 195')
-Insert OK, 1 row affected
-insert into t0 values (196, 'tuple 196')
-Insert OK, 1 row affected
-insert into t0 values (197, 'tuple 197')
-Insert OK, 1 row affected
-insert into t0 values (198, 'tuple 198')
-Insert OK, 1 row affected
-insert into t0 values (199, 'tuple 199')
-Insert OK, 1 row affected
-select * from t0 where k0 = 195
-Found 1 tuple:
-[195, 'tuple 195']
-select * from t0 where k0 = 196
-Found 1 tuple:
-[196, 'tuple 196']
-select * from t0 where k0 = 197
-Found 1 tuple:
-[197, 'tuple 197']
-select * from t0 where k0 = 198
-Found 1 tuple:
-[198, 'tuple 198']
-select * from t0 where k0 = 199
-Found 1 tuple:
-[199, 'tuple 199']
+insert(0, (190, 'tuple 190'), not_presented = True)
+---
+ -  ['190', 'tuple 190']
+...
+insert(0, (191, 'tuple 191'), not_presented = True)
+---
+ -  ['191', 'tuple 191']
+...
+insert(0, (192, 'tuple 192'), not_presented = True)
+---
+ -  ['192', 'tuple 192']
+...
+insert(0, (193, 'tuple 193'), not_presented = True)
+---
+ -  ['193', 'tuple 193']
+...
+insert(0, (194, 'tuple 194'), not_presented = True)
+---
+ -  ['194', 'tuple 194']
+...
+select(0, 190)
+---
+ -  ['190', 'tuple 190']
+...
+select(0, 191)
+---
+ -  ['191', 'tuple 191']
+...
+select(0, 192)
+---
+ -  ['192', 'tuple 192']
+...
+select(0, 193)
+---
+ -  ['193', 'tuple 193']
+...
+select(0, 194)
+---
+ -  ['194', 'tuple 194']
+...
+insert(0, (195, 'tuple 195'), not_presented = True)
+---
+ -  ['195', 'tuple 195']
+...
+insert(0, (196, 'tuple 196'), not_presented = True)
+---
+ -  ['196', 'tuple 196']
+...
+insert(0, (197, 'tuple 197'), not_presented = True)
+---
+ -  ['197', 'tuple 197']
+...
+insert(0, (198, 'tuple 198'), not_presented = True)
+---
+ -  ['198', 'tuple 198']
+...
+insert(0, (199, 'tuple 199'), not_presented = True)
+---
+ -  ['199', 'tuple 199']
+...
+select(0, 195)
+---
+ -  ['195', 'tuple 195']
+...
+select(0, 196)
+---
+ -  ['196', 'tuple 196']
+...
+select(0, 197)
+---
+ -  ['197', 'tuple 197']
+...
+select(0, 198)
+---
+ -  ['198', 'tuple 198']
+...
+select(0, 199)
+---
+ -  ['199', 'tuple 199']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1189,56 +1789,86 @@ reload configuration
 ok
 ...
 test 10 iteration
-insert into t0 values (200, 'tuple 200')
-Insert OK, 1 row affected
-insert into t0 values (201, 'tuple 201')
-Insert OK, 1 row affected
-insert into t0 values (202, 'tuple 202')
-Insert OK, 1 row affected
-insert into t0 values (203, 'tuple 203')
-Insert OK, 1 row affected
-insert into t0 values (204, 'tuple 204')
-Insert OK, 1 row affected
-select * from t0 where k0 = 200
-Found 1 tuple:
-[200, 'tuple 200']
-select * from t0 where k0 = 201
-Found 1 tuple:
-[201, 'tuple 201']
-select * from t0 where k0 = 202
-Found 1 tuple:
-[202, 'tuple 202']
-select * from t0 where k0 = 203
-Found 1 tuple:
-[203, 'tuple 203']
-select * from t0 where k0 = 204
-Found 1 tuple:
-[204, 'tuple 204']
-insert into t0 values (205, 'tuple 205')
-Insert OK, 1 row affected
-insert into t0 values (206, 'tuple 206')
-Insert OK, 1 row affected
-insert into t0 values (207, 'tuple 207')
-Insert OK, 1 row affected
-insert into t0 values (208, 'tuple 208')
-Insert OK, 1 row affected
-insert into t0 values (209, 'tuple 209')
-Insert OK, 1 row affected
-select * from t0 where k0 = 205
-Found 1 tuple:
-[205, 'tuple 205']
-select * from t0 where k0 = 206
-Found 1 tuple:
-[206, 'tuple 206']
-select * from t0 where k0 = 207
-Found 1 tuple:
-[207, 'tuple 207']
-select * from t0 where k0 = 208
-Found 1 tuple:
-[208, 'tuple 208']
-select * from t0 where k0 = 209
-Found 1 tuple:
-[209, 'tuple 209']
+insert(0, (200, 'tuple 200'), not_presented = True)
+---
+ -  ['200', 'tuple 200']
+...
+insert(0, (201, 'tuple 201'), not_presented = True)
+---
+ -  ['201', 'tuple 201']
+...
+insert(0, (202, 'tuple 202'), not_presented = True)
+---
+ -  ['202', 'tuple 202']
+...
+insert(0, (203, 'tuple 203'), not_presented = True)
+---
+ -  ['203', 'tuple 203']
+...
+insert(0, (204, 'tuple 204'), not_presented = True)
+---
+ -  ['204', 'tuple 204']
+...
+select(0, 200)
+---
+ -  ['200', 'tuple 200']
+...
+select(0, 201)
+---
+ -  ['201', 'tuple 201']
+...
+select(0, 202)
+---
+ -  ['202', 'tuple 202']
+...
+select(0, 203)
+---
+ -  ['203', 'tuple 203']
+...
+select(0, 204)
+---
+ -  ['204', 'tuple 204']
+...
+insert(0, (205, 'tuple 205'), not_presented = True)
+---
+ -  ['205', 'tuple 205']
+...
+insert(0, (206, 'tuple 206'), not_presented = True)
+---
+ -  ['206', 'tuple 206']
+...
+insert(0, (207, 'tuple 207'), not_presented = True)
+---
+ -  ['207', 'tuple 207']
+...
+insert(0, (208, 'tuple 208'), not_presented = True)
+---
+ -  ['208', 'tuple 208']
+...
+insert(0, (209, 'tuple 209'), not_presented = True)
+---
+ -  ['209', 'tuple 209']
+...
+select(0, 205)
+---
+ -  ['205', 'tuple 205']
+...
+select(0, 206)
+---
+ -  ['206', 'tuple 206']
+...
+select(0, 207)
+---
+ -  ['207', 'tuple 207']
+...
+select(0, 208)
+---
+ -  ['208', 'tuple 208']
+...
+select(0, 209)
+---
+ -  ['209', 'tuple 209']
+...
 swap servers
 reload configuration
 ---
@@ -1248,56 +1878,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (210, 'tuple 210')
-Insert OK, 1 row affected
-insert into t0 values (211, 'tuple 211')
-Insert OK, 1 row affected
-insert into t0 values (212, 'tuple 212')
-Insert OK, 1 row affected
-insert into t0 values (213, 'tuple 213')
-Insert OK, 1 row affected
-insert into t0 values (214, 'tuple 214')
-Insert OK, 1 row affected
-select * from t0 where k0 = 210
-Found 1 tuple:
-[210, 'tuple 210']
-select * from t0 where k0 = 211
-Found 1 tuple:
-[211, 'tuple 211']
-select * from t0 where k0 = 212
-Found 1 tuple:
-[212, 'tuple 212']
-select * from t0 where k0 = 213
-Found 1 tuple:
-[213, 'tuple 213']
-select * from t0 where k0 = 214
-Found 1 tuple:
-[214, 'tuple 214']
-insert into t0 values (215, 'tuple 215')
-Insert OK, 1 row affected
-insert into t0 values (216, 'tuple 216')
-Insert OK, 1 row affected
-insert into t0 values (217, 'tuple 217')
-Insert OK, 1 row affected
-insert into t0 values (218, 'tuple 218')
-Insert OK, 1 row affected
-insert into t0 values (219, 'tuple 219')
-Insert OK, 1 row affected
-select * from t0 where k0 = 215
-Found 1 tuple:
-[215, 'tuple 215']
-select * from t0 where k0 = 216
-Found 1 tuple:
-[216, 'tuple 216']
-select * from t0 where k0 = 217
-Found 1 tuple:
-[217, 'tuple 217']
-select * from t0 where k0 = 218
-Found 1 tuple:
-[218, 'tuple 218']
-select * from t0 where k0 = 219
-Found 1 tuple:
-[219, 'tuple 219']
+insert(0, (210, 'tuple 210'), not_presented = True)
+---
+ -  ['210', 'tuple 210']
+...
+insert(0, (211, 'tuple 211'), not_presented = True)
+---
+ -  ['211', 'tuple 211']
+...
+insert(0, (212, 'tuple 212'), not_presented = True)
+---
+ -  ['212', 'tuple 212']
+...
+insert(0, (213, 'tuple 213'), not_presented = True)
+---
+ -  ['213', 'tuple 213']
+...
+insert(0, (214, 'tuple 214'), not_presented = True)
+---
+ -  ['214', 'tuple 214']
+...
+select(0, 210)
+---
+ -  ['210', 'tuple 210']
+...
+select(0, 211)
+---
+ -  ['211', 'tuple 211']
+...
+select(0, 212)
+---
+ -  ['212', 'tuple 212']
+...
+select(0, 213)
+---
+ -  ['213', 'tuple 213']
+...
+select(0, 214)
+---
+ -  ['214', 'tuple 214']
+...
+insert(0, (215, 'tuple 215'), not_presented = True)
+---
+ -  ['215', 'tuple 215']
+...
+insert(0, (216, 'tuple 216'), not_presented = True)
+---
+ -  ['216', 'tuple 216']
+...
+insert(0, (217, 'tuple 217'), not_presented = True)
+---
+ -  ['217', 'tuple 217']
+...
+insert(0, (218, 'tuple 218'), not_presented = True)
+---
+ -  ['218', 'tuple 218']
+...
+insert(0, (219, 'tuple 219'), not_presented = True)
+---
+ -  ['219', 'tuple 219']
+...
+select(0, 215)
+---
+ -  ['215', 'tuple 215']
+...
+select(0, 216)
+---
+ -  ['216', 'tuple 216']
+...
+select(0, 217)
+---
+ -  ['217', 'tuple 217']
+...
+select(0, 218)
+---
+ -  ['218', 'tuple 218']
+...
+select(0, 219)
+---
+ -  ['219', 'tuple 219']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1308,56 +1968,86 @@ reload configuration
 ok
 ...
 test 11 iteration
-insert into t0 values (220, 'tuple 220')
-Insert OK, 1 row affected
-insert into t0 values (221, 'tuple 221')
-Insert OK, 1 row affected
-insert into t0 values (222, 'tuple 222')
-Insert OK, 1 row affected
-insert into t0 values (223, 'tuple 223')
-Insert OK, 1 row affected
-insert into t0 values (224, 'tuple 224')
-Insert OK, 1 row affected
-select * from t0 where k0 = 220
-Found 1 tuple:
-[220, 'tuple 220']
-select * from t0 where k0 = 221
-Found 1 tuple:
-[221, 'tuple 221']
-select * from t0 where k0 = 222
-Found 1 tuple:
-[222, 'tuple 222']
-select * from t0 where k0 = 223
-Found 1 tuple:
-[223, 'tuple 223']
-select * from t0 where k0 = 224
-Found 1 tuple:
-[224, 'tuple 224']
-insert into t0 values (225, 'tuple 225')
-Insert OK, 1 row affected
-insert into t0 values (226, 'tuple 226')
-Insert OK, 1 row affected
-insert into t0 values (227, 'tuple 227')
-Insert OK, 1 row affected
-insert into t0 values (228, 'tuple 228')
-Insert OK, 1 row affected
-insert into t0 values (229, 'tuple 229')
-Insert OK, 1 row affected
-select * from t0 where k0 = 225
-Found 1 tuple:
-[225, 'tuple 225']
-select * from t0 where k0 = 226
-Found 1 tuple:
-[226, 'tuple 226']
-select * from t0 where k0 = 227
-Found 1 tuple:
-[227, 'tuple 227']
-select * from t0 where k0 = 228
-Found 1 tuple:
-[228, 'tuple 228']
-select * from t0 where k0 = 229
-Found 1 tuple:
-[229, 'tuple 229']
+insert(0, (220, 'tuple 220'), not_presented = True)
+---
+ -  ['220', 'tuple 220']
+...
+insert(0, (221, 'tuple 221'), not_presented = True)
+---
+ -  ['221', 'tuple 221']
+...
+insert(0, (222, 'tuple 222'), not_presented = True)
+---
+ -  ['222', 'tuple 222']
+...
+insert(0, (223, 'tuple 223'), not_presented = True)
+---
+ -  ['223', 'tuple 223']
+...
+insert(0, (224, 'tuple 224'), not_presented = True)
+---
+ -  ['224', 'tuple 224']
+...
+select(0, 220)
+---
+ -  ['220', 'tuple 220']
+...
+select(0, 221)
+---
+ -  ['221', 'tuple 221']
+...
+select(0, 222)
+---
+ -  ['222', 'tuple 222']
+...
+select(0, 223)
+---
+ -  ['223', 'tuple 223']
+...
+select(0, 224)
+---
+ -  ['224', 'tuple 224']
+...
+insert(0, (225, 'tuple 225'), not_presented = True)
+---
+ -  ['225', 'tuple 225']
+...
+insert(0, (226, 'tuple 226'), not_presented = True)
+---
+ -  ['226', 'tuple 226']
+...
+insert(0, (227, 'tuple 227'), not_presented = True)
+---
+ -  ['227', 'tuple 227']
+...
+insert(0, (228, 'tuple 228'), not_presented = True)
+---
+ -  ['228', 'tuple 228']
+...
+insert(0, (229, 'tuple 229'), not_presented = True)
+---
+ -  ['229', 'tuple 229']
+...
+select(0, 225)
+---
+ -  ['225', 'tuple 225']
+...
+select(0, 226)
+---
+ -  ['226', 'tuple 226']
+...
+select(0, 227)
+---
+ -  ['227', 'tuple 227']
+...
+select(0, 228)
+---
+ -  ['228', 'tuple 228']
+...
+select(0, 229)
+---
+ -  ['229', 'tuple 229']
+...
 swap servers
 reload configuration
 ---
@@ -1367,56 +2057,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (230, 'tuple 230')
-Insert OK, 1 row affected
-insert into t0 values (231, 'tuple 231')
-Insert OK, 1 row affected
-insert into t0 values (232, 'tuple 232')
-Insert OK, 1 row affected
-insert into t0 values (233, 'tuple 233')
-Insert OK, 1 row affected
-insert into t0 values (234, 'tuple 234')
-Insert OK, 1 row affected
-select * from t0 where k0 = 230
-Found 1 tuple:
-[230, 'tuple 230']
-select * from t0 where k0 = 231
-Found 1 tuple:
-[231, 'tuple 231']
-select * from t0 where k0 = 232
-Found 1 tuple:
-[232, 'tuple 232']
-select * from t0 where k0 = 233
-Found 1 tuple:
-[233, 'tuple 233']
-select * from t0 where k0 = 234
-Found 1 tuple:
-[234, 'tuple 234']
-insert into t0 values (235, 'tuple 235')
-Insert OK, 1 row affected
-insert into t0 values (236, 'tuple 236')
-Insert OK, 1 row affected
-insert into t0 values (237, 'tuple 237')
-Insert OK, 1 row affected
-insert into t0 values (238, 'tuple 238')
-Insert OK, 1 row affected
-insert into t0 values (239, 'tuple 239')
-Insert OK, 1 row affected
-select * from t0 where k0 = 235
-Found 1 tuple:
-[235, 'tuple 235']
-select * from t0 where k0 = 236
-Found 1 tuple:
-[236, 'tuple 236']
-select * from t0 where k0 = 237
-Found 1 tuple:
-[237, 'tuple 237']
-select * from t0 where k0 = 238
-Found 1 tuple:
-[238, 'tuple 238']
-select * from t0 where k0 = 239
-Found 1 tuple:
-[239, 'tuple 239']
+insert(0, (230, 'tuple 230'), not_presented = True)
+---
+ -  ['230', 'tuple 230']
+...
+insert(0, (231, 'tuple 231'), not_presented = True)
+---
+ -  ['231', 'tuple 231']
+...
+insert(0, (232, 'tuple 232'), not_presented = True)
+---
+ -  ['232', 'tuple 232']
+...
+insert(0, (233, 'tuple 233'), not_presented = True)
+---
+ -  ['233', 'tuple 233']
+...
+insert(0, (234, 'tuple 234'), not_presented = True)
+---
+ -  ['234', 'tuple 234']
+...
+select(0, 230)
+---
+ -  ['230', 'tuple 230']
+...
+select(0, 231)
+---
+ -  ['231', 'tuple 231']
+...
+select(0, 232)
+---
+ -  ['232', 'tuple 232']
+...
+select(0, 233)
+---
+ -  ['233', 'tuple 233']
+...
+select(0, 234)
+---
+ -  ['234', 'tuple 234']
+...
+insert(0, (235, 'tuple 235'), not_presented = True)
+---
+ -  ['235', 'tuple 235']
+...
+insert(0, (236, 'tuple 236'), not_presented = True)
+---
+ -  ['236', 'tuple 236']
+...
+insert(0, (237, 'tuple 237'), not_presented = True)
+---
+ -  ['237', 'tuple 237']
+...
+insert(0, (238, 'tuple 238'), not_presented = True)
+---
+ -  ['238', 'tuple 238']
+...
+insert(0, (239, 'tuple 239'), not_presented = True)
+---
+ -  ['239', 'tuple 239']
+...
+select(0, 235)
+---
+ -  ['235', 'tuple 235']
+...
+select(0, 236)
+---
+ -  ['236', 'tuple 236']
+...
+select(0, 237)
+---
+ -  ['237', 'tuple 237']
+...
+select(0, 238)
+---
+ -  ['238', 'tuple 238']
+...
+select(0, 239)
+---
+ -  ['239', 'tuple 239']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1427,56 +2147,86 @@ reload configuration
 ok
 ...
 test 12 iteration
-insert into t0 values (240, 'tuple 240')
-Insert OK, 1 row affected
-insert into t0 values (241, 'tuple 241')
-Insert OK, 1 row affected
-insert into t0 values (242, 'tuple 242')
-Insert OK, 1 row affected
-insert into t0 values (243, 'tuple 243')
-Insert OK, 1 row affected
-insert into t0 values (244, 'tuple 244')
-Insert OK, 1 row affected
-select * from t0 where k0 = 240
-Found 1 tuple:
-[240, 'tuple 240']
-select * from t0 where k0 = 241
-Found 1 tuple:
-[241, 'tuple 241']
-select * from t0 where k0 = 242
-Found 1 tuple:
-[242, 'tuple 242']
-select * from t0 where k0 = 243
-Found 1 tuple:
-[243, 'tuple 243']
-select * from t0 where k0 = 244
-Found 1 tuple:
-[244, 'tuple 244']
-insert into t0 values (245, 'tuple 245')
-Insert OK, 1 row affected
-insert into t0 values (246, 'tuple 246')
-Insert OK, 1 row affected
-insert into t0 values (247, 'tuple 247')
-Insert OK, 1 row affected
-insert into t0 values (248, 'tuple 248')
-Insert OK, 1 row affected
-insert into t0 values (249, 'tuple 249')
-Insert OK, 1 row affected
-select * from t0 where k0 = 245
-Found 1 tuple:
-[245, 'tuple 245']
-select * from t0 where k0 = 246
-Found 1 tuple:
-[246, 'tuple 246']
-select * from t0 where k0 = 247
-Found 1 tuple:
-[247, 'tuple 247']
-select * from t0 where k0 = 248
-Found 1 tuple:
-[248, 'tuple 248']
-select * from t0 where k0 = 249
-Found 1 tuple:
-[249, 'tuple 249']
+insert(0, (240, 'tuple 240'), not_presented = True)
+---
+ -  ['240', 'tuple 240']
+...
+insert(0, (241, 'tuple 241'), not_presented = True)
+---
+ -  ['241', 'tuple 241']
+...
+insert(0, (242, 'tuple 242'), not_presented = True)
+---
+ -  ['242', 'tuple 242']
+...
+insert(0, (243, 'tuple 243'), not_presented = True)
+---
+ -  ['243', 'tuple 243']
+...
+insert(0, (244, 'tuple 244'), not_presented = True)
+---
+ -  ['244', 'tuple 244']
+...
+select(0, 240)
+---
+ -  ['240', 'tuple 240']
+...
+select(0, 241)
+---
+ -  ['241', 'tuple 241']
+...
+select(0, 242)
+---
+ -  ['242', 'tuple 242']
+...
+select(0, 243)
+---
+ -  ['243', 'tuple 243']
+...
+select(0, 244)
+---
+ -  ['244', 'tuple 244']
+...
+insert(0, (245, 'tuple 245'), not_presented = True)
+---
+ -  ['245', 'tuple 245']
+...
+insert(0, (246, 'tuple 246'), not_presented = True)
+---
+ -  ['246', 'tuple 246']
+...
+insert(0, (247, 'tuple 247'), not_presented = True)
+---
+ -  ['247', 'tuple 247']
+...
+insert(0, (248, 'tuple 248'), not_presented = True)
+---
+ -  ['248', 'tuple 248']
+...
+insert(0, (249, 'tuple 249'), not_presented = True)
+---
+ -  ['249', 'tuple 249']
+...
+select(0, 245)
+---
+ -  ['245', 'tuple 245']
+...
+select(0, 246)
+---
+ -  ['246', 'tuple 246']
+...
+select(0, 247)
+---
+ -  ['247', 'tuple 247']
+...
+select(0, 248)
+---
+ -  ['248', 'tuple 248']
+...
+select(0, 249)
+---
+ -  ['249', 'tuple 249']
+...
 swap servers
 reload configuration
 ---
@@ -1486,56 +2236,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (250, 'tuple 250')
-Insert OK, 1 row affected
-insert into t0 values (251, 'tuple 251')
-Insert OK, 1 row affected
-insert into t0 values (252, 'tuple 252')
-Insert OK, 1 row affected
-insert into t0 values (253, 'tuple 253')
-Insert OK, 1 row affected
-insert into t0 values (254, 'tuple 254')
-Insert OK, 1 row affected
-select * from t0 where k0 = 250
-Found 1 tuple:
-[250, 'tuple 250']
-select * from t0 where k0 = 251
-Found 1 tuple:
-[251, 'tuple 251']
-select * from t0 where k0 = 252
-Found 1 tuple:
-[252, 'tuple 252']
-select * from t0 where k0 = 253
-Found 1 tuple:
-[253, 'tuple 253']
-select * from t0 where k0 = 254
-Found 1 tuple:
-[254, 'tuple 254']
-insert into t0 values (255, 'tuple 255')
-Insert OK, 1 row affected
-insert into t0 values (256, 'tuple 256')
-Insert OK, 1 row affected
-insert into t0 values (257, 'tuple 257')
-Insert OK, 1 row affected
-insert into t0 values (258, 'tuple 258')
-Insert OK, 1 row affected
-insert into t0 values (259, 'tuple 259')
-Insert OK, 1 row affected
-select * from t0 where k0 = 255
-Found 1 tuple:
-[255, 'tuple 255']
-select * from t0 where k0 = 256
-Found 1 tuple:
-[256, 'tuple 256']
-select * from t0 where k0 = 257
-Found 1 tuple:
-[257, 'tuple 257']
-select * from t0 where k0 = 258
-Found 1 tuple:
-[258, 'tuple 258']
-select * from t0 where k0 = 259
-Found 1 tuple:
-[259, 'tuple 259']
+insert(0, (250, 'tuple 250'), not_presented = True)
+---
+ -  ['250', 'tuple 250']
+...
+insert(0, (251, 'tuple 251'), not_presented = True)
+---
+ -  ['251', 'tuple 251']
+...
+insert(0, (252, 'tuple 252'), not_presented = True)
+---
+ -  ['252', 'tuple 252']
+...
+insert(0, (253, 'tuple 253'), not_presented = True)
+---
+ -  ['253', 'tuple 253']
+...
+insert(0, (254, 'tuple 254'), not_presented = True)
+---
+ -  ['254', 'tuple 254']
+...
+select(0, 250)
+---
+ -  ['250', 'tuple 250']
+...
+select(0, 251)
+---
+ -  ['251', 'tuple 251']
+...
+select(0, 252)
+---
+ -  ['252', 'tuple 252']
+...
+select(0, 253)
+---
+ -  ['253', 'tuple 253']
+...
+select(0, 254)
+---
+ -  ['254', 'tuple 254']
+...
+insert(0, (255, 'tuple 255'), not_presented = True)
+---
+ -  ['255', 'tuple 255']
+...
+insert(0, (256, 'tuple 256'), not_presented = True)
+---
+ -  ['256', 'tuple 256']
+...
+insert(0, (257, 'tuple 257'), not_presented = True)
+---
+ -  ['257', 'tuple 257']
+...
+insert(0, (258, 'tuple 258'), not_presented = True)
+---
+ -  ['258', 'tuple 258']
+...
+insert(0, (259, 'tuple 259'), not_presented = True)
+---
+ -  ['259', 'tuple 259']
+...
+select(0, 255)
+---
+ -  ['255', 'tuple 255']
+...
+select(0, 256)
+---
+ -  ['256', 'tuple 256']
+...
+select(0, 257)
+---
+ -  ['257', 'tuple 257']
+...
+select(0, 258)
+---
+ -  ['258', 'tuple 258']
+...
+select(0, 259)
+---
+ -  ['259', 'tuple 259']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1546,56 +2326,86 @@ reload configuration
 ok
 ...
 test 13 iteration
-insert into t0 values (260, 'tuple 260')
-Insert OK, 1 row affected
-insert into t0 values (261, 'tuple 261')
-Insert OK, 1 row affected
-insert into t0 values (262, 'tuple 262')
-Insert OK, 1 row affected
-insert into t0 values (263, 'tuple 263')
-Insert OK, 1 row affected
-insert into t0 values (264, 'tuple 264')
-Insert OK, 1 row affected
-select * from t0 where k0 = 260
-Found 1 tuple:
-[260, 'tuple 260']
-select * from t0 where k0 = 261
-Found 1 tuple:
-[261, 'tuple 261']
-select * from t0 where k0 = 262
-Found 1 tuple:
-[262, 'tuple 262']
-select * from t0 where k0 = 263
-Found 1 tuple:
-[263, 'tuple 263']
-select * from t0 where k0 = 264
-Found 1 tuple:
-[264, 'tuple 264']
-insert into t0 values (265, 'tuple 265')
-Insert OK, 1 row affected
-insert into t0 values (266, 'tuple 266')
-Insert OK, 1 row affected
-insert into t0 values (267, 'tuple 267')
-Insert OK, 1 row affected
-insert into t0 values (268, 'tuple 268')
-Insert OK, 1 row affected
-insert into t0 values (269, 'tuple 269')
-Insert OK, 1 row affected
-select * from t0 where k0 = 265
-Found 1 tuple:
-[265, 'tuple 265']
-select * from t0 where k0 = 266
-Found 1 tuple:
-[266, 'tuple 266']
-select * from t0 where k0 = 267
-Found 1 tuple:
-[267, 'tuple 267']
-select * from t0 where k0 = 268
-Found 1 tuple:
-[268, 'tuple 268']
-select * from t0 where k0 = 269
-Found 1 tuple:
-[269, 'tuple 269']
+insert(0, (260, 'tuple 260'), not_presented = True)
+---
+ -  ['260', 'tuple 260']
+...
+insert(0, (261, 'tuple 261'), not_presented = True)
+---
+ -  ['261', 'tuple 261']
+...
+insert(0, (262, 'tuple 262'), not_presented = True)
+---
+ -  ['262', 'tuple 262']
+...
+insert(0, (263, 'tuple 263'), not_presented = True)
+---
+ -  ['263', 'tuple 263']
+...
+insert(0, (264, 'tuple 264'), not_presented = True)
+---
+ -  ['264', 'tuple 264']
+...
+select(0, 260)
+---
+ -  ['260', 'tuple 260']
+...
+select(0, 261)
+---
+ -  ['261', 'tuple 261']
+...
+select(0, 262)
+---
+ -  ['262', 'tuple 262']
+...
+select(0, 263)
+---
+ -  ['263', 'tuple 263']
+...
+select(0, 264)
+---
+ -  ['264', 'tuple 264']
+...
+insert(0, (265, 'tuple 265'), not_presented = True)
+---
+ -  ['265', 'tuple 265']
+...
+insert(0, (266, 'tuple 266'), not_presented = True)
+---
+ -  ['266', 'tuple 266']
+...
+insert(0, (267, 'tuple 267'), not_presented = True)
+---
+ -  ['267', 'tuple 267']
+...
+insert(0, (268, 'tuple 268'), not_presented = True)
+---
+ -  ['268', 'tuple 268']
+...
+insert(0, (269, 'tuple 269'), not_presented = True)
+---
+ -  ['269', 'tuple 269']
+...
+select(0, 265)
+---
+ -  ['265', 'tuple 265']
+...
+select(0, 266)
+---
+ -  ['266', 'tuple 266']
+...
+select(0, 267)
+---
+ -  ['267', 'tuple 267']
+...
+select(0, 268)
+---
+ -  ['268', 'tuple 268']
+...
+select(0, 269)
+---
+ -  ['269', 'tuple 269']
+...
 swap servers
 reload configuration
 ---
@@ -1605,56 +2415,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (270, 'tuple 270')
-Insert OK, 1 row affected
-insert into t0 values (271, 'tuple 271')
-Insert OK, 1 row affected
-insert into t0 values (272, 'tuple 272')
-Insert OK, 1 row affected
-insert into t0 values (273, 'tuple 273')
-Insert OK, 1 row affected
-insert into t0 values (274, 'tuple 274')
-Insert OK, 1 row affected
-select * from t0 where k0 = 270
-Found 1 tuple:
-[270, 'tuple 270']
-select * from t0 where k0 = 271
-Found 1 tuple:
-[271, 'tuple 271']
-select * from t0 where k0 = 272
-Found 1 tuple:
-[272, 'tuple 272']
-select * from t0 where k0 = 273
-Found 1 tuple:
-[273, 'tuple 273']
-select * from t0 where k0 = 274
-Found 1 tuple:
-[274, 'tuple 274']
-insert into t0 values (275, 'tuple 275')
-Insert OK, 1 row affected
-insert into t0 values (276, 'tuple 276')
-Insert OK, 1 row affected
-insert into t0 values (277, 'tuple 277')
-Insert OK, 1 row affected
-insert into t0 values (278, 'tuple 278')
-Insert OK, 1 row affected
-insert into t0 values (279, 'tuple 279')
-Insert OK, 1 row affected
-select * from t0 where k0 = 275
-Found 1 tuple:
-[275, 'tuple 275']
-select * from t0 where k0 = 276
-Found 1 tuple:
-[276, 'tuple 276']
-select * from t0 where k0 = 277
-Found 1 tuple:
-[277, 'tuple 277']
-select * from t0 where k0 = 278
-Found 1 tuple:
-[278, 'tuple 278']
-select * from t0 where k0 = 279
-Found 1 tuple:
-[279, 'tuple 279']
+insert(0, (270, 'tuple 270'), not_presented = True)
+---
+ -  ['270', 'tuple 270']
+...
+insert(0, (271, 'tuple 271'), not_presented = True)
+---
+ -  ['271', 'tuple 271']
+...
+insert(0, (272, 'tuple 272'), not_presented = True)
+---
+ -  ['272', 'tuple 272']
+...
+insert(0, (273, 'tuple 273'), not_presented = True)
+---
+ -  ['273', 'tuple 273']
+...
+insert(0, (274, 'tuple 274'), not_presented = True)
+---
+ -  ['274', 'tuple 274']
+...
+select(0, 270)
+---
+ -  ['270', 'tuple 270']
+...
+select(0, 271)
+---
+ -  ['271', 'tuple 271']
+...
+select(0, 272)
+---
+ -  ['272', 'tuple 272']
+...
+select(0, 273)
+---
+ -  ['273', 'tuple 273']
+...
+select(0, 274)
+---
+ -  ['274', 'tuple 274']
+...
+insert(0, (275, 'tuple 275'), not_presented = True)
+---
+ -  ['275', 'tuple 275']
+...
+insert(0, (276, 'tuple 276'), not_presented = True)
+---
+ -  ['276', 'tuple 276']
+...
+insert(0, (277, 'tuple 277'), not_presented = True)
+---
+ -  ['277', 'tuple 277']
+...
+insert(0, (278, 'tuple 278'), not_presented = True)
+---
+ -  ['278', 'tuple 278']
+...
+insert(0, (279, 'tuple 279'), not_presented = True)
+---
+ -  ['279', 'tuple 279']
+...
+select(0, 275)
+---
+ -  ['275', 'tuple 275']
+...
+select(0, 276)
+---
+ -  ['276', 'tuple 276']
+...
+select(0, 277)
+---
+ -  ['277', 'tuple 277']
+...
+select(0, 278)
+---
+ -  ['278', 'tuple 278']
+...
+select(0, 279)
+---
+ -  ['279', 'tuple 279']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1665,56 +2505,86 @@ reload configuration
 ok
 ...
 test 14 iteration
-insert into t0 values (280, 'tuple 280')
-Insert OK, 1 row affected
-insert into t0 values (281, 'tuple 281')
-Insert OK, 1 row affected
-insert into t0 values (282, 'tuple 282')
-Insert OK, 1 row affected
-insert into t0 values (283, 'tuple 283')
-Insert OK, 1 row affected
-insert into t0 values (284, 'tuple 284')
-Insert OK, 1 row affected
-select * from t0 where k0 = 280
-Found 1 tuple:
-[280, 'tuple 280']
-select * from t0 where k0 = 281
-Found 1 tuple:
-[281, 'tuple 281']
-select * from t0 where k0 = 282
-Found 1 tuple:
-[282, 'tuple 282']
-select * from t0 where k0 = 283
-Found 1 tuple:
-[283, 'tuple 283']
-select * from t0 where k0 = 284
-Found 1 tuple:
-[284, 'tuple 284']
-insert into t0 values (285, 'tuple 285')
-Insert OK, 1 row affected
-insert into t0 values (286, 'tuple 286')
-Insert OK, 1 row affected
-insert into t0 values (287, 'tuple 287')
-Insert OK, 1 row affected
-insert into t0 values (288, 'tuple 288')
-Insert OK, 1 row affected
-insert into t0 values (289, 'tuple 289')
-Insert OK, 1 row affected
-select * from t0 where k0 = 285
-Found 1 tuple:
-[285, 'tuple 285']
-select * from t0 where k0 = 286
-Found 1 tuple:
-[286, 'tuple 286']
-select * from t0 where k0 = 287
-Found 1 tuple:
-[287, 'tuple 287']
-select * from t0 where k0 = 288
-Found 1 tuple:
-[288, 'tuple 288']
-select * from t0 where k0 = 289
-Found 1 tuple:
-[289, 'tuple 289']
+insert(0, (280, 'tuple 280'), not_presented = True)
+---
+ -  ['280', 'tuple 280']
+...
+insert(0, (281, 'tuple 281'), not_presented = True)
+---
+ -  ['281', 'tuple 281']
+...
+insert(0, (282, 'tuple 282'), not_presented = True)
+---
+ -  ['282', 'tuple 282']
+...
+insert(0, (283, 'tuple 283'), not_presented = True)
+---
+ -  ['283', 'tuple 283']
+...
+insert(0, (284, 'tuple 284'), not_presented = True)
+---
+ -  ['284', 'tuple 284']
+...
+select(0, 280)
+---
+ -  ['280', 'tuple 280']
+...
+select(0, 281)
+---
+ -  ['281', 'tuple 281']
+...
+select(0, 282)
+---
+ -  ['282', 'tuple 282']
+...
+select(0, 283)
+---
+ -  ['283', 'tuple 283']
+...
+select(0, 284)
+---
+ -  ['284', 'tuple 284']
+...
+insert(0, (285, 'tuple 285'), not_presented = True)
+---
+ -  ['285', 'tuple 285']
+...
+insert(0, (286, 'tuple 286'), not_presented = True)
+---
+ -  ['286', 'tuple 286']
+...
+insert(0, (287, 'tuple 287'), not_presented = True)
+---
+ -  ['287', 'tuple 287']
+...
+insert(0, (288, 'tuple 288'), not_presented = True)
+---
+ -  ['288', 'tuple 288']
+...
+insert(0, (289, 'tuple 289'), not_presented = True)
+---
+ -  ['289', 'tuple 289']
+...
+select(0, 285)
+---
+ -  ['285', 'tuple 285']
+...
+select(0, 286)
+---
+ -  ['286', 'tuple 286']
+...
+select(0, 287)
+---
+ -  ['287', 'tuple 287']
+...
+select(0, 288)
+---
+ -  ['288', 'tuple 288']
+...
+select(0, 289)
+---
+ -  ['289', 'tuple 289']
+...
 swap servers
 reload configuration
 ---
@@ -1724,56 +2594,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (290, 'tuple 290')
-Insert OK, 1 row affected
-insert into t0 values (291, 'tuple 291')
-Insert OK, 1 row affected
-insert into t0 values (292, 'tuple 292')
-Insert OK, 1 row affected
-insert into t0 values (293, 'tuple 293')
-Insert OK, 1 row affected
-insert into t0 values (294, 'tuple 294')
-Insert OK, 1 row affected
-select * from t0 where k0 = 290
-Found 1 tuple:
-[290, 'tuple 290']
-select * from t0 where k0 = 291
-Found 1 tuple:
-[291, 'tuple 291']
-select * from t0 where k0 = 292
-Found 1 tuple:
-[292, 'tuple 292']
-select * from t0 where k0 = 293
-Found 1 tuple:
-[293, 'tuple 293']
-select * from t0 where k0 = 294
-Found 1 tuple:
-[294, 'tuple 294']
-insert into t0 values (295, 'tuple 295')
-Insert OK, 1 row affected
-insert into t0 values (296, 'tuple 296')
-Insert OK, 1 row affected
-insert into t0 values (297, 'tuple 297')
-Insert OK, 1 row affected
-insert into t0 values (298, 'tuple 298')
-Insert OK, 1 row affected
-insert into t0 values (299, 'tuple 299')
-Insert OK, 1 row affected
-select * from t0 where k0 = 295
-Found 1 tuple:
-[295, 'tuple 295']
-select * from t0 where k0 = 296
-Found 1 tuple:
-[296, 'tuple 296']
-select * from t0 where k0 = 297
-Found 1 tuple:
-[297, 'tuple 297']
-select * from t0 where k0 = 298
-Found 1 tuple:
-[298, 'tuple 298']
-select * from t0 where k0 = 299
-Found 1 tuple:
-[299, 'tuple 299']
+insert(0, (290, 'tuple 290'), not_presented = True)
+---
+ -  ['290', 'tuple 290']
+...
+insert(0, (291, 'tuple 291'), not_presented = True)
+---
+ -  ['291', 'tuple 291']
+...
+insert(0, (292, 'tuple 292'), not_presented = True)
+---
+ -  ['292', 'tuple 292']
+...
+insert(0, (293, 'tuple 293'), not_presented = True)
+---
+ -  ['293', 'tuple 293']
+...
+insert(0, (294, 'tuple 294'), not_presented = True)
+---
+ -  ['294', 'tuple 294']
+...
+select(0, 290)
+---
+ -  ['290', 'tuple 290']
+...
+select(0, 291)
+---
+ -  ['291', 'tuple 291']
+...
+select(0, 292)
+---
+ -  ['292', 'tuple 292']
+...
+select(0, 293)
+---
+ -  ['293', 'tuple 293']
+...
+select(0, 294)
+---
+ -  ['294', 'tuple 294']
+...
+insert(0, (295, 'tuple 295'), not_presented = True)
+---
+ -  ['295', 'tuple 295']
+...
+insert(0, (296, 'tuple 296'), not_presented = True)
+---
+ -  ['296', 'tuple 296']
+...
+insert(0, (297, 'tuple 297'), not_presented = True)
+---
+ -  ['297', 'tuple 297']
+...
+insert(0, (298, 'tuple 298'), not_presented = True)
+---
+ -  ['298', 'tuple 298']
+...
+insert(0, (299, 'tuple 299'), not_presented = True)
+---
+ -  ['299', 'tuple 299']
+...
+select(0, 295)
+---
+ -  ['295', 'tuple 295']
+...
+select(0, 296)
+---
+ -  ['296', 'tuple 296']
+...
+select(0, 297)
+---
+ -  ['297', 'tuple 297']
+...
+select(0, 298)
+---
+ -  ['298', 'tuple 298']
+...
+select(0, 299)
+---
+ -  ['299', 'tuple 299']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1784,56 +2684,86 @@ reload configuration
 ok
 ...
 test 15 iteration
-insert into t0 values (300, 'tuple 300')
-Insert OK, 1 row affected
-insert into t0 values (301, 'tuple 301')
-Insert OK, 1 row affected
-insert into t0 values (302, 'tuple 302')
-Insert OK, 1 row affected
-insert into t0 values (303, 'tuple 303')
-Insert OK, 1 row affected
-insert into t0 values (304, 'tuple 304')
-Insert OK, 1 row affected
-select * from t0 where k0 = 300
-Found 1 tuple:
-[300, 'tuple 300']
-select * from t0 where k0 = 301
-Found 1 tuple:
-[301, 'tuple 301']
-select * from t0 where k0 = 302
-Found 1 tuple:
-[302, 'tuple 302']
-select * from t0 where k0 = 303
-Found 1 tuple:
-[303, 'tuple 303']
-select * from t0 where k0 = 304
-Found 1 tuple:
-[304, 'tuple 304']
-insert into t0 values (305, 'tuple 305')
-Insert OK, 1 row affected
-insert into t0 values (306, 'tuple 306')
-Insert OK, 1 row affected
-insert into t0 values (307, 'tuple 307')
-Insert OK, 1 row affected
-insert into t0 values (308, 'tuple 308')
-Insert OK, 1 row affected
-insert into t0 values (309, 'tuple 309')
-Insert OK, 1 row affected
-select * from t0 where k0 = 305
-Found 1 tuple:
-[305, 'tuple 305']
-select * from t0 where k0 = 306
-Found 1 tuple:
-[306, 'tuple 306']
-select * from t0 where k0 = 307
-Found 1 tuple:
-[307, 'tuple 307']
-select * from t0 where k0 = 308
-Found 1 tuple:
-[308, 'tuple 308']
-select * from t0 where k0 = 309
-Found 1 tuple:
-[309, 'tuple 309']
+insert(0, (300, 'tuple 300'), not_presented = True)
+---
+ -  ['300', 'tuple 300']
+...
+insert(0, (301, 'tuple 301'), not_presented = True)
+---
+ -  ['301', 'tuple 301']
+...
+insert(0, (302, 'tuple 302'), not_presented = True)
+---
+ -  ['302', 'tuple 302']
+...
+insert(0, (303, 'tuple 303'), not_presented = True)
+---
+ -  ['303', 'tuple 303']
+...
+insert(0, (304, 'tuple 304'), not_presented = True)
+---
+ -  ['304', 'tuple 304']
+...
+select(0, 300)
+---
+ -  ['300', 'tuple 300']
+...
+select(0, 301)
+---
+ -  ['301', 'tuple 301']
+...
+select(0, 302)
+---
+ -  ['302', 'tuple 302']
+...
+select(0, 303)
+---
+ -  ['303', 'tuple 303']
+...
+select(0, 304)
+---
+ -  ['304', 'tuple 304']
+...
+insert(0, (305, 'tuple 305'), not_presented = True)
+---
+ -  ['305', 'tuple 305']
+...
+insert(0, (306, 'tuple 306'), not_presented = True)
+---
+ -  ['306', 'tuple 306']
+...
+insert(0, (307, 'tuple 307'), not_presented = True)
+---
+ -  ['307', 'tuple 307']
+...
+insert(0, (308, 'tuple 308'), not_presented = True)
+---
+ -  ['308', 'tuple 308']
+...
+insert(0, (309, 'tuple 309'), not_presented = True)
+---
+ -  ['309', 'tuple 309']
+...
+select(0, 305)
+---
+ -  ['305', 'tuple 305']
+...
+select(0, 306)
+---
+ -  ['306', 'tuple 306']
+...
+select(0, 307)
+---
+ -  ['307', 'tuple 307']
+...
+select(0, 308)
+---
+ -  ['308', 'tuple 308']
+...
+select(0, 309)
+---
+ -  ['309', 'tuple 309']
+...
 swap servers
 reload configuration
 ---
@@ -1843,56 +2773,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (310, 'tuple 310')
-Insert OK, 1 row affected
-insert into t0 values (311, 'tuple 311')
-Insert OK, 1 row affected
-insert into t0 values (312, 'tuple 312')
-Insert OK, 1 row affected
-insert into t0 values (313, 'tuple 313')
-Insert OK, 1 row affected
-insert into t0 values (314, 'tuple 314')
-Insert OK, 1 row affected
-select * from t0 where k0 = 310
-Found 1 tuple:
-[310, 'tuple 310']
-select * from t0 where k0 = 311
-Found 1 tuple:
-[311, 'tuple 311']
-select * from t0 where k0 = 312
-Found 1 tuple:
-[312, 'tuple 312']
-select * from t0 where k0 = 313
-Found 1 tuple:
-[313, 'tuple 313']
-select * from t0 where k0 = 314
-Found 1 tuple:
-[314, 'tuple 314']
-insert into t0 values (315, 'tuple 315')
-Insert OK, 1 row affected
-insert into t0 values (316, 'tuple 316')
-Insert OK, 1 row affected
-insert into t0 values (317, 'tuple 317')
-Insert OK, 1 row affected
-insert into t0 values (318, 'tuple 318')
-Insert OK, 1 row affected
-insert into t0 values (319, 'tuple 319')
-Insert OK, 1 row affected
-select * from t0 where k0 = 315
-Found 1 tuple:
-[315, 'tuple 315']
-select * from t0 where k0 = 316
-Found 1 tuple:
-[316, 'tuple 316']
-select * from t0 where k0 = 317
-Found 1 tuple:
-[317, 'tuple 317']
-select * from t0 where k0 = 318
-Found 1 tuple:
-[318, 'tuple 318']
-select * from t0 where k0 = 319
-Found 1 tuple:
-[319, 'tuple 319']
+insert(0, (310, 'tuple 310'), not_presented = True)
+---
+ -  ['310', 'tuple 310']
+...
+insert(0, (311, 'tuple 311'), not_presented = True)
+---
+ -  ['311', 'tuple 311']
+...
+insert(0, (312, 'tuple 312'), not_presented = True)
+---
+ -  ['312', 'tuple 312']
+...
+insert(0, (313, 'tuple 313'), not_presented = True)
+---
+ -  ['313', 'tuple 313']
+...
+insert(0, (314, 'tuple 314'), not_presented = True)
+---
+ -  ['314', 'tuple 314']
+...
+select(0, 310)
+---
+ -  ['310', 'tuple 310']
+...
+select(0, 311)
+---
+ -  ['311', 'tuple 311']
+...
+select(0, 312)
+---
+ -  ['312', 'tuple 312']
+...
+select(0, 313)
+---
+ -  ['313', 'tuple 313']
+...
+select(0, 314)
+---
+ -  ['314', 'tuple 314']
+...
+insert(0, (315, 'tuple 315'), not_presented = True)
+---
+ -  ['315', 'tuple 315']
+...
+insert(0, (316, 'tuple 316'), not_presented = True)
+---
+ -  ['316', 'tuple 316']
+...
+insert(0, (317, 'tuple 317'), not_presented = True)
+---
+ -  ['317', 'tuple 317']
+...
+insert(0, (318, 'tuple 318'), not_presented = True)
+---
+ -  ['318', 'tuple 318']
+...
+insert(0, (319, 'tuple 319'), not_presented = True)
+---
+ -  ['319', 'tuple 319']
+...
+select(0, 315)
+---
+ -  ['315', 'tuple 315']
+...
+select(0, 316)
+---
+ -  ['316', 'tuple 316']
+...
+select(0, 317)
+---
+ -  ['317', 'tuple 317']
+...
+select(0, 318)
+---
+ -  ['318', 'tuple 318']
+...
+select(0, 319)
+---
+ -  ['319', 'tuple 319']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -1903,56 +2863,86 @@ reload configuration
 ok
 ...
 test 16 iteration
-insert into t0 values (320, 'tuple 320')
-Insert OK, 1 row affected
-insert into t0 values (321, 'tuple 321')
-Insert OK, 1 row affected
-insert into t0 values (322, 'tuple 322')
-Insert OK, 1 row affected
-insert into t0 values (323, 'tuple 323')
-Insert OK, 1 row affected
-insert into t0 values (324, 'tuple 324')
-Insert OK, 1 row affected
-select * from t0 where k0 = 320
-Found 1 tuple:
-[320, 'tuple 320']
-select * from t0 where k0 = 321
-Found 1 tuple:
-[321, 'tuple 321']
-select * from t0 where k0 = 322
-Found 1 tuple:
-[322, 'tuple 322']
-select * from t0 where k0 = 323
-Found 1 tuple:
-[323, 'tuple 323']
-select * from t0 where k0 = 324
-Found 1 tuple:
-[324, 'tuple 324']
-insert into t0 values (325, 'tuple 325')
-Insert OK, 1 row affected
-insert into t0 values (326, 'tuple 326')
-Insert OK, 1 row affected
-insert into t0 values (327, 'tuple 327')
-Insert OK, 1 row affected
-insert into t0 values (328, 'tuple 328')
-Insert OK, 1 row affected
-insert into t0 values (329, 'tuple 329')
-Insert OK, 1 row affected
-select * from t0 where k0 = 325
-Found 1 tuple:
-[325, 'tuple 325']
-select * from t0 where k0 = 326
-Found 1 tuple:
-[326, 'tuple 326']
-select * from t0 where k0 = 327
-Found 1 tuple:
-[327, 'tuple 327']
-select * from t0 where k0 = 328
-Found 1 tuple:
-[328, 'tuple 328']
-select * from t0 where k0 = 329
-Found 1 tuple:
-[329, 'tuple 329']
+insert(0, (320, 'tuple 320'), not_presented = True)
+---
+ -  ['320', 'tuple 320']
+...
+insert(0, (321, 'tuple 321'), not_presented = True)
+---
+ -  ['321', 'tuple 321']
+...
+insert(0, (322, 'tuple 322'), not_presented = True)
+---
+ -  ['322', 'tuple 322']
+...
+insert(0, (323, 'tuple 323'), not_presented = True)
+---
+ -  ['323', 'tuple 323']
+...
+insert(0, (324, 'tuple 324'), not_presented = True)
+---
+ -  ['324', 'tuple 324']
+...
+select(0, 320)
+---
+ -  ['320', 'tuple 320']
+...
+select(0, 321)
+---
+ -  ['321', 'tuple 321']
+...
+select(0, 322)
+---
+ -  ['322', 'tuple 322']
+...
+select(0, 323)
+---
+ -  ['323', 'tuple 323']
+...
+select(0, 324)
+---
+ -  ['324', 'tuple 324']
+...
+insert(0, (325, 'tuple 325'), not_presented = True)
+---
+ -  ['325', 'tuple 325']
+...
+insert(0, (326, 'tuple 326'), not_presented = True)
+---
+ -  ['326', 'tuple 326']
+...
+insert(0, (327, 'tuple 327'), not_presented = True)
+---
+ -  ['327', 'tuple 327']
+...
+insert(0, (328, 'tuple 328'), not_presented = True)
+---
+ -  ['328', 'tuple 328']
+...
+insert(0, (329, 'tuple 329'), not_presented = True)
+---
+ -  ['329', 'tuple 329']
+...
+select(0, 325)
+---
+ -  ['325', 'tuple 325']
+...
+select(0, 326)
+---
+ -  ['326', 'tuple 326']
+...
+select(0, 327)
+---
+ -  ['327', 'tuple 327']
+...
+select(0, 328)
+---
+ -  ['328', 'tuple 328']
+...
+select(0, 329)
+---
+ -  ['329', 'tuple 329']
+...
 swap servers
 reload configuration
 ---
@@ -1962,56 +2952,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (330, 'tuple 330')
-Insert OK, 1 row affected
-insert into t0 values (331, 'tuple 331')
-Insert OK, 1 row affected
-insert into t0 values (332, 'tuple 332')
-Insert OK, 1 row affected
-insert into t0 values (333, 'tuple 333')
-Insert OK, 1 row affected
-insert into t0 values (334, 'tuple 334')
-Insert OK, 1 row affected
-select * from t0 where k0 = 330
-Found 1 tuple:
-[330, 'tuple 330']
-select * from t0 where k0 = 331
-Found 1 tuple:
-[331, 'tuple 331']
-select * from t0 where k0 = 332
-Found 1 tuple:
-[332, 'tuple 332']
-select * from t0 where k0 = 333
-Found 1 tuple:
-[333, 'tuple 333']
-select * from t0 where k0 = 334
-Found 1 tuple:
-[334, 'tuple 334']
-insert into t0 values (335, 'tuple 335')
-Insert OK, 1 row affected
-insert into t0 values (336, 'tuple 336')
-Insert OK, 1 row affected
-insert into t0 values (337, 'tuple 337')
-Insert OK, 1 row affected
-insert into t0 values (338, 'tuple 338')
-Insert OK, 1 row affected
-insert into t0 values (339, 'tuple 339')
-Insert OK, 1 row affected
-select * from t0 where k0 = 335
-Found 1 tuple:
-[335, 'tuple 335']
-select * from t0 where k0 = 336
-Found 1 tuple:
-[336, 'tuple 336']
-select * from t0 where k0 = 337
-Found 1 tuple:
-[337, 'tuple 337']
-select * from t0 where k0 = 338
-Found 1 tuple:
-[338, 'tuple 338']
-select * from t0 where k0 = 339
-Found 1 tuple:
-[339, 'tuple 339']
+insert(0, (330, 'tuple 330'), not_presented = True)
+---
+ -  ['330', 'tuple 330']
+...
+insert(0, (331, 'tuple 331'), not_presented = True)
+---
+ -  ['331', 'tuple 331']
+...
+insert(0, (332, 'tuple 332'), not_presented = True)
+---
+ -  ['332', 'tuple 332']
+...
+insert(0, (333, 'tuple 333'), not_presented = True)
+---
+ -  ['333', 'tuple 333']
+...
+insert(0, (334, 'tuple 334'), not_presented = True)
+---
+ -  ['334', 'tuple 334']
+...
+select(0, 330)
+---
+ -  ['330', 'tuple 330']
+...
+select(0, 331)
+---
+ -  ['331', 'tuple 331']
+...
+select(0, 332)
+---
+ -  ['332', 'tuple 332']
+...
+select(0, 333)
+---
+ -  ['333', 'tuple 333']
+...
+select(0, 334)
+---
+ -  ['334', 'tuple 334']
+...
+insert(0, (335, 'tuple 335'), not_presented = True)
+---
+ -  ['335', 'tuple 335']
+...
+insert(0, (336, 'tuple 336'), not_presented = True)
+---
+ -  ['336', 'tuple 336']
+...
+insert(0, (337, 'tuple 337'), not_presented = True)
+---
+ -  ['337', 'tuple 337']
+...
+insert(0, (338, 'tuple 338'), not_presented = True)
+---
+ -  ['338', 'tuple 338']
+...
+insert(0, (339, 'tuple 339'), not_presented = True)
+---
+ -  ['339', 'tuple 339']
+...
+select(0, 335)
+---
+ -  ['335', 'tuple 335']
+...
+select(0, 336)
+---
+ -  ['336', 'tuple 336']
+...
+select(0, 337)
+---
+ -  ['337', 'tuple 337']
+...
+select(0, 338)
+---
+ -  ['338', 'tuple 338']
+...
+select(0, 339)
+---
+ -  ['339', 'tuple 339']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -2022,56 +3042,86 @@ reload configuration
 ok
 ...
 test 17 iteration
-insert into t0 values (340, 'tuple 340')
-Insert OK, 1 row affected
-insert into t0 values (341, 'tuple 341')
-Insert OK, 1 row affected
-insert into t0 values (342, 'tuple 342')
-Insert OK, 1 row affected
-insert into t0 values (343, 'tuple 343')
-Insert OK, 1 row affected
-insert into t0 values (344, 'tuple 344')
-Insert OK, 1 row affected
-select * from t0 where k0 = 340
-Found 1 tuple:
-[340, 'tuple 340']
-select * from t0 where k0 = 341
-Found 1 tuple:
-[341, 'tuple 341']
-select * from t0 where k0 = 342
-Found 1 tuple:
-[342, 'tuple 342']
-select * from t0 where k0 = 343
-Found 1 tuple:
-[343, 'tuple 343']
-select * from t0 where k0 = 344
-Found 1 tuple:
-[344, 'tuple 344']
-insert into t0 values (345, 'tuple 345')
-Insert OK, 1 row affected
-insert into t0 values (346, 'tuple 346')
-Insert OK, 1 row affected
-insert into t0 values (347, 'tuple 347')
-Insert OK, 1 row affected
-insert into t0 values (348, 'tuple 348')
-Insert OK, 1 row affected
-insert into t0 values (349, 'tuple 349')
-Insert OK, 1 row affected
-select * from t0 where k0 = 345
-Found 1 tuple:
-[345, 'tuple 345']
-select * from t0 where k0 = 346
-Found 1 tuple:
-[346, 'tuple 346']
-select * from t0 where k0 = 347
-Found 1 tuple:
-[347, 'tuple 347']
-select * from t0 where k0 = 348
-Found 1 tuple:
-[348, 'tuple 348']
-select * from t0 where k0 = 349
-Found 1 tuple:
-[349, 'tuple 349']
+insert(0, (340, 'tuple 340'), not_presented = True)
+---
+ -  ['340', 'tuple 340']
+...
+insert(0, (341, 'tuple 341'), not_presented = True)
+---
+ -  ['341', 'tuple 341']
+...
+insert(0, (342, 'tuple 342'), not_presented = True)
+---
+ -  ['342', 'tuple 342']
+...
+insert(0, (343, 'tuple 343'), not_presented = True)
+---
+ -  ['343', 'tuple 343']
+...
+insert(0, (344, 'tuple 344'), not_presented = True)
+---
+ -  ['344', 'tuple 344']
+...
+select(0, 340)
+---
+ -  ['340', 'tuple 340']
+...
+select(0, 341)
+---
+ -  ['341', 'tuple 341']
+...
+select(0, 342)
+---
+ -  ['342', 'tuple 342']
+...
+select(0, 343)
+---
+ -  ['343', 'tuple 343']
+...
+select(0, 344)
+---
+ -  ['344', 'tuple 344']
+...
+insert(0, (345, 'tuple 345'), not_presented = True)
+---
+ -  ['345', 'tuple 345']
+...
+insert(0, (346, 'tuple 346'), not_presented = True)
+---
+ -  ['346', 'tuple 346']
+...
+insert(0, (347, 'tuple 347'), not_presented = True)
+---
+ -  ['347', 'tuple 347']
+...
+insert(0, (348, 'tuple 348'), not_presented = True)
+---
+ -  ['348', 'tuple 348']
+...
+insert(0, (349, 'tuple 349'), not_presented = True)
+---
+ -  ['349', 'tuple 349']
+...
+select(0, 345)
+---
+ -  ['345', 'tuple 345']
+...
+select(0, 346)
+---
+ -  ['346', 'tuple 346']
+...
+select(0, 347)
+---
+ -  ['347', 'tuple 347']
+...
+select(0, 348)
+---
+ -  ['348', 'tuple 348']
+...
+select(0, 349)
+---
+ -  ['349', 'tuple 349']
+...
 swap servers
 reload configuration
 ---
@@ -2081,56 +3131,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (350, 'tuple 350')
-Insert OK, 1 row affected
-insert into t0 values (351, 'tuple 351')
-Insert OK, 1 row affected
-insert into t0 values (352, 'tuple 352')
-Insert OK, 1 row affected
-insert into t0 values (353, 'tuple 353')
-Insert OK, 1 row affected
-insert into t0 values (354, 'tuple 354')
-Insert OK, 1 row affected
-select * from t0 where k0 = 350
-Found 1 tuple:
-[350, 'tuple 350']
-select * from t0 where k0 = 351
-Found 1 tuple:
-[351, 'tuple 351']
-select * from t0 where k0 = 352
-Found 1 tuple:
-[352, 'tuple 352']
-select * from t0 where k0 = 353
-Found 1 tuple:
-[353, 'tuple 353']
-select * from t0 where k0 = 354
-Found 1 tuple:
-[354, 'tuple 354']
-insert into t0 values (355, 'tuple 355')
-Insert OK, 1 row affected
-insert into t0 values (356, 'tuple 356')
-Insert OK, 1 row affected
-insert into t0 values (357, 'tuple 357')
-Insert OK, 1 row affected
-insert into t0 values (358, 'tuple 358')
-Insert OK, 1 row affected
-insert into t0 values (359, 'tuple 359')
-Insert OK, 1 row affected
-select * from t0 where k0 = 355
-Found 1 tuple:
-[355, 'tuple 355']
-select * from t0 where k0 = 356
-Found 1 tuple:
-[356, 'tuple 356']
-select * from t0 where k0 = 357
-Found 1 tuple:
-[357, 'tuple 357']
-select * from t0 where k0 = 358
-Found 1 tuple:
-[358, 'tuple 358']
-select * from t0 where k0 = 359
-Found 1 tuple:
-[359, 'tuple 359']
+insert(0, (350, 'tuple 350'), not_presented = True)
+---
+ -  ['350', 'tuple 350']
+...
+insert(0, (351, 'tuple 351'), not_presented = True)
+---
+ -  ['351', 'tuple 351']
+...
+insert(0, (352, 'tuple 352'), not_presented = True)
+---
+ -  ['352', 'tuple 352']
+...
+insert(0, (353, 'tuple 353'), not_presented = True)
+---
+ -  ['353', 'tuple 353']
+...
+insert(0, (354, 'tuple 354'), not_presented = True)
+---
+ -  ['354', 'tuple 354']
+...
+select(0, 350)
+---
+ -  ['350', 'tuple 350']
+...
+select(0, 351)
+---
+ -  ['351', 'tuple 351']
+...
+select(0, 352)
+---
+ -  ['352', 'tuple 352']
+...
+select(0, 353)
+---
+ -  ['353', 'tuple 353']
+...
+select(0, 354)
+---
+ -  ['354', 'tuple 354']
+...
+insert(0, (355, 'tuple 355'), not_presented = True)
+---
+ -  ['355', 'tuple 355']
+...
+insert(0, (356, 'tuple 356'), not_presented = True)
+---
+ -  ['356', 'tuple 356']
+...
+insert(0, (357, 'tuple 357'), not_presented = True)
+---
+ -  ['357', 'tuple 357']
+...
+insert(0, (358, 'tuple 358'), not_presented = True)
+---
+ -  ['358', 'tuple 358']
+...
+insert(0, (359, 'tuple 359'), not_presented = True)
+---
+ -  ['359', 'tuple 359']
+...
+select(0, 355)
+---
+ -  ['355', 'tuple 355']
+...
+select(0, 356)
+---
+ -  ['356', 'tuple 356']
+...
+select(0, 357)
+---
+ -  ['357', 'tuple 357']
+...
+select(0, 358)
+---
+ -  ['358', 'tuple 358']
+...
+select(0, 359)
+---
+ -  ['359', 'tuple 359']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -2141,56 +3221,86 @@ reload configuration
 ok
 ...
 test 18 iteration
-insert into t0 values (360, 'tuple 360')
-Insert OK, 1 row affected
-insert into t0 values (361, 'tuple 361')
-Insert OK, 1 row affected
-insert into t0 values (362, 'tuple 362')
-Insert OK, 1 row affected
-insert into t0 values (363, 'tuple 363')
-Insert OK, 1 row affected
-insert into t0 values (364, 'tuple 364')
-Insert OK, 1 row affected
-select * from t0 where k0 = 360
-Found 1 tuple:
-[360, 'tuple 360']
-select * from t0 where k0 = 361
-Found 1 tuple:
-[361, 'tuple 361']
-select * from t0 where k0 = 362
-Found 1 tuple:
-[362, 'tuple 362']
-select * from t0 where k0 = 363
-Found 1 tuple:
-[363, 'tuple 363']
-select * from t0 where k0 = 364
-Found 1 tuple:
-[364, 'tuple 364']
-insert into t0 values (365, 'tuple 365')
-Insert OK, 1 row affected
-insert into t0 values (366, 'tuple 366')
-Insert OK, 1 row affected
-insert into t0 values (367, 'tuple 367')
-Insert OK, 1 row affected
-insert into t0 values (368, 'tuple 368')
-Insert OK, 1 row affected
-insert into t0 values (369, 'tuple 369')
-Insert OK, 1 row affected
-select * from t0 where k0 = 365
-Found 1 tuple:
-[365, 'tuple 365']
-select * from t0 where k0 = 366
-Found 1 tuple:
-[366, 'tuple 366']
-select * from t0 where k0 = 367
-Found 1 tuple:
-[367, 'tuple 367']
-select * from t0 where k0 = 368
-Found 1 tuple:
-[368, 'tuple 368']
-select * from t0 where k0 = 369
-Found 1 tuple:
-[369, 'tuple 369']
+insert(0, (360, 'tuple 360'), not_presented = True)
+---
+ -  ['360', 'tuple 360']
+...
+insert(0, (361, 'tuple 361'), not_presented = True)
+---
+ -  ['361', 'tuple 361']
+...
+insert(0, (362, 'tuple 362'), not_presented = True)
+---
+ -  ['362', 'tuple 362']
+...
+insert(0, (363, 'tuple 363'), not_presented = True)
+---
+ -  ['363', 'tuple 363']
+...
+insert(0, (364, 'tuple 364'), not_presented = True)
+---
+ -  ['364', 'tuple 364']
+...
+select(0, 360)
+---
+ -  ['360', 'tuple 360']
+...
+select(0, 361)
+---
+ -  ['361', 'tuple 361']
+...
+select(0, 362)
+---
+ -  ['362', 'tuple 362']
+...
+select(0, 363)
+---
+ -  ['363', 'tuple 363']
+...
+select(0, 364)
+---
+ -  ['364', 'tuple 364']
+...
+insert(0, (365, 'tuple 365'), not_presented = True)
+---
+ -  ['365', 'tuple 365']
+...
+insert(0, (366, 'tuple 366'), not_presented = True)
+---
+ -  ['366', 'tuple 366']
+...
+insert(0, (367, 'tuple 367'), not_presented = True)
+---
+ -  ['367', 'tuple 367']
+...
+insert(0, (368, 'tuple 368'), not_presented = True)
+---
+ -  ['368', 'tuple 368']
+...
+insert(0, (369, 'tuple 369'), not_presented = True)
+---
+ -  ['369', 'tuple 369']
+...
+select(0, 365)
+---
+ -  ['365', 'tuple 365']
+...
+select(0, 366)
+---
+ -  ['366', 'tuple 366']
+...
+select(0, 367)
+---
+ -  ['367', 'tuple 367']
+...
+select(0, 368)
+---
+ -  ['368', 'tuple 368']
+...
+select(0, 369)
+---
+ -  ['369', 'tuple 369']
+...
 swap servers
 reload configuration
 ---
@@ -2200,56 +3310,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (370, 'tuple 370')
-Insert OK, 1 row affected
-insert into t0 values (371, 'tuple 371')
-Insert OK, 1 row affected
-insert into t0 values (372, 'tuple 372')
-Insert OK, 1 row affected
-insert into t0 values (373, 'tuple 373')
-Insert OK, 1 row affected
-insert into t0 values (374, 'tuple 374')
-Insert OK, 1 row affected
-select * from t0 where k0 = 370
-Found 1 tuple:
-[370, 'tuple 370']
-select * from t0 where k0 = 371
-Found 1 tuple:
-[371, 'tuple 371']
-select * from t0 where k0 = 372
-Found 1 tuple:
-[372, 'tuple 372']
-select * from t0 where k0 = 373
-Found 1 tuple:
-[373, 'tuple 373']
-select * from t0 where k0 = 374
-Found 1 tuple:
-[374, 'tuple 374']
-insert into t0 values (375, 'tuple 375')
-Insert OK, 1 row affected
-insert into t0 values (376, 'tuple 376')
-Insert OK, 1 row affected
-insert into t0 values (377, 'tuple 377')
-Insert OK, 1 row affected
-insert into t0 values (378, 'tuple 378')
-Insert OK, 1 row affected
-insert into t0 values (379, 'tuple 379')
-Insert OK, 1 row affected
-select * from t0 where k0 = 375
-Found 1 tuple:
-[375, 'tuple 375']
-select * from t0 where k0 = 376
-Found 1 tuple:
-[376, 'tuple 376']
-select * from t0 where k0 = 377
-Found 1 tuple:
-[377, 'tuple 377']
-select * from t0 where k0 = 378
-Found 1 tuple:
-[378, 'tuple 378']
-select * from t0 where k0 = 379
-Found 1 tuple:
-[379, 'tuple 379']
+insert(0, (370, 'tuple 370'), not_presented = True)
+---
+ -  ['370', 'tuple 370']
+...
+insert(0, (371, 'tuple 371'), not_presented = True)
+---
+ -  ['371', 'tuple 371']
+...
+insert(0, (372, 'tuple 372'), not_presented = True)
+---
+ -  ['372', 'tuple 372']
+...
+insert(0, (373, 'tuple 373'), not_presented = True)
+---
+ -  ['373', 'tuple 373']
+...
+insert(0, (374, 'tuple 374'), not_presented = True)
+---
+ -  ['374', 'tuple 374']
+...
+select(0, 370)
+---
+ -  ['370', 'tuple 370']
+...
+select(0, 371)
+---
+ -  ['371', 'tuple 371']
+...
+select(0, 372)
+---
+ -  ['372', 'tuple 372']
+...
+select(0, 373)
+---
+ -  ['373', 'tuple 373']
+...
+select(0, 374)
+---
+ -  ['374', 'tuple 374']
+...
+insert(0, (375, 'tuple 375'), not_presented = True)
+---
+ -  ['375', 'tuple 375']
+...
+insert(0, (376, 'tuple 376'), not_presented = True)
+---
+ -  ['376', 'tuple 376']
+...
+insert(0, (377, 'tuple 377'), not_presented = True)
+---
+ -  ['377', 'tuple 377']
+...
+insert(0, (378, 'tuple 378'), not_presented = True)
+---
+ -  ['378', 'tuple 378']
+...
+insert(0, (379, 'tuple 379'), not_presented = True)
+---
+ -  ['379', 'tuple 379']
+...
+select(0, 375)
+---
+ -  ['375', 'tuple 375']
+...
+select(0, 376)
+---
+ -  ['376', 'tuple 376']
+...
+select(0, 377)
+---
+ -  ['377', 'tuple 377']
+...
+select(0, 378)
+---
+ -  ['378', 'tuple 378']
+...
+select(0, 379)
+---
+ -  ['379', 'tuple 379']
+...
 rollback servers configuration
 reload configuration
 ---
@@ -2260,56 +3400,86 @@ reload configuration
 ok
 ...
 test 19 iteration
-insert into t0 values (380, 'tuple 380')
-Insert OK, 1 row affected
-insert into t0 values (381, 'tuple 381')
-Insert OK, 1 row affected
-insert into t0 values (382, 'tuple 382')
-Insert OK, 1 row affected
-insert into t0 values (383, 'tuple 383')
-Insert OK, 1 row affected
-insert into t0 values (384, 'tuple 384')
-Insert OK, 1 row affected
-select * from t0 where k0 = 380
-Found 1 tuple:
-[380, 'tuple 380']
-select * from t0 where k0 = 381
-Found 1 tuple:
-[381, 'tuple 381']
-select * from t0 where k0 = 382
-Found 1 tuple:
-[382, 'tuple 382']
-select * from t0 where k0 = 383
-Found 1 tuple:
-[383, 'tuple 383']
-select * from t0 where k0 = 384
-Found 1 tuple:
-[384, 'tuple 384']
-insert into t0 values (385, 'tuple 385')
-Insert OK, 1 row affected
-insert into t0 values (386, 'tuple 386')
-Insert OK, 1 row affected
-insert into t0 values (387, 'tuple 387')
-Insert OK, 1 row affected
-insert into t0 values (388, 'tuple 388')
-Insert OK, 1 row affected
-insert into t0 values (389, 'tuple 389')
-Insert OK, 1 row affected
-select * from t0 where k0 = 385
-Found 1 tuple:
-[385, 'tuple 385']
-select * from t0 where k0 = 386
-Found 1 tuple:
-[386, 'tuple 386']
-select * from t0 where k0 = 387
-Found 1 tuple:
-[387, 'tuple 387']
-select * from t0 where k0 = 388
-Found 1 tuple:
-[388, 'tuple 388']
-select * from t0 where k0 = 389
-Found 1 tuple:
-[389, 'tuple 389']
+insert(0, (380, 'tuple 380'), not_presented = True)
+---
+ -  ['380', 'tuple 380']
+...
+insert(0, (381, 'tuple 381'), not_presented = True)
+---
+ -  ['381', 'tuple 381']
+...
+insert(0, (382, 'tuple 382'), not_presented = True)
+---
+ -  ['382', 'tuple 382']
+...
+insert(0, (383, 'tuple 383'), not_presented = True)
+---
+ -  ['383', 'tuple 383']
+...
+insert(0, (384, 'tuple 384'), not_presented = True)
+---
+ -  ['384', 'tuple 384']
+...
+select(0, 380)
+---
+ -  ['380', 'tuple 380']
+...
+select(0, 381)
+---
+ -  ['381', 'tuple 381']
+...
+select(0, 382)
+---
+ -  ['382', 'tuple 382']
+...
+select(0, 383)
+---
+ -  ['383', 'tuple 383']
+...
+select(0, 384)
+---
+ -  ['384', 'tuple 384']
+...
+insert(0, (385, 'tuple 385'), not_presented = True)
+---
+ -  ['385', 'tuple 385']
+...
+insert(0, (386, 'tuple 386'), not_presented = True)
+---
+ -  ['386', 'tuple 386']
+...
+insert(0, (387, 'tuple 387'), not_presented = True)
+---
+ -  ['387', 'tuple 387']
+...
+insert(0, (388, 'tuple 388'), not_presented = True)
+---
+ -  ['388', 'tuple 388']
+...
+insert(0, (389, 'tuple 389'), not_presented = True)
+---
+ -  ['389', 'tuple 389']
+...
+select(0, 385)
+---
+ -  ['385', 'tuple 385']
+...
+select(0, 386)
+---
+ -  ['386', 'tuple 386']
+...
+select(0, 387)
+---
+ -  ['387', 'tuple 387']
+...
+select(0, 388)
+---
+ -  ['388', 'tuple 388']
+...
+select(0, 389)
+---
+ -  ['389', 'tuple 389']
+...
 swap servers
 reload configuration
 ---
@@ -2319,56 +3489,86 @@ reload configuration
 ---
 ok
 ...
-insert into t0 values (390, 'tuple 390')
-Insert OK, 1 row affected
-insert into t0 values (391, 'tuple 391')
-Insert OK, 1 row affected
-insert into t0 values (392, 'tuple 392')
-Insert OK, 1 row affected
-insert into t0 values (393, 'tuple 393')
-Insert OK, 1 row affected
-insert into t0 values (394, 'tuple 394')
-Insert OK, 1 row affected
-select * from t0 where k0 = 390
-Found 1 tuple:
-[390, 'tuple 390']
-select * from t0 where k0 = 391
-Found 1 tuple:
-[391, 'tuple 391']
-select * from t0 where k0 = 392
-Found 1 tuple:
-[392, 'tuple 392']
-select * from t0 where k0 = 393
-Found 1 tuple:
-[393, 'tuple 393']
-select * from t0 where k0 = 394
-Found 1 tuple:
-[394, 'tuple 394']
-insert into t0 values (395, 'tuple 395')
-Insert OK, 1 row affected
-insert into t0 values (396, 'tuple 396')
-Insert OK, 1 row affected
-insert into t0 values (397, 'tuple 397')
-Insert OK, 1 row affected
-insert into t0 values (398, 'tuple 398')
-Insert OK, 1 row affected
-insert into t0 values (399, 'tuple 399')
-Insert OK, 1 row affected
-select * from t0 where k0 = 395
-Found 1 tuple:
-[395, 'tuple 395']
-select * from t0 where k0 = 396
-Found 1 tuple:
-[396, 'tuple 396']
-select * from t0 where k0 = 397
-Found 1 tuple:
-[397, 'tuple 397']
-select * from t0 where k0 = 398
-Found 1 tuple:
-[398, 'tuple 398']
-select * from t0 where k0 = 399
-Found 1 tuple:
-[399, 'tuple 399']
+insert(0, (390, 'tuple 390'), not_presented = True)
+---
+ -  ['390', 'tuple 390']
+...
+insert(0, (391, 'tuple 391'), not_presented = True)
+---
+ -  ['391', 'tuple 391']
+...
+insert(0, (392, 'tuple 392'), not_presented = True)
+---
+ -  ['392', 'tuple 392']
+...
+insert(0, (393, 'tuple 393'), not_presented = True)
+---
+ -  ['393', 'tuple 393']
+...
+insert(0, (394, 'tuple 394'), not_presented = True)
+---
+ -  ['394', 'tuple 394']
+...
+select(0, 390)
+---
+ -  ['390', 'tuple 390']
+...
+select(0, 391)
+---
+ -  ['391', 'tuple 391']
+...
+select(0, 392)
+---
+ -  ['392', 'tuple 392']
+...
+select(0, 393)
+---
+ -  ['393', 'tuple 393']
+...
+select(0, 394)
+---
+ -  ['394', 'tuple 394']
+...
+insert(0, (395, 'tuple 395'), not_presented = True)
+---
+ -  ['395', 'tuple 395']
+...
+insert(0, (396, 'tuple 396'), not_presented = True)
+---
+ -  ['396', 'tuple 396']
+...
+insert(0, (397, 'tuple 397'), not_presented = True)
+---
+ -  ['397', 'tuple 397']
+...
+insert(0, (398, 'tuple 398'), not_presented = True)
+---
+ -  ['398', 'tuple 398']
+...
+insert(0, (399, 'tuple 399'), not_presented = True)
+---
+ -  ['399', 'tuple 399']
+...
+select(0, 395)
+---
+ -  ['395', 'tuple 395']
+...
+select(0, 396)
+---
+ -  ['396', 'tuple 396']
+...
+select(0, 397)
+---
+ -  ['397', 'tuple 397']
+...
+select(0, 398)
+---
+ -  ['398', 'tuple 398']
+...
+select(0, 399)
+---
+ -  ['399', 'tuple 399']
+...
 rollback servers configuration
 reload configuration
 ---

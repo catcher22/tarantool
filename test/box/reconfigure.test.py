@@ -1,5 +1,15 @@
-# encoding: utf-8
-#
+import tarantool
+sql.set_schema({
+    0 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.NUM
+            },
+        'indexes' : {
+            0 : [0] # HASH
+            }
+        }
+    })
 admin("box.cfg.too_long_threshold")
 # bad1
 server.reconfigure("box/tarantool_bad1.cfg")
@@ -34,13 +44,15 @@ print """#
 # Valgrind reports use of not initialized memory after 'reload
 # configuration'
 #"""
-sql("insert into t0 values (1, 'tuple')")
+
+sql.insert(0, (1, 'tuple'))
 admin("save snapshot")
 server.reconfigure(None)
-sql("insert into t0 values (2, 'tuple 2')")
+
+sql.insert(0, (2, 'tuple 2'))
 admin("save snapshot")
 server.reconfigure("box/tarantool_good.cfg")
-sql("insert into t0 values (3, 'tuple 3')")
+sql.insert(0, (3, 'tuple 3'))
 admin("save snapshot")
 # Cleanup
 server.reconfigure(self.suite_ini["config"])

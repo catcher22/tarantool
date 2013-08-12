@@ -1,5 +1,15 @@
-# encoding: utf-8
-#
+import tarantool
+sql.set_schema({
+    0 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.NUM
+            },
+        'indexes' : {
+            0 : [0] # HASH
+            }
+        }
+    })
 # clear statistics
 server.restart()
 
@@ -9,7 +19,7 @@ print """#
 #
 """
 for i in range(10):
-  sql("insert into t0 values ({0}, 'tuple')".format(i))
+  sql.insert(0, (i, 'tuple'))
 admin("show stat")
 print """#
 # restart server
@@ -24,6 +34,4 @@ admin("show stat")
 
 # cleanup
 for i in range(10):
-  sql("delete from t0 where k0 = {0}".format(i))
-
-# vim: syntax=python
+  sql.delete(0, i)

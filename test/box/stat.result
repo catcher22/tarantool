@@ -3,26 +3,46 @@
 #  add several tuples
 #
 
-insert into t0 values (0, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (1, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (2, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (3, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (4, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (5, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (6, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (7, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (8, 'tuple')
-Insert OK, 1 row affected
-insert into t0 values (9, 'tuple')
-Insert OK, 1 row affected
+insert(0, (0, 'tuple'), not_presented = True)
+---
+ -  ['0', 'tuple']
+...
+insert(0, (1, 'tuple'), not_presented = True)
+---
+ -  ['1', 'tuple']
+...
+insert(0, (2, 'tuple'), not_presented = True)
+---
+ -  ['2', 'tuple']
+...
+insert(0, (3, 'tuple'), not_presented = True)
+---
+ -  ['3', 'tuple']
+...
+insert(0, (4, 'tuple'), not_presented = True)
+---
+ -  ['4', 'tuple']
+...
+insert(0, (5, 'tuple'), not_presented = True)
+---
+ -  ['5', 'tuple']
+...
+insert(0, (6, 'tuple'), not_presented = True)
+---
+ -  ['6', 'tuple']
+...
+insert(0, (7, 'tuple'), not_presented = True)
+---
+ -  ['7', 'tuple']
+...
+insert(0, (8, 'tuple'), not_presented = True)
+---
+ -  ['8', 'tuple']
+...
+insert(0, (9, 'tuple'), not_presented = True)
+---
+ -  ['9', 'tuple']
+...
 show stat
 ---
 statistics:
@@ -51,23 +71,43 @@ statistics:
   DELETE:     { rps:  0    , total:  0           }
   CALL:       { rps:  0    , total:  0           }
 ...
-delete from t0 where k0 = 0
-Delete OK, 1 row affected
-delete from t0 where k0 = 1
-Delete OK, 1 row affected
-delete from t0 where k0 = 2
-Delete OK, 1 row affected
-delete from t0 where k0 = 3
-Delete OK, 1 row affected
-delete from t0 where k0 = 4
-Delete OK, 1 row affected
-delete from t0 where k0 = 5
-Delete OK, 1 row affected
-delete from t0 where k0 = 6
-Delete OK, 1 row affected
-delete from t0 where k0 = 7
-Delete OK, 1 row affected
-delete from t0 where k0 = 8
-Delete OK, 1 row affected
-delete from t0 where k0 = 9
-Delete OK, 1 row affected
+delete(0, 0)
+---
+ -  ['0', 'tuple']
+...
+delete(0, 1)
+---
+ -  ['1', 'tuple']
+...
+delete(0, 2)
+---
+ -  ['2', 'tuple']
+...
+delete(0, 3)
+---
+ -  ['3', 'tuple']
+...
+delete(0, 4)
+---
+ -  ['4', 'tuple']
+...
+delete(0, 5)
+---
+ -  ['5', 'tuple']
+...
+delete(0, 6)
+---
+ -  ['6', 'tuple']
+...
+delete(0, 7)
+---
+ -  ['7', 'tuple']
+...
+delete(0, 8)
+---
+ -  ['8', 'tuple']
+...
+delete(0, 9)
+---
+ -  ['9', 'tuple']
+...

@@ -1,4 +1,15 @@
-# encoding: utf-8
+import tarantool
+sql.set_schema({
+    0 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.NUM
+            },
+        'indexes' : {
+            0 : [0] # HASH
+            }
+        }
+    })
 from lib.admin_connection import AdminConnection
 from lib.box_connection import BoxConnection
 

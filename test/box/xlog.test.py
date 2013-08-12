@@ -1,8 +1,19 @@
-# encoding: utf-8
-#
 import os
 from os.path import abspath
 import shutil
+import tarantool
+
+sql.set_schema({
+    0 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.NUM
+            },
+        'indexes' : {
+            0 : [0] # HASH
+            }
+        }
+    })
 
 # cleanup vardir
 server.stop()
@@ -16,11 +27,11 @@ wal_inprogress = os.path.join(vardir, "00000000000000000002.xlog.inprogress")
 wal = os.path.join(vardir, "00000000000000000002.xlog")
 
 server.start()
-sql("insert into t0 values (1, 'first tuple')")
+sql.insert(0, (1, 'first tuple'))
 if os.access(wal_inprogress, os.F_OK):
   print "00000000000000000002.xlog.inprogress exists"
 
-sql("insert into t0 values (2, 'second tuple')")
+sql.insert(0, (2, 'second tuple'))
 
 if os.access(wal, os.F_OK) and not os.access(wal_inprogress, os.F_OK):
   print "00000000000000000002.xlog.inprogress has been successfully renamed"
@@ -34,7 +45,7 @@ server.start()
 wal_inprogress = os.path.join(vardir, "00000000000000000004.xlog.inprogress")
 wal = os.path.join(vardir, "00000000000000000004.xlog")
 
-sql("insert into t0 values (3, 'third tuple')")
+sql.insert(0, (3, 'third tuple'))
 
 if os.access(wal_inprogress, os.F_OK):
   print "00000000000000000004.xlog.inprogress exists"

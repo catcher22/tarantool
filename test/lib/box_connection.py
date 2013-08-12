@@ -64,7 +64,7 @@ def log_call_log(function, boxcon, *args, **kwargs):
     error = False
     warnings.simplefilter("ignore")
     print "%s(%s)" % (function.func_name, merge_args())
-    print "---\n"
+    print "---"
     try:
         if function.func_name == 'ping':
             kwargs['notime'] = True
@@ -77,9 +77,9 @@ def log_call_log(function, boxcon, *args, **kwargs):
         error = True
         ans = "Error: " + str(e.args)
     if error or function.func_name == 'ping':
-        print ans + "\n"
+        print ans
     elif not ans[:]:
-        print "No match\n"
+        print "No match"
     else:
         for i in ans:
             print " - ", print_tuple(i)

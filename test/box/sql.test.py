@@ -1,52 +1,64 @@
-# encoding: utf-8
-sql("ping")
+import tarantool
+sql.set_schema({
+    0 : {
+        'default_type' : tarantool.STR,
+        'fields' : {
+            0 : tarantool.NUM
+            },
+        'indexes' : {
+            0 : [0] # HASH
+            }
+        }
+    })
+
+sql.ping(notime=True)
 # xxx: bug -- currently selects no rows
-sql("select * from t0")
-sql("insert into t0 values (1, 'I am a tuple')")
-sql("select * from t0 where k0 = 1")
+sql.select(0)
+sql.insert(0, (1, 'I am a tuple'))
+sql.select(0, 1, index=0)
 # currently there is no way to find out how many records
 # a space contains 
-sql("select * from t0 where k0 = 0")
-sql("select * from t0 where k0 = 2")
+sql.select(0, 0, index=0)
+sql.select(0, 2, index=0)
 server.restart()
-sql("select * from t0 where k0 = 1")
+sql.select(0, 1, index=0)
 admin("save snapshot")
-sql("select * from t0 where k0 = 1")
+sql.select(0, 1, index=0)
 server.restart()
-sql("select * from t0 where k0 = 1")
-sql("delete from t0 where k0 = 1")
-sql("select * from t0 where k0 = 1")
+sql.select(0, 1, index=0)
+sql.delete(0, 1)
+sql.select(0, 1, index=0)
 # xxx: update comes through, returns 0 rows affected 
-sql("update t0 set k1 = 'I am a new tuple' where k0=1")
+sql.update(0, 1, [(1, '=', 'I am a new tuple')])
 # nothing is selected, since nothing was there
-sql("select * from t0 where k0=1")
-sql("insert into t0 values (1, 'I am a new tuple')")
-sql("select * from t0 where k0 = 1")
-sql("update t0 set k1 = 'I am the newest tuple' where k0=1")
-sql("select * from t0 where k0 = 1")
+sql.select(0, 1, index=0)
+sql.insert(0, (1, 'I am a new tuple'))
+sql.select(0, 1, index=0)
+sql.update(0, 1, [(1, '=', 'I am the newest tuple')])
+sql.select(0, 1, index=0)
 # this is correct, can append field to tuple
-sql("update t0 set k1 = 'Huh', k2 = 'I am a new field! I was added via append' where k0=1")
-sql("select * from t0 where k0 = 1")
+sql.update(0, 1, [(1, '=', 'Huh'), (2, '=', 'I am a new field! I was added via append')])
+sql.select(0, 1, index=0)
 # this is illegal
-sql("update t0 set k1 = 'Huh', k1000 = 'invalid field' where k0=1")
-sql("select * from t0 where k0 = 1")
-sql("replace into t0 values (1, 'I am a new tuple', 'stub')")
-sql("update t0 set k1 = 'Huh', k2 = 'Oh-ho-ho' where k0=1")
-sql("select * from t0 where k0 = 1")
+sql.update(0, 1, [(1, '=', 'Huh'), (1000, '=', 'invalid field')])
+sql.select(0, 1, index=0)
+sql.replace(0, (1, 'I am a new tuple', 'stub'))
+sql.update(0, 1, [(1, '=', 'Huh'), (2, '=', 'Oh-ho-ho')])
+sql.select(0, 1, index=0)
 # check empty strings
-sql("update t0 set k1 = '', k2 = '' where k0=1")
-sql("select * from t0 where k0 = 1")
+sql.update(0, 1, [(1, '=', ''), (2, '=', '')])
+sql.select(0, 1, index=0)
 # check type change 
-sql("update t0 set k1 = 2, k2 = 3 where k0=1")
-sql("select * from t0 where k0 = 1")
+sql.update(0, 1, [(1, '=', 2), (2, '=', 3)])
+sql.select(0, 1, index=0)
 # check limits
-sql("insert into t0 values (0)")
-sql("select * from t0 where k0=0")
-sql("insert into t0 values (4294967295)")
-sql("select * from t0 where k0=4294967295")
+sql.insert(0, (0, ))
+sql.select(0, 0, index=0)
+sql.insert(0, (4294967295, ))
+sql.select(0, 4294967295, index=0)
 # cleanup 
-sql("delete from t0 where k0=0")
-sql("delete from t0 where k0=4294967295")
+sql.delete(0, 0)
+sql.delete(0, 4294967295)
 
 print """#
 # A test case for: http://bugs.launchpad.net/bugs/712456
@@ -54,9 +66,9 @@ print """#
 # very large space id, no crash occurs.
 #
 """
-sql("select * from t1 where k0 = 0")
-sql("select * from t65537 where k0 = 0")
-sql("select * from t4294967295 where k0 = 0")
+sql.select(1, 0, index=0)
+sql.select(65537, 0, index=0)
+sql.select(4294967295, 0, index=0)
 admin("box.space[0]:truncate()")
 
 print """#
@@ -64,5 +76,3 @@ print """#
 # Admin console should not stall on unknown command.
 """
 admin("show status", simple=True)
-
-# vim: syntax=python

@@ -1,17 +1,23 @@
 
 # Inprogress xlog must be renamed before second insert.
 
-insert into t0 values (1, 'first tuple')
-Insert OK, 1 row affected
+insert(0, (1, 'first tuple'), not_presented = True)
+---
+ -  ['1', 'first tuple']
+...
 00000000000000000002.xlog.inprogress exists
-insert into t0 values (2, 'second tuple')
-Insert OK, 1 row affected
+insert(0, (2, 'second tuple'), not_presented = True)
+---
+ -  ['2', 'second tuple']
+...
 00000000000000000002.xlog.inprogress has been successfully renamed
 
 # Inprogress xlog must be renamed during regular termination.
 
-insert into t0 values (3, 'third tuple')
-Insert OK, 1 row affected
+insert(0, (3, 'third tuple'), not_presented = True)
+---
+ -  ['3', 'third tuple']
+...
 00000000000000000004.xlog.inprogress exists
 Stopping the server...
 00000000000000000004.xlog.inprogress has been successfully renamed

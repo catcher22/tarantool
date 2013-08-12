@@ -1,55 +1,85 @@
 insert to master [0, 10) entries
-insert into t0 values (0, 'mater 0')
-Insert OK, 1 row affected
-insert into t0 values (1, 'mater 1')
-Insert OK, 1 row affected
-insert into t0 values (2, 'mater 2')
-Insert OK, 1 row affected
-insert into t0 values (3, 'mater 3')
-Insert OK, 1 row affected
-insert into t0 values (4, 'mater 4')
-Insert OK, 1 row affected
-insert into t0 values (5, 'mater 5')
-Insert OK, 1 row affected
-insert into t0 values (6, 'mater 6')
-Insert OK, 1 row affected
-insert into t0 values (7, 'mater 7')
-Insert OK, 1 row affected
-insert into t0 values (8, 'mater 8')
-Insert OK, 1 row affected
-insert into t0 values (9, 'mater 9')
-Insert OK, 1 row affected
+insert(0, (0, 'mater 0'), not_presented = True)
+---
+ -  ['0', 'mater 0']
+...
+insert(0, (1, 'mater 1'), not_presented = True)
+---
+ -  ['1', 'mater 1']
+...
+insert(0, (2, 'mater 2'), not_presented = True)
+---
+ -  ['2', 'mater 2']
+...
+insert(0, (3, 'mater 3'), not_presented = True)
+---
+ -  ['3', 'mater 3']
+...
+insert(0, (4, 'mater 4'), not_presented = True)
+---
+ -  ['4', 'mater 4']
+...
+insert(0, (5, 'mater 5'), not_presented = True)
+---
+ -  ['5', 'mater 5']
+...
+insert(0, (6, 'mater 6'), not_presented = True)
+---
+ -  ['6', 'mater 6']
+...
+insert(0, (7, 'mater 7'), not_presented = True)
+---
+ -  ['7', 'mater 7']
+...
+insert(0, (8, 'mater 8'), not_presented = True)
+---
+ -  ['8', 'mater 8']
+...
+insert(0, (9, 'mater 9'), not_presented = True)
+---
+ -  ['9', 'mater 9']
+...
 select from replica [0, 10) entries
-select * from t0 where k0 = 0
-Found 1 tuple:
-[0, 'mater 0']
-select * from t0 where k0 = 1
-Found 1 tuple:
-[1, 'mater 1']
-select * from t0 where k0 = 2
-Found 1 tuple:
-[2, 'mater 2']
-select * from t0 where k0 = 3
-Found 1 tuple:
-[3, 'mater 3']
-select * from t0 where k0 = 4
-Found 1 tuple:
-[4, 'mater 4']
-select * from t0 where k0 = 5
-Found 1 tuple:
-[5, 'mater 5']
-select * from t0 where k0 = 6
-Found 1 tuple:
-[6, 'mater 6']
-select * from t0 where k0 = 7
-Found 1 tuple:
-[7, 'mater 7']
-select * from t0 where k0 = 8
-Found 1 tuple:
-[8, 'mater 8']
-select * from t0 where k0 = 9
-Found 1 tuple:
-[9, 'mater 9']
+select(0, 0)
+---
+ -  ['0', 'mater 0']
+...
+select(0, 1)
+---
+ -  ['1', 'mater 1']
+...
+select(0, 2)
+---
+ -  ['2', 'mater 2']
+...
+select(0, 3)
+---
+ -  ['3', 'mater 3']
+...
+select(0, 4)
+---
+ -  ['4', 'mater 4']
+...
+select(0, 5)
+---
+ -  ['5', 'mater 5']
+...
+select(0, 6)
+---
+ -  ['6', 'mater 6']
+...
+select(0, 7)
+---
+ -  ['7', 'mater 7']
+...
+select(0, 8)
+---
+ -  ['8', 'mater 8']
+...
+select(0, 9)
+---
+ -  ['9', 'mater 9']
+...
 master lsn = 11
 replica lsn = 11
 
@@ -65,84 +95,129 @@ reload configuration
 ok
 ...
 insert to master [10, 20) entries
-insert into t0 values (10, 'mater 10')
-Insert OK, 1 row affected
-insert into t0 values (11, 'mater 11')
-Insert OK, 1 row affected
-insert into t0 values (12, 'mater 12')
-Insert OK, 1 row affected
-insert into t0 values (13, 'mater 13')
-Insert OK, 1 row affected
-insert into t0 values (14, 'mater 14')
-Insert OK, 1 row affected
-insert into t0 values (15, 'mater 15')
-Insert OK, 1 row affected
-insert into t0 values (16, 'mater 16')
-Insert OK, 1 row affected
-insert into t0 values (17, 'mater 17')
-Insert OK, 1 row affected
-insert into t0 values (18, 'mater 18')
-Insert OK, 1 row affected
-insert into t0 values (19, 'mater 19')
-Insert OK, 1 row affected
+insert(0, (10, 'mater 10'), not_presented = True)
+---
+ -  ['10', 'mater 10']
+...
+insert(0, (11, 'mater 11'), not_presented = True)
+---
+ -  ['11', 'mater 11']
+...
+insert(0, (12, 'mater 12'), not_presented = True)
+---
+ -  ['12', 'mater 12']
+...
+insert(0, (13, 'mater 13'), not_presented = True)
+---
+ -  ['13', 'mater 13']
+...
+insert(0, (14, 'mater 14'), not_presented = True)
+---
+ -  ['14', 'mater 14']
+...
+insert(0, (15, 'mater 15'), not_presented = True)
+---
+ -  ['15', 'mater 15']
+...
+insert(0, (16, 'mater 16'), not_presented = True)
+---
+ -  ['16', 'mater 16']
+...
+insert(0, (17, 'mater 17'), not_presented = True)
+---
+ -  ['17', 'mater 17']
+...
+insert(0, (18, 'mater 18'), not_presented = True)
+---
+ -  ['18', 'mater 18']
+...
+insert(0, (19, 'mater 19'), not_presented = True)
+---
+ -  ['19', 'mater 19']
+...
 select from master [10, 20) entries
-select * from t0 where k0 = 10
-Found 1 tuple:
-[10, 'mater 10']
-select * from t0 where k0 = 11
-Found 1 tuple:
-[11, 'mater 11']
-select * from t0 where k0 = 12
-Found 1 tuple:
-[12, 'mater 12']
-select * from t0 where k0 = 13
-Found 1 tuple:
-[13, 'mater 13']
-select * from t0 where k0 = 14
-Found 1 tuple:
-[14, 'mater 14']
-select * from t0 where k0 = 15
-Found 1 tuple:
-[15, 'mater 15']
-select * from t0 where k0 = 16
-Found 1 tuple:
-[16, 'mater 16']
-select * from t0 where k0 = 17
-Found 1 tuple:
-[17, 'mater 17']
-select * from t0 where k0 = 18
-Found 1 tuple:
-[18, 'mater 18']
-select * from t0 where k0 = 19
-Found 1 tuple:
-[19, 'mater 19']
+select(0, 10)
+---
+ -  ['10', 'mater 10']
+...
+select(0, 11)
+---
+ -  ['11', 'mater 11']
+...
+select(0, 12)
+---
+ -  ['12', 'mater 12']
+...
+select(0, 13)
+---
+ -  ['13', 'mater 13']
+...
+select(0, 14)
+---
+ -  ['14', 'mater 14']
+...
+select(0, 15)
+---
+ -  ['15', 'mater 15']
+...
+select(0, 16)
+---
+ -  ['16', 'mater 16']
+...
+select(0, 17)
+---
+ -  ['17', 'mater 17']
+...
+select(0, 18)
+---
+ -  ['18', 'mater 18']
+...
+select(0, 19)
+---
+ -  ['19', 'mater 19']
+...
 insert to replica [10, 15) entries
-insert into t0 values (10, 'replica 10')
-Insert OK, 1 row affected
-insert into t0 values (11, 'replica 11')
-Insert OK, 1 row affected
-insert into t0 values (12, 'replica 12')
-Insert OK, 1 row affected
-insert into t0 values (13, 'replica 13')
-Insert OK, 1 row affected
-insert into t0 values (14, 'replica 14')
-Insert OK, 1 row affected
+insert(0, (10, 'replica 10'), not_presented = True)
+---
+ -  ['10', 'replica 10']
+...
+insert(0, (11, 'replica 11'), not_presented = True)
+---
+ -  ['11', 'replica 11']
+...
+insert(0, (12, 'replica 12'), not_presented = True)
+---
+ -  ['12', 'replica 12']
+...
+insert(0, (13, 'replica 13'), not_presented = True)
+---
+ -  ['13', 'replica 13']
+...
+insert(0, (14, 'replica 14'), not_presented = True)
+---
+ -  ['14', 'replica 14']
+...
 select from replica [10, 15) entries
-select * from t0 where k0 = 10
-Found 1 tuple:
-[10, 'replica 10']
-select * from t0 where k0 = 11
-Found 1 tuple:
-[11, 'replica 11']
-select * from t0 where k0 = 12
-Found 1 tuple:
-[12, 'replica 12']
-select * from t0 where k0 = 13
-Found 1 tuple:
-[13, 'replica 13']
-select * from t0 where k0 = 14
-Found 1 tuple:
-[14, 'replica 14']
+select(0, 10)
+---
+ -  ['10', 'replica 10']
+...
+select(0, 11)
+---
+ -  ['11', 'replica 11']
+...
+select(0, 12)
+---
+ -  ['12', 'replica 12']
+...
+select(0, 13)
+---
+ -  ['13', 'replica 13']
+...
+select(0, 14)
+---
+ -  ['14', 'replica 14']
+...
 master lsn = 21
 replica lsn = 16
 
@@ -153,36 +228,46 @@ reload configuration
 ok
 ...
 select from replica [10, 20) entries
-select * from t0 where k0 = 10
-Found 1 tuple:
-[10, 'replica 10']
-select * from t0 where k0 = 11
-Found 1 tuple:
-[11, 'replica 11']
-select * from t0 where k0 = 12
-Found 1 tuple:
-[12, 'replica 12']
-select * from t0 where k0 = 13
-Found 1 tuple:
-[13, 'replica 13']
-select * from t0 where k0 = 14
-Found 1 tuple:
-[14, 'replica 14']
-select * from t0 where k0 = 15
-Found 1 tuple:
-[15, 'mater 15']
-select * from t0 where k0 = 16
-Found 1 tuple:
-[16, 'mater 16']
-select * from t0 where k0 = 17
-Found 1 tuple:
-[17, 'mater 17']
-select * from t0 where k0 = 18
-Found 1 tuple:
-[18, 'mater 18']
-select * from t0 where k0 = 19
-Found 1 tuple:
-[19, 'mater 19']
+select(0, 10)
+---
+ -  ['10', 'replica 10']
+...
+select(0, 11)
+---
+ -  ['11', 'replica 11']
+...
+select(0, 12)
+---
+ -  ['12', 'replica 12']
+...
+select(0, 13)
+---
+ -  ['13', 'replica 13']
+...
+select(0, 14)
+---
+ -  ['14', 'replica 14']
+...
+select(0, 15)
+---
+ -  ['15', 'mater 15']
+...
+select(0, 16)
+---
+ -  ['16', 'mater 16']
+...
+select(0, 17)
+---
+ -  ['17', 'mater 17']
+...
+select(0, 18)
+---
+ -  ['18', 'mater 18']
+...
+select(0, 19)
+---
+ -  ['19', 'mater 19']
+...
 master lsn = 21
 replica lsn = 21
 
@@ -198,109 +283,169 @@ reload configuration
 ok
 ...
 insert to master [20, 30) entries
-insert into t0 values (20, 'mater 20')
-Insert OK, 1 row affected
-insert into t0 values (21, 'mater 21')
-Insert OK, 1 row affected
-insert into t0 values (22, 'mater 22')
-Insert OK, 1 row affected
-insert into t0 values (23, 'mater 23')
-Insert OK, 1 row affected
-insert into t0 values (24, 'mater 24')
-Insert OK, 1 row affected
-insert into t0 values (25, 'mater 25')
-Insert OK, 1 row affected
-insert into t0 values (26, 'mater 26')
-Insert OK, 1 row affected
-insert into t0 values (27, 'mater 27')
-Insert OK, 1 row affected
-insert into t0 values (28, 'mater 28')
-Insert OK, 1 row affected
-insert into t0 values (29, 'mater 29')
-Insert OK, 1 row affected
+insert(0, (20, 'mater 20'), not_presented = True)
+---
+ -  ['20', 'mater 20']
+...
+insert(0, (21, 'mater 21'), not_presented = True)
+---
+ -  ['21', 'mater 21']
+...
+insert(0, (22, 'mater 22'), not_presented = True)
+---
+ -  ['22', 'mater 22']
+...
+insert(0, (23, 'mater 23'), not_presented = True)
+---
+ -  ['23', 'mater 23']
+...
+insert(0, (24, 'mater 24'), not_presented = True)
+---
+ -  ['24', 'mater 24']
+...
+insert(0, (25, 'mater 25'), not_presented = True)
+---
+ -  ['25', 'mater 25']
+...
+insert(0, (26, 'mater 26'), not_presented = True)
+---
+ -  ['26', 'mater 26']
+...
+insert(0, (27, 'mater 27'), not_presented = True)
+---
+ -  ['27', 'mater 27']
+...
+insert(0, (28, 'mater 28'), not_presented = True)
+---
+ -  ['28', 'mater 28']
+...
+insert(0, (29, 'mater 29'), not_presented = True)
+---
+ -  ['29', 'mater 29']
+...
 select from master [20, 30) entries
-select * from t0 where k0 = 20
-Found 1 tuple:
-[20, 'mater 20']
-select * from t0 where k0 = 21
-Found 1 tuple:
-[21, 'mater 21']
-select * from t0 where k0 = 22
-Found 1 tuple:
-[22, 'mater 22']
-select * from t0 where k0 = 23
-Found 1 tuple:
-[23, 'mater 23']
-select * from t0 where k0 = 24
-Found 1 tuple:
-[24, 'mater 24']
-select * from t0 where k0 = 25
-Found 1 tuple:
-[25, 'mater 25']
-select * from t0 where k0 = 26
-Found 1 tuple:
-[26, 'mater 26']
-select * from t0 where k0 = 27
-Found 1 tuple:
-[27, 'mater 27']
-select * from t0 where k0 = 28
-Found 1 tuple:
-[28, 'mater 28']
-select * from t0 where k0 = 29
-Found 1 tuple:
-[29, 'mater 29']
+select(0, 20)
+---
+ -  ['20', 'mater 20']
+...
+select(0, 21)
+---
+ -  ['21', 'mater 21']
+...
+select(0, 22)
+---
+ -  ['22', 'mater 22']
+...
+select(0, 23)
+---
+ -  ['23', 'mater 23']
+...
+select(0, 24)
+---
+ -  ['24', 'mater 24']
+...
+select(0, 25)
+---
+ -  ['25', 'mater 25']
+...
+select(0, 26)
+---
+ -  ['26', 'mater 26']
+...
+select(0, 27)
+---
+ -  ['27', 'mater 27']
+...
+select(0, 28)
+---
+ -  ['28', 'mater 28']
+...
+select(0, 29)
+---
+ -  ['29', 'mater 29']
+...
 insert to replica [20, 30) entries
-insert into t0 values (20, 'replica 20')
-Insert OK, 1 row affected
-insert into t0 values (21, 'replica 21')
-Insert OK, 1 row affected
-insert into t0 values (22, 'replica 22')
-Insert OK, 1 row affected
-insert into t0 values (23, 'replica 23')
-Insert OK, 1 row affected
-insert into t0 values (24, 'replica 24')
-Insert OK, 1 row affected
-insert into t0 values (25, 'replica 25')
-Insert OK, 1 row affected
-insert into t0 values (26, 'replica 26')
-Insert OK, 1 row affected
-insert into t0 values (27, 'replica 27')
-Insert OK, 1 row affected
-insert into t0 values (28, 'replica 28')
-Insert OK, 1 row affected
-insert into t0 values (29, 'replica 29')
-Insert OK, 1 row affected
+insert(0, (20, 'replica 20'), not_presented = True)
+---
+ -  ['20', 'replica 20']
+...
+insert(0, (21, 'replica 21'), not_presented = True)
+---
+ -  ['21', 'replica 21']
+...
+insert(0, (22, 'replica 22'), not_presented = True)
+---
+ -  ['22', 'replica 22']
+...
+insert(0, (23, 'replica 23'), not_presented = True)
+---
+ -  ['23', 'replica 23']
+...
+insert(0, (24, 'replica 24'), not_presented = True)
+---
+ -  ['24', 'replica 24']
+...
+insert(0, (25, 'replica 25'), not_presented = True)
+---
+ -  ['25', 'replica 25']
+...
+insert(0, (26, 'replica 26'), not_presented = True)
+---
+ -  ['26', 'replica 26']
+...
+insert(0, (27, 'replica 27'), not_presented = True)
+---
+ -  ['27', 'replica 27']
+...
+insert(0, (28, 'replica 28'), not_presented = True)
+---
+ -  ['28', 'replica 28']
+...
+insert(0, (29, 'replica 29'), not_presented = True)
+---
+ -  ['29', 'replica 29']
+...
 select from replica [20, 30) entries
-select * from t0 where k0 = 20
-Found 1 tuple:
-[20, 'replica 20']
-select * from t0 where k0 = 21
-Found 1 tuple:
-[21, 'replica 21']
-select * from t0 where k0 = 22
-Found 1 tuple:
-[22, 'replica 22']
-select * from t0 where k0 = 23
-Found 1 tuple:
-[23, 'replica 23']
-select * from t0 where k0 = 24
-Found 1 tuple:
-[24, 'replica 24']
-select * from t0 where k0 = 25
-Found 1 tuple:
-[25, 'replica 25']
-select * from t0 where k0 = 26
-Found 1 tuple:
-[26, 'replica 26']
-select * from t0 where k0 = 27
-Found 1 tuple:
-[27, 'replica 27']
-select * from t0 where k0 = 28
-Found 1 tuple:
-[28, 'replica 28']
-select * from t0 where k0 = 29
-Found 1 tuple:
-[29, 'replica 29']
+select(0, 20)
+---
+ -  ['20', 'replica 20']
+...
+select(0, 21)
+---
+ -  ['21', 'replica 21']
+...
+select(0, 22)
+---
+ -  ['22', 'replica 22']
+...
+select(0, 23)
+---
+ -  ['23', 'replica 23']
+...
+select(0, 24)
+---
+ -  ['24', 'replica 24']
+...
+select(0, 25)
+---
+ -  ['25', 'replica 25']
+...
+select(0, 26)
+---
+ -  ['26', 'replica 26']
+...
+select(0, 27)
+---
+ -  ['27', 'replica 27']
+...
+select(0, 28)
+---
+ -  ['28', 'replica 28']
+...
+select(0, 29)
+---
+ -  ['29', 'replica 29']
+...
 master lsn = 31
 replica lsn = 31
 
@@ -311,36 +456,46 @@ reload configuration
 ok
 ...
 select from replica [20, 30) entries
-select * from t0 where k0 = 20
-Found 1 tuple:
-[20, 'replica 20']
-select * from t0 where k0 = 21
-Found 1 tuple:
-[21, 'replica 21']
-select * from t0 where k0 = 22
-Found 1 tuple:
-[22, 'replica 22']
-select * from t0 where k0 = 23
-Found 1 tuple:
-[23, 'replica 23']
-select * from t0 where k0 = 24
-Found 1 tuple:
-[24, 'replica 24']
-select * from t0 where k0 = 25
-Found 1 tuple:
-[25, 'replica 25']
-select * from t0 where k0 = 26
-Found 1 tuple:
-[26, 'replica 26']
-select * from t0 where k0 = 27
-Found 1 tuple:
-[27, 'replica 27']
-select * from t0 where k0 = 28
-Found 1 tuple:
-[28, 'replica 28']
-select * from t0 where k0 = 29
-Found 1 tuple:
-[29, 'replica 29']
+select(0, 20)
+---
+ -  ['20', 'replica 20']
+...
+select(0, 21)
+---
+ -  ['21', 'replica 21']
+...
+select(0, 22)
+---
+ -  ['22', 'replica 22']
+...
+select(0, 23)
+---
+ -  ['23', 'replica 23']
+...
+select(0, 24)
+---
+ -  ['24', 'replica 24']
+...
+select(0, 25)
+---
+ -  ['25', 'replica 25']
+...
+select(0, 26)
+---
+ -  ['26', 'replica 26']
+...
+select(0, 27)
+---
+ -  ['27', 'replica 27']
+...
+select(0, 28)
+---
+ -  ['28', 'replica 28']
+...
+select(0, 29)
+---
+ -  ['29', 'replica 29']
+...
 master lsn = 31
 replica lsn = 31
 
@@ -356,159 +511,249 @@ reload configuration
 ok
 ...
 insert to master [30, 40) entries
-insert into t0 values (30, 'mater 30')
-Insert OK, 1 row affected
-insert into t0 values (31, 'mater 31')
-Insert OK, 1 row affected
-insert into t0 values (32, 'mater 32')
-Insert OK, 1 row affected
-insert into t0 values (33, 'mater 33')
-Insert OK, 1 row affected
-insert into t0 values (34, 'mater 34')
-Insert OK, 1 row affected
-insert into t0 values (35, 'mater 35')
-Insert OK, 1 row affected
-insert into t0 values (36, 'mater 36')
-Insert OK, 1 row affected
-insert into t0 values (37, 'mater 37')
-Insert OK, 1 row affected
-insert into t0 values (38, 'mater 38')
-Insert OK, 1 row affected
-insert into t0 values (39, 'mater 39')
-Insert OK, 1 row affected
+insert(0, (30, 'mater 30'), not_presented = True)
+---
+ -  ['30', 'mater 30']
+...
+insert(0, (31, 'mater 31'), not_presented = True)
+---
+ -  ['31', 'mater 31']
+...
+insert(0, (32, 'mater 32'), not_presented = True)
+---
+ -  ['32', 'mater 32']
+...
+insert(0, (33, 'mater 33'), not_presented = True)
+---
+ -  ['33', 'mater 33']
+...
+insert(0, (34, 'mater 34'), not_presented = True)
+---
+ -  ['34', 'mater 34']
+...
+insert(0, (35, 'mater 35'), not_presented = True)
+---
+ -  ['35', 'mater 35']
+...
+insert(0, (36, 'mater 36'), not_presented = True)
+---
+ -  ['36', 'mater 36']
+...
+insert(0, (37, 'mater 37'), not_presented = True)
+---
+ -  ['37', 'mater 37']
+...
+insert(0, (38, 'mater 38'), not_presented = True)
+---
+ -  ['38', 'mater 38']
+...
+insert(0, (39, 'mater 39'), not_presented = True)
+---
+ -  ['39', 'mater 39']
+...
 select from master [30, 40) entries
-select * from t0 where k0 = 30
-Found 1 tuple:
-[30, 'mater 30']
-select * from t0 where k0 = 31
-Found 1 tuple:
-[31, 'mater 31']
-select * from t0 where k0 = 32
-Found 1 tuple:
-[32, 'mater 32']
-select * from t0 where k0 = 33
-Found 1 tuple:
-[33, 'mater 33']
-select * from t0 where k0 = 34
-Found 1 tuple:
-[34, 'mater 34']
-select * from t0 where k0 = 35
-Found 1 tuple:
-[35, 'mater 35']
-select * from t0 where k0 = 36
-Found 1 tuple:
-[36, 'mater 36']
-select * from t0 where k0 = 37
-Found 1 tuple:
-[37, 'mater 37']
-select * from t0 where k0 = 38
-Found 1 tuple:
-[38, 'mater 38']
-select * from t0 where k0 = 39
-Found 1 tuple:
-[39, 'mater 39']
+select(0, 30)
+---
+ -  ['30', 'mater 30']
+...
+select(0, 31)
+---
+ -  ['31', 'mater 31']
+...
+select(0, 32)
+---
+ -  ['32', 'mater 32']
+...
+select(0, 33)
+---
+ -  ['33', 'mater 33']
+...
+select(0, 34)
+---
+ -  ['34', 'mater 34']
+...
+select(0, 35)
+---
+ -  ['35', 'mater 35']
+...
+select(0, 36)
+---
+ -  ['36', 'mater 36']
+...
+select(0, 37)
+---
+ -  ['37', 'mater 37']
+...
+select(0, 38)
+---
+ -  ['38', 'mater 38']
+...
+select(0, 39)
+---
+ -  ['39', 'mater 39']
+...
 insert to replica [30, 50) entries
-insert into t0 values (30, 'replica 30')
-Insert OK, 1 row affected
-insert into t0 values (31, 'replica 31')
-Insert OK, 1 row affected
-insert into t0 values (32, 'replica 32')
-Insert OK, 1 row affected
-insert into t0 values (33, 'replica 33')
-Insert OK, 1 row affected
-insert into t0 values (34, 'replica 34')
-Insert OK, 1 row affected
-insert into t0 values (35, 'replica 35')
-Insert OK, 1 row affected
-insert into t0 values (36, 'replica 36')
-Insert OK, 1 row affected
-insert into t0 values (37, 'replica 37')
-Insert OK, 1 row affected
-insert into t0 values (38, 'replica 38')
-Insert OK, 1 row affected
-insert into t0 values (39, 'replica 39')
-Insert OK, 1 row affected
-insert into t0 values (40, 'replica 40')
-Insert OK, 1 row affected
-insert into t0 values (41, 'replica 41')
-Insert OK, 1 row affected
-insert into t0 values (42, 'replica 42')
-Insert OK, 1 row affected
-insert into t0 values (43, 'replica 43')
-Insert OK, 1 row affected
-insert into t0 values (44, 'replica 44')
-Insert OK, 1 row affected
-insert into t0 values (45, 'replica 45')
-Insert OK, 1 row affected
-insert into t0 values (46, 'replica 46')
-Insert OK, 1 row affected
-insert into t0 values (47, 'replica 47')
-Insert OK, 1 row affected
-insert into t0 values (48, 'replica 48')
-Insert OK, 1 row affected
-insert into t0 values (49, 'replica 49')
-Insert OK, 1 row affected
+insert(0, (30, 'replica 30'), not_presented = True)
+---
+ -  ['30', 'replica 30']
+...
+insert(0, (31, 'replica 31'), not_presented = True)
+---
+ -  ['31', 'replica 31']
+...
+insert(0, (32, 'replica 32'), not_presented = True)
+---
+ -  ['32', 'replica 32']
+...
+insert(0, (33, 'replica 33'), not_presented = True)
+---
+ -  ['33', 'replica 33']
+...
+insert(0, (34, 'replica 34'), not_presented = True)
+---
+ -  ['34', 'replica 34']
+...
+insert(0, (35, 'replica 35'), not_presented = True)
+---
+ -  ['35', 'replica 35']
+...
+insert(0, (36, 'replica 36'), not_presented = True)
+---
+ -  ['36', 'replica 36']
+...
+insert(0, (37, 'replica 37'), not_presented = True)
+---
+ -  ['37', 'replica 37']
+...
+insert(0, (38, 'replica 38'), not_presented = True)
+---
+ -  ['38', 'replica 38']
+...
+insert(0, (39, 'replica 39'), not_presented = True)
+---
+ -  ['39', 'replica 39']
+...
+insert(0, (40, 'replica 40'), not_presented = True)
+---
+ -  ['40', 'replica 40']
+...
+insert(0, (41, 'replica 41'), not_presented = True)
+---
+ -  ['41', 'replica 41']
+...
+insert(0, (42, 'replica 42'), not_presented = True)
+---
+ -  ['42', 'replica 42']
+...
+insert(0, (43, 'replica 43'), not_presented = True)
+---
+ -  ['43', 'replica 43']
+...
+insert(0, (44, 'replica 44'), not_presented = True)
+---
+ -  ['44', 'replica 44']
+...
+insert(0, (45, 'replica 45'), not_presented = True)
+---
+ -  ['45', 'replica 45']
+...
+insert(0, (46, 'replica 46'), not_presented = True)
+---
+ -  ['46', 'replica 46']
+...
+insert(0, (47, 'replica 47'), not_presented = True)
+---
+ -  ['47', 'replica 47']
+...
+insert(0, (48, 'replica 48'), not_presented = True)
+---
+ -  ['48', 'replica 48']
+...
+insert(0, (49, 'replica 49'), not_presented = True)
+---
+ -  ['49', 'replica 49']
+...
 select from replica [30, 50) entries
-select * from t0 where k0 = 30
-Found 1 tuple:
-[30, 'replica 30']
-select * from t0 where k0 = 31
-Found 1 tuple:
-[31, 'replica 31']
-select * from t0 where k0 = 32
-Found 1 tuple:
-[32, 'replica 32']
-select * from t0 where k0 = 33
-Found 1 tuple:
-[33, 'replica 33']
-select * from t0 where k0 = 34
-Found 1 tuple:
-[34, 'replica 34']
-select * from t0 where k0 = 35
-Found 1 tuple:
-[35, 'replica 35']
-select * from t0 where k0 = 36
-Found 1 tuple:
-[36, 'replica 36']
-select * from t0 where k0 = 37
-Found 1 tuple:
-[37, 'replica 37']
-select * from t0 where k0 = 38
-Found 1 tuple:
-[38, 'replica 38']
-select * from t0 where k0 = 39
-Found 1 tuple:
-[39, 'replica 39']
-select * from t0 where k0 = 40
-Found 1 tuple:
-[40, 'replica 40']
-select * from t0 where k0 = 41
-Found 1 tuple:
-[41, 'replica 41']
-select * from t0 where k0 = 42
-Found 1 tuple:
-[42, 'replica 42']
-select * from t0 where k0 = 43
-Found 1 tuple:
-[43, 'replica 43']
-select * from t0 where k0 = 44
-Found 1 tuple:
-[44, 'replica 44']
-select * from t0 where k0 = 45
-Found 1 tuple:
-[45, 'replica 45']
-select * from t0 where k0 = 46
-Found 1 tuple:
-[46, 'replica 46']
-select * from t0 where k0 = 47
-Found 1 tuple:
-[47, 'replica 47']
-select * from t0 where k0 = 48
-Found 1 tuple:
-[48, 'replica 48']
-select * from t0 where k0 = 49
-Found 1 tuple:
-[49, 'replica 49']
+select(0, 30)
+---
+ -  ['30', 'replica 30']
+...
+select(0, 31)
+---
+ -  ['31', 'replica 31']
+...
+select(0, 32)
+---
+ -  ['32', 'replica 32']
+...
+select(0, 33)
+---
+ -  ['33', 'replica 33']
+...
+select(0, 34)
+---
+ -  ['34', 'replica 34']
+...
+select(0, 35)
+---
+ -  ['35', 'replica 35']
+...
+select(0, 36)
+---
+ -  ['36', 'replica 36']
+...
+select(0, 37)
+---
+ -  ['37', 'replica 37']
+...
+select(0, 38)
+---
+ -  ['38', 'replica 38']
+...
+select(0, 39)
+---
+ -  ['39', 'replica 39']
+...
+select(0, 40)
+---
+ -  ['40', 'replica 40']
+...
+select(0, 41)
+---
+ -  ['41', 'replica 41']
+...
+select(0, 42)
+---
+ -  ['42', 'replica 42']
+...
+select(0, 43)
+---
+ -  ['43', 'replica 43']
+...
+select(0, 44)
+---
+ -  ['44', 'replica 44']
+...
+select(0, 45)
+---
+ -  ['45', 'replica 45']
+...
+select(0, 46)
+---
+ -  ['46', 'replica 46']
+...
+select(0, 47)
+---
+ -  ['47', 'replica 47']
+...
+select(0, 48)
+---
+ -  ['48', 'replica 48']
+...
+select(0, 49)
+---
+ -  ['49', 'replica 49']
+...
 master lsn = 41
 replica lsn = 51
 
@@ -519,169 +764,251 @@ reload configuration
 ok
 ...
 select from replica [30, 50) entries
-select * from t0 where k0 = 30
-Found 1 tuple:
-[30, 'replica 30']
-select * from t0 where k0 = 31
-Found 1 tuple:
-[31, 'replica 31']
-select * from t0 where k0 = 32
-Found 1 tuple:
-[32, 'replica 32']
-select * from t0 where k0 = 33
-Found 1 tuple:
-[33, 'replica 33']
-select * from t0 where k0 = 34
-Found 1 tuple:
-[34, 'replica 34']
-select * from t0 where k0 = 35
-Found 1 tuple:
-[35, 'replica 35']
-select * from t0 where k0 = 36
-Found 1 tuple:
-[36, 'replica 36']
-select * from t0 where k0 = 37
-Found 1 tuple:
-[37, 'replica 37']
-select * from t0 where k0 = 38
-Found 1 tuple:
-[38, 'replica 38']
-select * from t0 where k0 = 39
-Found 1 tuple:
-[39, 'replica 39']
-select * from t0 where k0 = 40
-Found 1 tuple:
-[40, 'replica 40']
-select * from t0 where k0 = 41
-Found 1 tuple:
-[41, 'replica 41']
-select * from t0 where k0 = 42
-Found 1 tuple:
-[42, 'replica 42']
-select * from t0 where k0 = 43
-Found 1 tuple:
-[43, 'replica 43']
-select * from t0 where k0 = 44
-Found 1 tuple:
-[44, 'replica 44']
-select * from t0 where k0 = 45
-Found 1 tuple:
-[45, 'replica 45']
-select * from t0 where k0 = 46
-Found 1 tuple:
-[46, 'replica 46']
-select * from t0 where k0 = 47
-Found 1 tuple:
-[47, 'replica 47']
-select * from t0 where k0 = 48
-Found 1 tuple:
-[48, 'replica 48']
-select * from t0 where k0 = 49
-Found 1 tuple:
-[49, 'replica 49']
+select(0, 30)
+---
+ -  ['30', 'replica 30']
+...
+select(0, 31)
+---
+ -  ['31', 'replica 31']
+...
+select(0, 32)
+---
+ -  ['32', 'replica 32']
+...
+select(0, 33)
+---
+ -  ['33', 'replica 33']
+...
+select(0, 34)
+---
+ -  ['34', 'replica 34']
+...
+select(0, 35)
+---
+ -  ['35', 'replica 35']
+...
+select(0, 36)
+---
+ -  ['36', 'replica 36']
+...
+select(0, 37)
+---
+ -  ['37', 'replica 37']
+...
+select(0, 38)
+---
+ -  ['38', 'replica 38']
+...
+select(0, 39)
+---
+ -  ['39', 'replica 39']
+...
+select(0, 40)
+---
+ -  ['40', 'replica 40']
+...
+select(0, 41)
+---
+ -  ['41', 'replica 41']
+...
+select(0, 42)
+---
+ -  ['42', 'replica 42']
+...
+select(0, 43)
+---
+ -  ['43', 'replica 43']
+...
+select(0, 44)
+---
+ -  ['44', 'replica 44']
+...
+select(0, 45)
+---
+ -  ['45', 'replica 45']
+...
+select(0, 46)
+---
+ -  ['46', 'replica 46']
+...
+select(0, 47)
+---
+ -  ['47', 'replica 47']
+...
+select(0, 48)
+---
+ -  ['48', 'replica 48']
+...
+select(0, 49)
+---
+ -  ['49', 'replica 49']
+...
 insert to master [40, 60) entries
-insert into t0 values (40, 'master 40')
-Insert OK, 1 row affected
-insert into t0 values (41, 'master 41')
-Insert OK, 1 row affected
-insert into t0 values (42, 'master 42')
-Insert OK, 1 row affected
-insert into t0 values (43, 'master 43')
-Insert OK, 1 row affected
-insert into t0 values (44, 'master 44')
-Insert OK, 1 row affected
-insert into t0 values (45, 'master 45')
-Insert OK, 1 row affected
-insert into t0 values (46, 'master 46')
-Insert OK, 1 row affected
-insert into t0 values (47, 'master 47')
-Insert OK, 1 row affected
-insert into t0 values (48, 'master 48')
-Insert OK, 1 row affected
-insert into t0 values (49, 'master 49')
-Insert OK, 1 row affected
-insert into t0 values (50, 'master 50')
-Insert OK, 1 row affected
-insert into t0 values (51, 'master 51')
-Insert OK, 1 row affected
-insert into t0 values (52, 'master 52')
-Insert OK, 1 row affected
-insert into t0 values (53, 'master 53')
-Insert OK, 1 row affected
-insert into t0 values (54, 'master 54')
-Insert OK, 1 row affected
-insert into t0 values (55, 'master 55')
-Insert OK, 1 row affected
-insert into t0 values (56, 'master 56')
-Insert OK, 1 row affected
-insert into t0 values (57, 'master 57')
-Insert OK, 1 row affected
-insert into t0 values (58, 'master 58')
-Insert OK, 1 row affected
-insert into t0 values (59, 'master 59')
-Insert OK, 1 row affected
+insert(0, (40, 'master 40'), not_presented = True)
+---
+ -  ['40', 'master 40']
+...
+insert(0, (41, 'master 41'), not_presented = True)
+---
+ -  ['41', 'master 41']
+...
+insert(0, (42, 'master 42'), not_presented = True)
+---
+ -  ['42', 'master 42']
+...
+insert(0, (43, 'master 43'), not_presented = True)
+---
+ -  ['43', 'master 43']
+...
+insert(0, (44, 'master 44'), not_presented = True)
+---
+ -  ['44', 'master 44']
+...
+insert(0, (45, 'master 45'), not_presented = True)
+---
+ -  ['45', 'master 45']
+...
+insert(0, (46, 'master 46'), not_presented = True)
+---
+ -  ['46', 'master 46']
+...
+insert(0, (47, 'master 47'), not_presented = True)
+---
+ -  ['47', 'master 47']
+...
+insert(0, (48, 'master 48'), not_presented = True)
+---
+ -  ['48', 'master 48']
+...
+insert(0, (49, 'master 49'), not_presented = True)
+---
+ -  ['49', 'master 49']
+...
+insert(0, (50, 'master 50'), not_presented = True)
+---
+ -  ['50', 'master 50']
+...
+insert(0, (51, 'master 51'), not_presented = True)
+---
+ -  ['51', 'master 51']
+...
+insert(0, (52, 'master 52'), not_presented = True)
+---
+ -  ['52', 'master 52']
+...
+insert(0, (53, 'master 53'), not_presented = True)
+---
+ -  ['53', 'master 53']
+...
+insert(0, (54, 'master 54'), not_presented = True)
+---
+ -  ['54', 'master 54']
+...
+insert(0, (55, 'master 55'), not_presented = True)
+---
+ -  ['55', 'master 55']
+...
+insert(0, (56, 'master 56'), not_presented = True)
+---
+ -  ['56', 'master 56']
+...
+insert(0, (57, 'master 57'), not_presented = True)
+---
+ -  ['57', 'master 57']
+...
+insert(0, (58, 'master 58'), not_presented = True)
+---
+ -  ['58', 'master 58']
+...
+insert(0, (59, 'master 59'), not_presented = True)
+---
+ -  ['59', 'master 59']
+...
 select from replica [40, 60) entries
-select * from t0 where k0 = 40
-Found 1 tuple:
-[40, 'replica 40']
-select * from t0 where k0 = 41
-Found 1 tuple:
-[41, 'replica 41']
-select * from t0 where k0 = 42
-Found 1 tuple:
-[42, 'replica 42']
-select * from t0 where k0 = 43
-Found 1 tuple:
-[43, 'replica 43']
-select * from t0 where k0 = 44
-Found 1 tuple:
-[44, 'replica 44']
-select * from t0 where k0 = 45
-Found 1 tuple:
-[45, 'replica 45']
-select * from t0 where k0 = 46
-Found 1 tuple:
-[46, 'replica 46']
-select * from t0 where k0 = 47
-Found 1 tuple:
-[47, 'replica 47']
-select * from t0 where k0 = 48
-Found 1 tuple:
-[48, 'replica 48']
-select * from t0 where k0 = 49
-Found 1 tuple:
-[49, 'replica 49']
-select * from t0 where k0 = 50
-Found 1 tuple:
-[50, 'master 50']
-select * from t0 where k0 = 51
-Found 1 tuple:
-[51, 'master 51']
-select * from t0 where k0 = 52
-Found 1 tuple:
-[52, 'master 52']
-select * from t0 where k0 = 53
-Found 1 tuple:
-[53, 'master 53']
-select * from t0 where k0 = 54
-Found 1 tuple:
-[54, 'master 54']
-select * from t0 where k0 = 55
-Found 1 tuple:
-[55, 'master 55']
-select * from t0 where k0 = 56
-Found 1 tuple:
-[56, 'master 56']
-select * from t0 where k0 = 57
-Found 1 tuple:
-[57, 'master 57']
-select * from t0 where k0 = 58
-Found 1 tuple:
-[58, 'master 58']
-select * from t0 where k0 = 59
-Found 1 tuple:
-[59, 'master 59']
+select(0, 40)
+---
+ -  ['40', 'replica 40']
+...
+select(0, 41)
+---
+ -  ['41', 'replica 41']
+...
+select(0, 42)
+---
+ -  ['42', 'replica 42']
+...
+select(0, 43)
+---
+ -  ['43', 'replica 43']
+...
+select(0, 44)
+---
+ -  ['44', 'replica 44']
+...
+select(0, 45)
+---
+ -  ['45', 'replica 45']
+...
+select(0, 46)
+---
+ -  ['46', 'replica 46']
+...
+select(0, 47)
+---
+ -  ['47', 'replica 47']
+...
+select(0, 48)
+---
+ -  ['48', 'replica 48']
+...
+select(0, 49)
+---
+ -  ['49', 'replica 49']
+...
+select(0, 50)
+---
+ -  ['50', 'master 50']
+...
+select(0, 51)
+---
+ -  ['51', 'master 51']
+...
+select(0, 52)
+---
+ -  ['52', 'master 52']
+...
+select(0, 53)
+---
+ -  ['53', 'master 53']
+...
+select(0, 54)
+---
+ -  ['54', 'master 54']
+...
+select(0, 55)
+---
+ -  ['55', 'master 55']
+...
+select(0, 56)
+---
+ -  ['56', 'master 56']
+...
+select(0, 57)
+---
+ -  ['57', 'master 57']
+...
+select(0, 58)
+---
+ -  ['58', 'master 58']
+...
+select(0, 59)
+---
+ -  ['59', 'master 59']
+...
 master lsn = 61
 replica lsn = 61
-insert into t0 values (0, 'replica is read only')
-An error occurred: ER_NONMASTER, 'Can't modify data on a replication slave. My master is: 127.0.0.1:33017'
+insert(0, (0, 'replica is read only'), not_presented = True)
+---
+Error: (1, u"Can't modify data on a replication slave. My master is: 127.0.0.1:33017")
+...
