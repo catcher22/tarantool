@@ -23,7 +23,7 @@ __author__ = "Konstantin Osipov <kostja.osipov@gmail.com>"
 
 import os
 import sys
-import sql
+
 import copy
 import errno
 import socket
@@ -93,45 +93,6 @@ class BoxConnection(TarantoolConnection):
                 connect_now=False, reconnect_max_attempts=2, socket_timeout=None)
         self.space = {}
         self.sort = False
-    def recvall(self, length):
-        res = ""
-        while len(res) < length:
-            buf = self.socket.recv(length - len(res))
-            if not buf:
-                raise RuntimeError("Got EOF from socket, the server has "
-                                   "probably crashed")
-            res = res + buf
-        return res
-
-    def execute_no_reconnect(self, command, silent=True):
-        statement = sql.parse("sql", command)
-        if statement == None:
-            return "You have an error in your SQL syntax\n"
-        statement.sort = self.sort
-
-        payload = statement.pack()
-        header = struct.pack("<lll", statement.reqeust_type, len(payload), 0)
-
-        self.socket.sendall(header)
-        if len(payload):
-            self.socket.sendall(payload)
-
-        IPROTO_HEADER_SIZE = 12
-
-        header = self.recvall(IPROTO_HEADER_SIZE)
-
-        response_len = struct.unpack("<lll", header)[1]
-
-        if response_len:
-            response = self.recvall(response_len)
-        else:
-            response = None
-
-        if not silent:
-            print command
-            print statement.unpack(response)
-
-        return statement.unpack(response) + "\n"
 
     def set_schema(self, schema_dict):
         self.newcon.schema = tarantool.Schema(schema_dict)
