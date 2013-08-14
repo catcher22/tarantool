@@ -113,6 +113,7 @@ set (common_sources
      lua/lua_socket.cc
      lua/session.cc
      lua/cjson.cc
+     lua/yaml.cc
      ${lua_sources}
 )
 
@@ -132,6 +133,7 @@ list(APPEND common_libraries
     ${LIBCORO_LIBRARIES}
     ${LIBGOPT_LIBRARIES}
     ${LIBCJSON_LIBRARIES}
+    ${LIBYAML_LIBRARIES}
     ${LUAJIT_LIB}
     misc
 )

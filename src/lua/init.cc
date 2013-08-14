@@ -54,6 +54,7 @@ extern "C" {
 #include "lua/stat.h"
 #include "lua/session.h"
 #include "lua/cjson.h"
+#include "lua/yaml.h"
 
 #include <ctype.h>
 #include <sys/time.h>
@@ -1324,6 +1325,7 @@ tarantool_lua_init()
 
 	tarantool_lua_admin_init(L);
 	tarantool_lua_cjson_init(L);
+	tarantool_lua_yaml_init(L);
 	tarantool_lua_info_init(L);
 	tarantool_lua_slab_init(L);
 	tarantool_lua_stat_init(L);
